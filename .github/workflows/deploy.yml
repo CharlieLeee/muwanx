@@ -24,27 +24,19 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        # For now disable submodules (it's taking almost 2min to download + upload)
-        submodules: false
+        submodules: recursive
       
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v2
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
       with:
-        bun-version: latest
-        
-    - name: Cache Bun dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.bun/install/cache
-        key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-bun-
+        node-version: '20'
+        cache: 'npm'
         
     - name: Install dependencies
-      run: bun install --frozen-lockfile
+      run: npm ci
       
     - name: Build application
-      run: bun run build
+      run: npm run build
       
     - name: Setup Pages
       uses: actions/configure-pages@v4
