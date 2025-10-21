@@ -316,7 +316,7 @@
 
 <script>
 import { MujocoRuntime, GoCommandManager, IsaacActionManager, PassiveActionManager, TrajectoryActionManager, ConfigObservationManager, LocomotionEnvManager } from '@/mujoco_wasm/examples/main.js';
-import load_mujoco from '@/mujoco_wasm/dist/mujoco_wasm.js';
+import loadMujoco from '@/mujoco_wasm/dist/mujoco_wasm.js';
 import { markRaw, nextTick } from 'vue';
 
 export default {
@@ -516,7 +516,7 @@ export default {
                 await this.loadConfig();
                 console.log(this.config);
                 if (!this.config.tasks.length) return;
-                const mujoco = await load_mujoco();
+                const mujoco = await loadMujoco();
                 
                 // Use the task and policy selected in loadConfig (may be from URL params)
                 const initialTask = this.config.tasks.find(t => t.id === this.task) ?? this.config.tasks[0];

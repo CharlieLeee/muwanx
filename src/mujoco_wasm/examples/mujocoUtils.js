@@ -11,17 +11,17 @@ export async function reloadScene(mjcf_path, meta_path) {
   let mujoco = this.mujoco;
   console.log("Loading scene:", mjcf_path);
   // Initialize the three.js Scene using the .xml Model
-  [this.model, this.state, this.simulation, this.bodies, this.lights] =
+  [this.mjModel, this.state, this.mjData, this.bodies, this.lights] =
     await loadSceneFromURL(mujoco, mjcf_path, this);
 
   // Parse joint names and addresses in mujoco
   const textDecoder = new TextDecoder();
-  const names_array = new Uint8Array(this.model.names);
+  const names_array = new Uint8Array(this.mjModel.names);
 
   this.jointNamesMJC = [];
-  for (let j = 0; j < this.model.njnt; j++) {
+  for (let j = 0; j < this.mjModel.njnt; j++) {
     // decode the joint name
-    let start_idx = this.model.name_jntadr[j];
+    let start_idx = this.mjModel.name_jntadr[j];
     let end_idx = start_idx;
     while (end_idx < names_array.length && names_array[end_idx] !== 0) {
       end_idx++;
@@ -39,12 +39,12 @@ export async function reloadScene(mjcf_path, meta_path) {
 
   // find the actuator/qpos/qvel address for each isaac joint
   let actuator2joint = []
-  for (let i = 0; i < this.model.nu; i++) {
-    const actuator_trntype = this.model.actuator_trntype[i];
+  for (let i = 0; i < this.mjModel.nu; i++) {
+    const actuator_trntype = this.mjModel.actuator_trntype[i];
     if (actuator_trntype !== mujoco.mjtTrn.mjTRN_JOINT.value) {
       throw new Error("Expected actuator transmission type to be mjTRN_JOINT");
     }
-    actuator2joint.push(this.model.actuator_trnid[2 * i]);
+    actuator2joint.push(this.mjModel.actuator_trnid[2 * i]);
   }
   console.log("this.actuator2joint", actuator2joint);
 
@@ -56,8 +56,8 @@ export async function reloadScene(mjcf_path, meta_path) {
     // find the actuator idx that corresponds to the mujoco joint id
     const actuator_idx = actuator2joint.findIndex(joint_id => joint_id == joint_idx);
     this.ctrl_adr_isaac.push(actuator_idx);
-    this.qpos_adr_isaac.push(this.model.jnt_qposadr[joint_idx]);
-    this.qvel_adr_isaac.push(this.model.jnt_dofadr[joint_idx]);
+    this.qpos_adr_isaac.push(this.mjModel.jnt_qposadr[joint_idx]);
+    this.qvel_adr_isaac.push(this.mjModel.jnt_dofadr[joint_idx]);
   }
   console.log("this.ctrl_adr_isaac", this.ctrl_adr_isaac);
   console.log("this.qpos_adr_isaac", this.qpos_adr_isaac);
@@ -78,7 +78,7 @@ export async function reloadScene(mjcf_path, meta_path) {
 
   // Initialize the three.js Scene using the .xml Model
   // Set up simulation parameters
-  this.timestep = this.model.getOptions().timestep;
+  this.timestep = this.mjModel.getOptions().timestep;
   this.decimation = Math.round(0.02 / this.timestep);
   this.mujoco_time = 0.0;
   this.simStepCount = 0;
@@ -106,8 +106,8 @@ export async function reloadPolicy(policy_path) {
   this.adapt_hx.fill(0);
   this.rpy.set(0, 0, 0);
 
-  this.simulation.resetData();
-  this.simulation.forward();
+  this.mjData.resetData();
+  this.mjData.forward();
 
   // Helper function to create observation instance
   const createObservation = (obsConfig) => {
@@ -127,8 +127,8 @@ export async function reloadPolicy(policy_path) {
 
     // Pass model, simulation, context and all remaining kwargs
     return new ObsClass(
-      this.model,
-      this.simulation,
+      this.mjModel,
+      this.mjData,
       this,
       kwargs
     );
@@ -159,7 +159,7 @@ export function setupGUI(parentContext) {
 
   // Make sure we reset the camera when the scene is changed or reloaded.
   parentContext.updateGUICallbacks.length = 0;
-  parentContext.updateGUICallbacks.push((model, simulation, params) => {
+  parentContext.updateGUICallbacks.push((mjModel, mjData, params) => {
     // TODO: Use free camera parameters from MuJoCo
     parentContext.camera.position.set(2.0, 1.7, 1.7);
     parentContext.controls.target.set(0, 0.7, 0);
@@ -342,8 +342,8 @@ export function setupGUI(parentContext) {
   //  When pressed, resets the simulation to the initial state.
   //  Can also be triggered by pressing backspace.
   const resetSimulation = () => {
-    parentContext.simulation.resetData();
-    parentContext.simulation.forward();
+    parentContext.mjData.resetData();
+    parentContext.mjData.forward();
   };
   simulationFolder.add({ reset: () => { resetSimulation(); } }, 'reset').name('Reset');
   document.addEventListener('keydown', (event) => {
@@ -353,16 +353,16 @@ export function setupGUI(parentContext) {
   keyInnerHTML += 'Backspace<br>';
 
   // Add keyframe slider.
-  let nkeys = parentContext.model.nkey;
+  let nkeys = parentContext.mjModel.nkey;
   let keyframeGUI = simulationFolder.add(parentContext.params, "keyframeNumber", 0, nkeys - 1, 1).name('Load Keyframe').listen();
   keyframeGUI.onChange((value) => {
-    if (value < parentContext.model.nkey) {
-      parentContext.simulation.qpos.set(parentContext.model.key_qpos.slice(
-        value * parentContext.model.nq, (value + 1) * parentContext.model.nq));
+    if (value < parentContext.mjModel.nkey) {
+      parentContext.mjData.qpos.set(parentContext.mjModel.key_qpos.slice(
+        value * parentContext.mjModel.nq, (value + 1) * parentContext.mjModel.nq));
     }
   });
-  parentContext.updateGUICallbacks.push((model, simulation, params) => {
-    let nkeys = parentContext.model.nkey;
+  parentContext.updateGUICallbacks.push((mjModel, mjData, params) => {
+    let nkeys = parentContext.mjModel.nkey;
     console.log("new model loaded. has " + nkeys + " keyframes.");
     if (nkeys > 0) {
       keyframeGUI.max(nkeys - 1);
@@ -383,30 +383,30 @@ export function setupGUI(parentContext) {
 
   // Add actuator sliders.
   let actuatorFolder = simulationFolder.addFolder("Actuators");
-  const addActuators = (model, simulation, params) => {
-    let act_range = model.actuator_ctrlrange;
+  const addActuators = (mjModel, mjData, params) => {
+    let act_range = mjModel.actuator_ctrlrange;
     let actuatorGUIs = [];
-    for (let i = 0; i < model.nu; i++) {
-      if (!model.actuator_ctrllimited[i]) { continue; }
+    for (let i = 0; i < mjModel.nu; i++) {
+      if (!mjModel.actuator_ctrllimited[i]) { continue; }
       let name = textDecoder.decode(
-        parentContext.model.names.subarray(
-          parentContext.model.name_actuatoradr[i])).split(nullChar)[0];
+        parentContext.mjModel.names.subarray(
+          parentContext.mjModel.name_actuatoradr[i])).split(nullChar)[0];
 
       parentContext.params[name] = 0.0;
       let actuatorGUI = actuatorFolder.add(parentContext.params, name, act_range[2 * i], act_range[2 * i + 1], 0.01).name(name).listen();
       actuatorGUIs.push(actuatorGUI);
       actuatorGUI.onChange((value) => {
-        simulation.ctrl[i] = value;
+        mjData.ctrl[i] = value;
       });
     }
     return actuatorGUIs;
   };
-  let actuatorGUIs = addActuators(parentContext.model, parentContext.simulation, parentContext.params);
-  parentContext.updateGUICallbacks.push((model, simulation, params) => {
+  let actuatorGUIs = addActuators(parentContext.mjModel, parentContext.mjData, parentContext.params);
+  parentContext.updateGUICallbacks.push((mjModel, mjData, params) => {
     for (let i = 0; i < actuatorGUIs.length; i++) {
       actuatorGUIs[i].destroy();
     }
-    actuatorGUIs = addActuators(model, simulation, parentContext.params);
+    actuatorGUIs = addActuators(mjModel, mjData, parentContext.params);
   });
   actuatorFolder.close();
 
@@ -434,40 +434,40 @@ export function setupGUI(parentContext) {
  * @param {MuJoCoDemo} parent The three.js Scene Object to add the MuJoCo model elements to
  */
 export async function loadSceneFromURL(mujoco, filename, parent) {
-  // Free the old simulation.
-  if (parent.simulation != null) {
-    parent.simulation.free();
-    parent.model = null;
+  // Free the old mjData.
+  if (parent.mjData != null) {
+    parent.mjData.free();
+    parent.mjModel = null;
     parent.state = null;
-    parent.simulation = null;
+    parent.mjData = null;
   }
 
   // Load in the state from XML.
-  parent.model = mujoco.Model.load_from_xml("/working/" + filename);
-  parent.state = new mujoco.State(parent.model);
-  parent.simulation = new mujoco.Simulation(parent.model, parent.state);
+  parent.mjModel = mujoco.Model.load_from_xml("/working/" + filename);
+  parent.state = new mujoco.State(parent.mjModel);
+  parent.mjData = new mujoco.Simulation(parent.mjModel, parent.state);
 
-  let model = parent.model;
+  let mjModel = parent.mjModel;
   let state = parent.state;
-  let simulation = parent.simulation;
+  let mjData = parent.mjData;
 
   // Decode the null-terminated string names.
   let textDecoder = new TextDecoder("utf-8");
-  let names_array = new Uint8Array(model.names);
-  let fullString = textDecoder.decode(model.names);
+  let names_array = new Uint8Array(mjModel.names);
+  let fullString = textDecoder.decode(mjModel.names);
   let names = fullString.split(textDecoder.decode(new ArrayBuffer(1)));
 
   // // Parse joint names
-  // console.log("model.njnt", model.njnt);
-  // for (let j = 0; j < model.njnt; j++) {
-  //   let start_idx = model.name_jntadr[j];
+  // console.log("mjModel.njnt", mjModel.njnt);
+  // for (let j = 0; j < mjModel.njnt; j++) {
+  //   let start_idx = mjModel.name_jntadr[j];
   //   let end_idx = start_idx;
   //   while (end_idx < names_array.length && names_array[end_idx] !== 0) {
   //     end_idx++;
   //   }
   //   let name_buffer = names_array.subarray(start_idx, end_idx);
-  //   console.log(model.jnt_type[j], mujoco.mjtJoint.mjJNT_HINGE.value, model.jnt_type[j] == mujoco.mjtJoint.mjJNT_HINGE.value);
-  //   if (model.jnt_type[j] == mujoco.mjtJoint.mjJNT_HINGE.value) {
+  //   console.log(mjModel.jnt_type[j], mujoco.mjtJoint.mjJNT_HINGE.value, mjModel.jnt_type[j] == mujoco.mjtJoint.mjJNT_HINGE.value);
+  //   if (mjModel.jnt_type[j] == mujoco.mjtJoint.mjJNT_HINGE.value) {
   //     parent.jointNamesMJC.push(textDecoder.decode(name_buffer));
   //   };
   // }
@@ -490,24 +490,24 @@ export async function loadSceneFromURL(mujoco, filename, parent) {
   material.color = new THREE.Color(1, 1, 1);
 
   // Loop through the MuJoCo geoms and recreate them in three.js.
-  for (let g = 0; g < model.ngeom; g++) {
+  for (let g = 0; g < mjModel.ngeom; g++) {
     // Only visualize geom groups up to 2 (same default behavior as simulate).
-    if (!(model.geom_group[g] < 3)) { continue; }
+    if (!(mjModel.geom_group[g] < 3)) { continue; }
 
     // Get the body ID and type of the geom.
-    let b = model.geom_bodyid[g];
-    let type = model.geom_type[g];
+    let b = mjModel.geom_bodyid[g];
+    let type = mjModel.geom_type[g];
     let size = [
-      model.geom_size[(g * 3) + 0],
-      model.geom_size[(g * 3) + 1],
-      model.geom_size[(g * 3) + 2]
+      mjModel.geom_size[(g * 3) + 0],
+      mjModel.geom_size[(g * 3) + 1],
+      mjModel.geom_size[(g * 3) + 2]
     ];
 
     // Create the body if it doesn't exist.
     if (!(b in bodies)) {
       bodies[b] = new THREE.Group();
 
-      let start_idx = model.name_bodyadr[b];
+      let start_idx = mjModel.name_bodyadr[b];
       let end_idx = start_idx;
       while (end_idx < names_array.length && names_array[end_idx] !== 0) {
         end_idx++;
@@ -542,14 +542,14 @@ export async function loadSceneFromURL(mujoco, filename, parent) {
     } else if (type == mujoco.mjtGeom.mjGEOM_BOX.value) {
       geometry = new THREE.BoxGeometry(size[0] * 2.0, size[2] * 2.0, size[1] * 2.0);
     } else if (type == mujoco.mjtGeom.mjGEOM_MESH.value) {
-      let meshID = model.geom_dataid[g];
+      let meshID = mjModel.geom_dataid[g];
 
       if (!(meshID in meshes)) {
         geometry = new THREE.BufferGeometry(); // TODO: Populate the Buffer Geometry with Generic Mesh Data
 
-        let vertex_buffer = model.mesh_vert.subarray(
-          model.mesh_vertadr[meshID] * 3,
-          (model.mesh_vertadr[meshID] + model.mesh_vertnum[meshID]) * 3);
+        let vertex_buffer = mjModel.mesh_vert.subarray(
+          mjModel.mesh_vertadr[meshID] * 3,
+          (mjModel.mesh_vertadr[meshID] + mjModel.mesh_vertnum[meshID]) * 3);
         for (let v = 0; v < vertex_buffer.length; v += 3) {
           //vertex_buffer[v + 0] =  vertex_buffer[v + 0];
           let temp = vertex_buffer[v + 1];
@@ -557,9 +557,9 @@ export async function loadSceneFromURL(mujoco, filename, parent) {
           vertex_buffer[v + 2] = -temp;
         }
 
-        let normal_buffer = model.mesh_normal.subarray(
-          model.mesh_vertadr[meshID] * 3,
-          (model.mesh_vertadr[meshID] + model.mesh_vertnum[meshID]) * 3);
+        let normal_buffer = mjModel.mesh_normal.subarray(
+          mjModel.mesh_vertadr[meshID] * 3,
+          (mjModel.mesh_vertadr[meshID] + mjModel.mesh_vertnum[meshID]) * 3);
         for (let v = 0; v < normal_buffer.length; v += 3) {
           //normal_buffer[v + 0] =  normal_buffer[v + 0];
           let temp = normal_buffer[v + 1];
@@ -567,12 +567,12 @@ export async function loadSceneFromURL(mujoco, filename, parent) {
           normal_buffer[v + 2] = -temp;
         }
 
-        let uv_buffer = model.mesh_texcoord.subarray(
-          model.mesh_texcoordadr[meshID] * 2,
-          (model.mesh_texcoordadr[meshID] + model.mesh_vertnum[meshID]) * 2);
-        let triangle_buffer = model.mesh_face.subarray(
-          model.mesh_faceadr[meshID] * 3,
-          (model.mesh_faceadr[meshID] + model.mesh_facenum[meshID]) * 3);
+        let uv_buffer = mjModel.mesh_texcoord.subarray(
+          mjModel.mesh_texcoordadr[meshID] * 2,
+          (mjModel.mesh_texcoordadr[meshID] + mjModel.mesh_vertnum[meshID]) * 2);
+        let triangle_buffer = mjModel.mesh_face.subarray(
+          mjModel.mesh_faceadr[meshID] * 3,
+          (mjModel.mesh_faceadr[meshID] + mjModel.mesh_facenum[meshID]) * 3);
         geometry.setAttribute("position", new THREE.BufferAttribute(vertex_buffer, 3));
         geometry.setAttribute("normal", new THREE.BufferAttribute(normal_buffer, 3));
         geometry.setAttribute("uv", new THREE.BufferAttribute(uv_buffer, 2));
@@ -589,26 +589,26 @@ export async function loadSceneFromURL(mujoco, filename, parent) {
     // Set the Material Properties of incoming bodies
     let texture = undefined;
     let color = [
-      model.geom_rgba[(g * 4) + 0],
-      model.geom_rgba[(g * 4) + 1],
-      model.geom_rgba[(g * 4) + 2],
-      model.geom_rgba[(g * 4) + 3]];
-    if (model.geom_matid[g] != -1) {
-      let matId = model.geom_matid[g];
+      mjModel.geom_rgba[(g * 4) + 0],
+      mjModel.geom_rgba[(g * 4) + 1],
+      mjModel.geom_rgba[(g * 4) + 2],
+      mjModel.geom_rgba[(g * 4) + 3]];
+    if (mjModel.geom_matid[g] != -1) {
+      let matId = mjModel.geom_matid[g];
       color = [
-        model.mat_rgba[(matId * 4) + 0],
-        model.mat_rgba[(matId * 4) + 1],
-        model.mat_rgba[(matId * 4) + 2],
-        model.mat_rgba[(matId * 4) + 3]];
+        mjModel.mat_rgba[(matId * 4) + 0],
+        mjModel.mat_rgba[(matId * 4) + 1],
+        mjModel.mat_rgba[(matId * 4) + 2],
+        mjModel.mat_rgba[(matId * 4) + 3]];
 
-      // Construct Texture from model.tex_rgb
+      // Construct Texture from mjModel.tex_rgb
       texture = undefined;
-      let texId = model.mat_texid[matId];
+      let texId = mjModel.mat_texid[matId];
       if (texId != -1) {
-        let width = model.tex_width[texId];
-        let height = model.tex_height[texId];
-        let offset = model.tex_adr[texId];
-        let rgbArray = model.tex_rgb;
+        let width = mjModel.tex_width[texId];
+        let height = mjModel.tex_height[texId];
+        let offset = mjModel.tex_adr[texId];
+        let rgbArray = mjModel.tex_rgb;
         let rgbaArray = new Uint8Array(width * height * 4);
         for (let p = 0; p < width * height; p++) {
           rgbaArray[(p * 4) + 0] = rgbArray[offset + ((p * 3) + 0)];
@@ -640,10 +640,10 @@ export async function loadSceneFromURL(mujoco, filename, parent) {
         color: new THREE.Color(color[0], color[1], color[2]),
         transparent: color[3] < 1.0,
         opacity: color[3],
-        specularIntensity: model.geom_matid[g] != -1 ? model.mat_specular[model.geom_matid[g]] * 0.5 : undefined,
-        reflectivity: model.geom_matid[g] != -1 ? model.mat_reflectance[model.geom_matid[g]] : undefined,
-        roughness: model.geom_matid[g] != -1 ? 1.0 - model.mat_shininess[model.geom_matid[g]] : undefined,
-        metalness: model.geom_matid[g] != -1 ? 0.1 : undefined,
+        specularIntensity: mjModel.geom_matid[g] != -1 ? mjModel.mat_specular[mjModel.geom_matid[g]] * 0.5 : undefined,
+        reflectivity: mjModel.geom_matid[g] != -1 ? mjModel.mat_reflectance[mjModel.geom_matid[g]] : undefined,
+        roughness: mjModel.geom_matid[g] != -1 ? 1.0 - mjModel.mat_shininess[mjModel.geom_matid[g]] : undefined,
+        metalness: mjModel.geom_matid[g] != -1 ? 0.1 : undefined,
         map: texture
       });
     }
@@ -660,8 +660,8 @@ export async function loadSceneFromURL(mujoco, filename, parent) {
     mesh.receiveShadow = type != 7;
     mesh.bodyID = b;
     bodies[b].add(mesh);
-    getPosition(model.geom_pos, g, mesh.position);
-    if (type != 0) { getQuaternion(model.geom_quat, g, mesh.quaternion); }
+    getPosition(mjModel.geom_pos, g, mesh.position);
+    if (type != 0) { getQuaternion(mjModel.geom_quat, g, mesh.quaternion); }
     if (type == 4) { mesh.scale.set(size[0], size[2], size[1]) } // Stretch the Ellipsoid
   }
 
@@ -682,14 +682,14 @@ export async function loadSceneFromURL(mujoco, filename, parent) {
   mujocoRoot.add(mujocoRoot.spheres);
 
   // Parse lights.
-  for (let l = 0; l < model.nlight; l++) {
+  for (let l = 0; l < mjModel.nlight; l++) {
     let light = new THREE.SpotLight();
-    if (model.light_directional[l]) {
+    if (mjModel.light_directional[l]) {
       light = new THREE.DirectionalLight();
     } else {
       light = new THREE.SpotLight();
     }
-    light.decay = model.light_attenuation[l] * 100;
+    light.decay = mjModel.light_attenuation[l] * 100;
     light.penumbra = 0.5;
     light.castShadow = true; // default false
 
@@ -697,7 +697,7 @@ export async function loadSceneFromURL(mujoco, filename, parent) {
     light.shadow.mapSize.height = 1024; // default
     light.shadow.camera.near = 1; // default
     light.shadow.camera.far = 10; // default
-    //bodies[model.light_bodyid()].add(light);
+    //bodies[mjModel.light_bodyid()].add(light);
     if (bodies[0]) {
       bodies[0].add(light);
     } else {
@@ -705,13 +705,13 @@ export async function loadSceneFromURL(mujoco, filename, parent) {
     }
     lights.push(light);
   }
-  if (model.nlight == 0) {
+  if (mjModel.nlight == 0) {
     let light = new THREE.DirectionalLight();
     mujocoRoot.add(light);
   }
 
-  for (let b = 0; b < model.nbody; b++) {
-    //let parent_body = model.body_parentid()[b];
+  for (let b = 0; b < mjModel.nbody; b++) {
+    //let parent_body = mjModel.body_parentid()[b];
     if (b == 0 || !bodies[0]) {
       mujocoRoot.add(bodies[b]);
     } else if (bodies[b]) {
@@ -725,7 +725,7 @@ export async function loadSceneFromURL(mujoco, filename, parent) {
 
   parent.mujocoRoot = mujocoRoot;
 
-  return [model, state, simulation, bodies, lights]
+  return [mjModel, state, simulation, bodies, lights]
 }
 
 const SCENE_BASE_URL = './examples/scenes';

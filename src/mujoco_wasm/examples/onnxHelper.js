@@ -8,32 +8,48 @@ import * as ort from 'onnxruntime-web';
 
 export class ONNXModule {
   constructor(config) {
+    if (!config || !config.path || !config.meta) {
+      throw new Error('ONNXModule config must have path and meta properties');
+    }
     this.modelPath = config.path;
     this.metaData = config.meta;
+    if (!this.metaData.in_keys) {
+      throw new Error('ONNXModule meta must have in_keys property');
+    }
     this.isRecurrent = config.meta.in_keys.includes("adapt_hx");
     console.log("isRecurrent", this.isRecurrent);
   }
 
   async init() {
-    // Load the ONNX model
-    const modelResponse = await fetch(this.modelPath);
-    const modelArrayBuffer = await modelResponse.arrayBuffer();
+    try {
+      // Load the ONNX model
+      console.log('[ONNXModule] Fetching model from:', this.modelPath);
+      const modelResponse = await fetch(this.modelPath);
+      if (!modelResponse.ok) {
+        throw new Error(`Failed to fetch model: ${modelResponse.status} ${modelResponse.statusText}`);
+      }
+      const modelArrayBuffer = await modelResponse.arrayBuffer();
+      console.log('[ONNXModule] Model fetched, size:', modelArrayBuffer.byteLength);
 
-    this.inKeys = this.metaData["in_keys"];
-    this.outKeys = this.metaData["out_keys"];
+      this.inKeys = this.metaData["in_keys"];
+      this.outKeys = this.metaData["out_keys"];
 
-    // Create session from the array buffer
-    this.session = await ort.InferenceSession.create(modelArrayBuffer, {
-      executionProviders: ['wasm'],
-      graphOptimizationLevel: 'all'
-    });
+      // Create session from the array buffer
+      console.log('[ONNXModule] Creating ONNX session...');
+      this.session = await ort.InferenceSession.create(modelArrayBuffer, {
+        executionProviders: ['wasm'],
+        graphOptimizationLevel: 'all'
+      });
 
-    console.log('ONNX model loaded successfully');
-    console.log("inKeys", this.inKeys);
-    console.log("outKeys", this.outKeys);
-
-    console.log("inputNames", this.session.inputNames);
-    console.log("outputNames", this.session.outputNames);
+      console.log('[ONNXModule] ONNX model loaded successfully');
+      console.log("inKeys", this.inKeys);
+      console.log("outKeys", this.outKeys);
+      console.log("inputNames", this.session.inputNames);
+      console.log("outputNames", this.session.outputNames);
+    } catch (error) {
+      console.error('[ONNXModule] Failed to initialize:', error);
+      throw error;
+    }
   }
 
   initInput() {
@@ -49,6 +65,9 @@ export class ONNXModule {
 
   async runInference(input) {
     // construct input
+    if (!this.inKeys || !this.session) {
+      throw new Error('ONNXModule not properly initialized. inKeys: ' + this.inKeys + ', session: ' + this.session);
+    }
     let onnxInput = {};
     for (let i = 0; i < this.inKeys.length; i++) {
       onnxInput[this.session.inputNames[i]] = input[this.inKeys[i]];
