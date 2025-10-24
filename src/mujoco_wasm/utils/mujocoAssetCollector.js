@@ -5,8 +5,8 @@
  * (meshes, textures, includes, etc.) similar to the Python generate_index.py script.
  * 
  * Usage:
- *   const analyzer = new MuJoCoAssetCollector();
- *   const assets = await analyzer.analyzeScene('./examples/scenes/unitree_go2/scene.xml');
+ *   const collector = new MuJoCoAssetCollector();
+ *   const assets = await collector.analyzeScene('./examples/scenes/unitree_go2/scene.xml');
  */
 
 export class MuJoCoAssetCollector {
@@ -27,6 +27,7 @@ export class MuJoCoAssetCollector {
         this.BINARY_EXTENSIONS = ['.png', '.stl', '.skn', '.mjb'];
         
         this.cache = new Map();
+        this.debug = options.debug || false;
     }
 
     /**
@@ -35,7 +36,7 @@ export class MuJoCoAssetCollector {
      * @param {string} baseUrl - Base URL for fetching files (default: './examples/scenes')
      * @returns {Promise<string[]>} Array of relative asset paths
      */
-    async analyzeScene(xmlPath, baseUrl = './examples/scenes') {
+    async analyzeScene(xmlPath, baseUrl = './') {
 
         // Input validation
         if (!xmlPath || typeof xmlPath !== 'string') {
@@ -47,15 +48,7 @@ export class MuJoCoAssetCollector {
         }
         
         // Normalize the xmlPath to handle both 'unitree_go2/scene.xml' and '/examples/scenes/unitree_go2/scene.xml'
-        let normalizedXmlPath = xmlPath;
-        
-        // Remove leading slash and common prefixes
-        normalizedXmlPath = normalizedXmlPath.replace(/^\/+/, '');
-        
-        // If the path starts with 'examples/scenes/', remove that prefix
-        if (normalizedXmlPath.startsWith('examples/scenes/')) {
-            normalizedXmlPath = normalizedXmlPath.substring('examples/scenes/'.length);
-        }
+        let normalizedXmlPath = this._normalizePath(xmlPath);
         
         const cacheKey = `${baseUrl}/${normalizedXmlPath}`;
         if (this.cache.has(cacheKey)) {
@@ -88,16 +81,15 @@ export class MuJoCoAssetCollector {
 
         const walk = async (filePath, parentHints = {}) => {
             const normalizedPath = this._normalizePath(filePath);
-            const fullFilePath = `${baseUrl}/${filePath}`;
+            const fullFilePath = `${baseUrl}/${normalizedPath}`;
             
             if (visited.has(normalizedPath)) {
                 return;
             }
             visited.add(normalizedPath);
             
-            // Add the file itself to collected assets (relative to root directory)
-            const relativeToRoot = this._getRelativeToRoot(normalizedPath, rootDir);
-            collected.add(relativeToRoot);
+            // Add the file itself to collected assets
+            collected.add(normalizedPath);
 
             let xmlContent;
             try {
@@ -112,7 +104,7 @@ export class MuJoCoAssetCollector {
                 return;
             }
 
-            const baseDir = this._getDirectoryPath(filePath);
+            const baseDir = this._getDirectoryPath(normalizedPath);
             const localHints = this._parseCompilerDirectories(xmlContent, baseDir);
             const directoryHints = this._mergeDirectoryHints(parentHints, localHints);
             
@@ -145,15 +137,14 @@ export class MuJoCoAssetCollector {
                         tagName,
                         attrName,
                         baseDir,
-                        rootDir,
                         directoryHints,
-                        baseUrl
+                        baseUrl,
+                        rootDir
                     );
 
                     if (reference) {
                         if (reference.path) {
-                            const assetRelativePath = this._getRelativeToRoot(reference.path, rootDir);
-                            collected.add(assetRelativePath);
+                            collected.add(reference.path);
                             
                             // Recursively process include files
                             if (tagName === 'include' && attrName === 'file') {
@@ -184,28 +175,6 @@ export class MuJoCoAssetCollector {
         
         console.log(`[MuJoCoAssetCollector] Successfully analyzed ${rootPath}: found ${result.length} assets`);
         return result;
-    }
-
-    _getRelativeToRoot(filePath, rootDir) {
-        if (!rootDir || rootDir === '') return filePath;
-        
-        // Normalize paths by removing empty parts
-        const pathParts = filePath.split('/').filter(p => p);
-        const rootParts = rootDir.split('/').filter(p => p);
-        
-        // Find common prefix length
-        let commonLength = 0;
-        const minLength = Math.min(pathParts.length, rootParts.length);
-        for (let i = 0; i < minLength; i++) {
-            if (pathParts[i] === rootParts[i]) {
-                commonLength++;
-            } else {
-                break;
-            }
-        }
-        
-        // Return the relative path (everything after the common prefix)
-        return pathParts.slice(commonLength).join('/');
     }
 
     _parseCompilerDirectories(xmlContent, baseDir) {
@@ -245,7 +214,7 @@ export class MuJoCoAssetCollector {
                     if (!directories[attrName]) {
                         directories[attrName] = [];
                     }
-                    directories[attrName].push(normalizedPath);
+                    directories[attrName].push(this._normalizePath(normalizedPath));
                 }
             }
         }
@@ -280,7 +249,7 @@ export class MuJoCoAssetCollector {
                     if (!directories[attrName]) {
                         directories[attrName] = [];
                     }
-                    directories[attrName].push(normalizedPath);
+                    directories[attrName].push(this._normalizePath(normalizedPath));
                 }
             }
         }
@@ -307,7 +276,7 @@ export class MuJoCoAssetCollector {
         return merged;
     }
 
-    _buildSearchOrder(tag, directoryHints, baseDir) {
+    _buildSearchOrder(tag, directoryHints, baseDir, rootDir) {
         const order = [];
         
         // For include files, prioritize the same directory first
@@ -332,7 +301,7 @@ export class MuJoCoAssetCollector {
             const commonDirs = ['assets', 'meshes', 'textures'];
             for (const commonDir of commonDirs) {
                 if (baseDir) {
-                    order.push(this._joinPath(baseDir, commonDir));
+                    order.push(this._normalizePath(this._joinPath(baseDir, commonDir)));
                 } else {
                     order.push(commonDir);
                 }
@@ -351,6 +320,11 @@ export class MuJoCoAssetCollector {
             }
             order.push('');
         }
+
+        // Add the root directory as a fallback
+        if (rootDir) {
+            order.push(rootDir);
+        }
         
         // Remove duplicates while preserving order
         return [...new Set(order.filter(path => path !== undefined))];
@@ -367,7 +341,7 @@ export class MuJoCoAssetCollector {
         if (value.startsWith('/')) {
             try {
                 const response = await fetch(`${baseUrl}${value}`, { method: 'HEAD' });
-                if (response.ok) return value.substring(1); // Remove leading slash
+                if (response.ok) return this._normalizePath(value.substring(1)); // Remove leading slash
             } catch (error) {
                 // Continue to relative resolution
             }
@@ -375,7 +349,7 @@ export class MuJoCoAssetCollector {
 
         // Search in order: search directories first, then base directory
         for (const directory of searchDirs) {
-            const candidate = this._joinPath(directory, value);
+            const candidate = this._normalizePath(this._joinPath(directory, value));
             const fullUrl = `${baseUrl}/${candidate}`;
             
             if (this.debug) {
@@ -406,7 +380,7 @@ export class MuJoCoAssetCollector {
         return null;
     }
 
-    async _resolveReference(rawValue, tag, attr, baseDir, rootDir, directoryHints, baseUrl) {
+    async _resolveReference(rawValue, tag, attr, baseDir, directoryHints, baseUrl, rootDir) {
         const value = rawValue.trim();
         if (!value) return null;
         
@@ -433,16 +407,15 @@ export class MuJoCoAssetCollector {
                 return null;
             }
             
-            const searchDirs = this._buildSearchOrder(tag, directoryHints, baseDir);
+            const searchDirs = this._buildSearchOrder(tag, directoryHints, baseDir, rootDir);
             const archivePath = await this._resolveLocalFile(prefix, baseDir, searchDirs, baseUrl);
             if (!archivePath) return null;
             
-            const archiveRel = this._getRelativePath(archivePath, rootDir);
-            return { text: `${archiveRel}@${member}` };
+            return { text: `${archivePath}@${member}` };
         }
 
         // Resolve local file
-        const searchDirs = this._buildSearchOrder(tag, directoryHints, baseDir);
+        const searchDirs = this._buildSearchOrder(tag, directoryHints, baseDir, rootDir);
         const resolved = await this._resolveLocalFile(value, baseDir, searchDirs, baseUrl);
         
         if (!resolved) return null;
@@ -459,14 +432,38 @@ export class MuJoCoAssetCollector {
 
     _normalizePath(path) {
         if (!path) return '';
-        
-        // Remove leading slashes, dots, and normalize multiple slashes
-        let normalized = path.replace(/^[./]+/, '').replace(/\/+/g, '/');
-        
-        // Remove trailing slashes
-        normalized = normalized.replace(/\/+$/, '');
-        
-        return normalized;
+
+        const isAbsolute = path.startsWith('/');
+
+        // Replace multiple slashes and remove trailing slash
+        path = path.replace(/\/+/g, '/').replace(/\/$/, '');
+
+        const parts = path.split('/');
+
+        const resolved = [];
+
+        for (let i = 0; i < parts.length; i++) {
+            const part = parts[i];
+            if (part === '' || part === '.') {
+                continue;
+            }
+            if (part === '..') {
+                if (resolved.length > 0) {
+                    resolved.pop();
+                }
+                // Removed the else push '..' to clip at root
+            } else {
+                resolved.push(part);
+            }
+        }
+
+        let result = resolved.join('/');
+
+        if (isAbsolute && result !== '') {
+            result = '/' + result;
+        }
+
+        return result || '';
     }
 
     _getDirectoryPath(filePath) {
@@ -482,26 +479,10 @@ export class MuJoCoAssetCollector {
         
         // Don't remove leading slash if the first part was absolute
         if (parts[0] && parts[0].startsWith('/')) {
-            return joined;
+            return this._normalizePath(joined);
         }
         
-        return joined.replace(/^\//, '');
-    }
-
-    _getRelativePath(path, basePath) {
-        if (!basePath) return path;
-        
-        const pathParts = path.split('/').filter(p => p);
-        const baseParts = basePath.split('/').filter(p => p);
-        
-        // Remove common prefix
-        let i = 0;
-        while (i < pathParts.length && i < baseParts.length && pathParts[i] === baseParts[i]) {
-            i++;
-        }
-        
-        // Return the remaining path parts
-        return pathParts.slice(i).join('/');
+        return this._normalizePath(joined.replace(/^\//, ''));
     }
 }
 

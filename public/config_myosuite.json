@@ -3,7 +3,23 @@
     {
       "id": "1",
       "name": "Finger",
-      "model_xml": "myosuite/myosuite/simhive/myo_sim/finger/finger_v0.xml",
+      "model_xml": "./examples/scenes/myosuite/myosuite/simhive/myo_sim/finger/finger_v0.xml",
+      "asset_meta": null,
+      "default_policy": null,
+      "policies": []
+    },
+    {
+      "id": "2",
+      "name": "Bimanual",
+      "model_xml": "./examples/scenes/myosuite/myosuite/envs/myo/assets/arm/myoarm_bionic_bimanual.xml",
+      "asset_meta": null,
+      "default_policy": null,
+      "policies": []
+    },
+    {
+      "id": "3",
+      "name": "Soccer",
+      "model_xml": "./examples/scenes/myosuite/myosuite/envs/myo/assets/leg_soccer/myolegs_soccer.xml",
       "asset_meta": null,
       "default_policy": null,
       "policies": []

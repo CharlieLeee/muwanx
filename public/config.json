@@ -3,7 +3,7 @@
     {
       "id": "1",
       "name": "Go2",
-      "model_xml": "unitree_go2/scene.xml",
+      "model_xml": "./examples/scenes/unitree_go2/scene.xml",
       "asset_meta": "./examples/checkpoints/go2/asset_meta.json",
       "default_policy": "facet",
       "policies": [
@@ -15,7 +15,7 @@
     {
       "id": "2",
       "name": "Go1",
-      "model_xml": "unitree_go1/go1.xml",
+      "model_xml": "./examples/scenes/unitree_go1/go1.xml",
       "asset_meta": "./examples/checkpoints/go1/asset_meta.json",
       "default_policy": "him",
       "policies": [
@@ -26,7 +26,7 @@
     {
       "id": "3",
       "name": "G1",
-      "model_xml": "unitree_g1/scene.xml",
+      "model_xml": "./examples/scenes/unitree_g1/scene.xml",
       "asset_meta": "./examples/checkpoints/unitree_g1/asset_meta.json",
       "default_policy": "locomotion",
       "policies": [

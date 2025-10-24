@@ -135,6 +135,7 @@ def build_search_order(
     tag: str,
     directory_hints: Dict[str, List[Path]],
     base_dir: Path,
+    root_dir: Optional[Path] = None,
 ) -> List[Path]:
     """Construct the ordered list of directories to search for an asset."""
 
@@ -145,6 +146,11 @@ def build_search_order(
     for _, paths in directory_hints.items():
         order.extend(paths)
     order.append(base_dir)
+    # As a last resort, also search relative to the original root file's directory
+    # (the top-level model start location). This helps resolve include paths that
+    # reference files relative to the scenes root rather than the current file.
+    if root_dir is not None:
+        order.append(root_dir)
     return unique_paths(order)
 
 
@@ -207,14 +213,14 @@ def resolve_reference(
         if not member:
             log_warning(f"Invalid archive reference (empty member): {value}")
             return None
-        search_dirs = build_search_order(tag, directory_hints, base_dir)
+        search_dirs = build_search_order(tag, directory_hints, base_dir, root_dir)
         archive_path = resolve_local_file(prefix, base_dir, search_dirs)
         if archive_path is None:
             return None
         archive_rel = to_relative_string(archive_path, root_dir)
         return Reference(text=f"{archive_rel}@{member}")
 
-    search_dirs = build_search_order(tag, directory_hints, base_dir)
+    search_dirs = build_search_order(tag, directory_hints, base_dir, root_dir)
     resolved = resolve_local_file(value, base_dir, search_dirs)
     if resolved is None:
         return None
@@ -317,8 +323,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     # Get the directory containing the config file
     config_dir = config_path.parent
-    # The XML files are expected to be in the examples/scenes subdirectory
-    scenes_dir = config_dir / "examples" / "scenes"
 
     with open(config_path, "r", encoding="utf-8") as f:
         config = json.load(f)
@@ -334,8 +338,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             print(f"[warn] Skipping task '{name}' (no model_xml found)", file=sys.stderr)
             continue
 
-        # Resolve model_xml path relative to the scenes directory
-        xml_path = scenes_dir / model_xml
+        # Resolve model_xml path relative to the config directory
+        xml_path = config_dir / model_xml
         try:
             dependencies = collect_assets(xml_path)
         except FileNotFoundError as exc:
