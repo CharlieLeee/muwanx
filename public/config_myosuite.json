@@ -1,6 +1,14 @@
 {
   "tasks": [
     {
+      "id": "0",
+      "name": "Logo",
+      "model_xml": "./examples/scenes/myosuite/myosuite/simhive/myo_sim/scene/myosuite_logo.xml",
+      "asset_meta": null,
+      "default_policy": null,
+      "policies": []
+    },
+    {
       "id": "1",
       "name": "Hand",
       "model_xml": "./examples/scenes/myosuite/myosuite/simhive/myo_sim/hand/myohand.xml",
@@ -29,6 +37,30 @@
       "name": "Legs",
       "model_xml": "./examples/scenes/myosuite/myosuite/simhive/myo_sim/leg/myolegs.xml",
       "asset_meta": "./examples/checkpoints/myosuite/asset_meta_myolegs.json",
+      "default_policy": null,
+      "policies": []
+    },
+    {
+      "id": "5",
+      "name": "Bimanual",
+      "model_xml": "./examples/scenes/myosuite/myosuite/envs/myo/assets/arm/myoarm_bionic_bimanual.xml",
+      "asset_meta": null,
+      "default_policy": null,
+      "policies": []
+    },
+    {
+      "id": "6",
+      "name": "TableTennis",
+      "model_xml": "./examples/scenes/myosuite/myosuite/envs/myo/assets/arm/myoarm_tabletennis.xml",
+      "asset_meta": null,
+      "default_policy": null,
+      "policies": []
+    },
+    {
+      "id": "7",
+      "name": "Soccer",
+      "model_xml": "./examples/scenes/myosuite/myosuite/envs/myo/assets/arm/myolegs_soccer.xml",
+      "asset_meta": null,
       "default_policy": null,
       "policies": []
     }
