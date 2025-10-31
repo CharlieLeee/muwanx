@@ -67,82 +67,88 @@
           </v-list>
         </v-menu>
       </v-card-title>
-      <!-- Scene selection (segmented dropdown) -->
+      <!-- Scene selection -->
       <v-card-text :class="{ 'mobile-padding': isMobile }">
-        <div class="segmented-select">
-          <div class="segment-label">Scene</div>
-          <v-menu v-model="sceneMenu" :close-on-content-click="true" transition="fade-transition" location="bottom start">
-            <template #activator="{ props }">
-              <v-btn
-                v-bind="props"
-                class="segment-button"
-                size="small"
-                variant="text"
-                append-icon="mdi-chevron-down"
-                role="combobox"
-                aria-haspopup="listbox"
-                :aria-expanded="String(sceneMenu)"
-                aria-controls="scene-listbox"
-              >
-                <span class="segment-value">{{ selectedTask?.name || '—' }}</span>
-              </v-btn>
-            </template>
-            <v-list id="scene-listbox" class="dropdown-list" density="compact" :style="{ minWidth: '192px', maxHeight: '280px', overflowY: 'auto' }">
-              <v-list-item
-                v-for="(item, i) in taskItems"
-                :key="item.id || i"
-                :class="{ selected: item.id === task }"
-                role="option"
-                :aria-selected="String(item.id === task)"
-                @click="task = item.id; updateTaskCallback()"
-              >
-                <v-list-item-title>{{ item.name }}</v-list-item-title>
-                <template #append>
-                  <v-icon v-if="item.id === task" icon="mdi-check" size="small" color="primary"></v-icon>
-                </template>
-              </v-list-item>
-            </v-list>
-          </v-menu>
+        <div class="control-row">
+          <div class="control-label">Scene</div>
+          <div class="control-unit">
+            <v-menu v-model="sceneMenu" :close-on-content-click="true" transition="fade-transition" location="bottom start">
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  class="segment-button"
+                  size="small"
+                  variant="text"
+                  append-icon="mdi-chevron-down"
+                  role="combobox"
+                  aria-haspopup="listbox"
+                  :aria-expanded="String(sceneMenu)"
+                  aria-controls="scene-listbox"
+                  block
+                >
+                  <span class="segment-value">{{ selectedTask?.name || '—' }}</span>
+                </v-btn>
+              </template>
+              <v-list id="scene-listbox" class="dropdown-list" density="compact" :style="{ minWidth: '192px', maxHeight: '280px', overflowY: 'auto' }">
+                <v-list-item
+                  v-for="(item, i) in taskItems"
+                  :key="item.id || i"
+                  :class="{ selected: item.id === task }"
+                  role="option"
+                  :aria-selected="String(item.id === task)"
+                  @click="task = item.id; updateTaskCallback()"
+                >
+                  <v-list-item-title>{{ item.name }}</v-list-item-title>
+                  <template #append>
+                    <v-icon v-if="item.id === task" icon="mdi-check" size="small" color="primary"></v-icon>
+                  </template>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </div>
         </div>
       </v-card-text>
 
-      <!-- Policy selection (segmented dropdown, only if available) -->
+      <!-- Policy selection (only if available) -->
       <v-card-text v-if="selectedTask && selectedTask.policies && selectedTask.policies.length"
         :class="{ 'mobile-padding': isMobile }">
-        <div class="segmented-select">
-          <div class="segment-label">Policy</div>
-          <v-menu v-model="policyMenu" :close-on-content-click="true" transition="fade-transition" location="bottom start">
-            <template #activator="{ props }">
-              <v-btn
-                v-bind="props"
-                class="segment-button"
-                size="small"
-                variant="text"
-                append-icon="mdi-chevron-down"
-                role="combobox"
-                aria-haspopup="listbox"
-                :aria-expanded="String(policyMenu)"
-                aria-controls="policy-listbox"
-              >
-                <span class="segment-value">{{ selectedPolicy?.name || '—' }}</span>
-              </v-btn>
-            </template>
-            <v-list id="policy-listbox" class="dropdown-list" density="compact" :style="{ minWidth: '192px', maxHeight: '280px', overflowY: 'auto' }">
-              <v-list-item
-                v-for="(item, i) in policyItems"
-                :key="item.id || i"
-                :class="{ selected: item.id === policy }"
-                role="option"
-                :aria-selected="String(item.id === policy)"
-                @click="policy = item.id; updatePolicyCallback()"
-              >
-                <v-list-item-title>{{ item.name }}</v-list-item-title>
-                <template #append>
-                  <v-icon v-if="item.id === policy" icon="mdi-check" size="small" color="primary"></v-icon>
-                </template>
-              </v-list-item>
-            </v-list>
-          </v-menu>
+        <div class="control-row">
+          <div class="control-label">Policy</div>
+          <div class="control-unit">
+            <v-menu v-model="policyMenu" :close-on-content-click="true" transition="fade-transition" location="bottom start">
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  class="segment-button"
+                  size="small"
+                  variant="text"
+                  append-icon="mdi-chevron-down"
+                  role="combobox"
+                  aria-haspopup="listbox"
+                  :aria-expanded="String(policyMenu)"
+                  aria-controls="policy-listbox"
+                  block
+                >
+                  <span class="segment-value">{{ selectedPolicy?.name || '—' }}</span>
+                </v-btn>
+              </template>
+              <v-list id="policy-listbox" class="dropdown-list" density="compact" :style="{ minWidth: '192px', maxHeight: '280px', overflowY: 'auto' }">
+                <v-list-item
+                  v-for="(item, i) in policyItems"
+                  :key="item.id || i"
+                  :class="{ selected: item.id === policy }"
+                  role="option"
+                  :aria-selected="String(item.id === policy)"
+                  @click="policy = item.id; updatePolicyCallback()"
+                >
+                  <v-list-item-title>{{ item.name }}</v-list-item-title>
+                  <template #append>
+                    <v-icon v-if="item.id === policy" icon="mdi-check" size="small" color="primary"></v-icon>
+                  </template>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </div>
         </div>
       </v-card-text>
 
@@ -150,71 +156,90 @@
       <template v-if="selectedPolicy">
         <!-- Command Controls Group -->
         <v-card-text :class="{ 'mobile-padding': isMobile }">
-          <div class="control-section-title">Target Velocity</div>
+          <!-- Use Setpoint -->
+          <div v-if="selectedPolicy.ui_controls && selectedPolicy.ui_controls.includes('setpoint')" class="control-row">
+            <div class="control-label">Setpoint</div>
+            <div class="control-unit">
+              <v-checkbox
+                :disabled="compliant_mode"
+                v-model="use_setpoint"
+                @update:modelValue="updateUseSetpointCallback()"
+                density="compact"
+                hide-details
+                class="mobile-checkbox inline-checkbox"
+              />
+            </div>
+          </div>
 
-          <!-- Setpoint checkbox -->
-          <v-checkbox v-if="selectedPolicy.ui_controls && selectedPolicy.ui_controls.includes('setpoint')"
-            :disabled="compliant_mode" v-model="use_setpoint" @update:modelValue="updateUseSetpointCallback()"
-            density="compact" hide-details class="mobile-checkbox">
-            <template v-slot:label>
-              <div class="checkbox-label">
-                <span class="label-text">Use Setpoint</span>
-              </div>
-            </template>
-          </v-checkbox>
-
-          <!-- Velocity slider -->
-          <div class="slider-section">
-            <v-slider
-              :disabled="use_setpoint && selectedPolicy.ui_controls && selectedPolicy.ui_controls.includes('setpoint') && compliant_mode"
-              v-model="command_vel_x" :min="-0.5" :max="1.5" :step="0.1" :thumb-size="isMobile ? 18 : 14"
-              :track-size="isMobile ? 5 : 3" hide-details @update:modelValue="updateCommandVelXCallback()"
-              class="mobile-slider"
-            >
-              <template v-slot:append>
-                <div class="slider-value">{{ command_vel_x }}</div>
-              </template>
-            </v-slider>
+          <!-- Target Velocity slider -->
+          <div class="control-row">
+            <div class="control-label">Target Velocity</div>
+            <div class="control-unit">
+              <v-slider
+                :disabled="use_setpoint && selectedPolicy.ui_controls && selectedPolicy.ui_controls.includes('setpoint') && compliant_mode"
+                v-model="command_vel_x"
+                :min="-0.5"
+                :max="1.5"
+                :step="0.1"
+                :thumb-size="isMobile ? 18 : 14"
+                :track-size="isMobile ? 5 : 3"
+                hide-details
+                @update:modelValue="updateCommandVelXCallback()"
+                class="mobile-slider"
+              >
+                <template #append>
+                  <div class="slider-value">{{ command_vel_x }}</div>
+                </template>
+              </v-slider>
+            </div>
           </div>
         </v-card-text>
 
         <v-card-text v-if="selectedPolicy.ui_controls && selectedPolicy.ui_controls.includes('trajectory_playback')"
           :class="{ 'mobile-padding': isMobile }">
-          <div class="control-section-title">Playback</div>
+          <!-- Playback controls -->
+          <div class="control-row">
+            <div class="control-label">Playback</div>
+            <div class="control-unit">
+              <v-btn-toggle v-model="trajectoryPlaybackState" mandatory class="mb-1">
+                <v-btn @click="playTrajectory" value="play" :size="isMobile ? 'default' : 'small'" prepend-icon="mdi-play">Play</v-btn>
+                <v-btn @click="stopTrajectory" value="stop" :size="isMobile ? 'default' : 'small'" prepend-icon="mdi-stop">Stop</v-btn>
+                <v-btn @click="resetTrajectory" value="reset" :size="isMobile ? 'default' : 'small'" prepend-icon="mdi-refresh">Reset</v-btn>
+              </v-btn-toggle>
+            </div>
+          </div>
 
-          <v-btn-toggle v-model="trajectoryPlaybackState" mandatory class="mb-1">
-            <v-btn @click="playTrajectory" value="play" :size="isMobile ? 'default' : 'small'" prepend-icon="mdi-play">Play</v-btn>
-            <v-btn @click="stopTrajectory" value="stop" :size="isMobile ? 'default' : 'small'" prepend-icon="mdi-stop">Stop</v-btn>
-            <v-btn @click="resetTrajectory" value="reset" :size="isMobile ? 'default' : 'small'" prepend-icon="mdi-refresh">Reset</v-btn>
-          </v-btn-toggle>
-
-          <v-checkbox v-model="trajectoryLoop" @update:modelValue="updateTrajectoryLoop" label="Loop"
-            density="compact" hide-details />
+          <div class="control-row">
+            <div class="control-label">Loop</div>
+            <div class="control-unit">
+              <v-checkbox v-model="trajectoryLoop" @update:modelValue="updateTrajectoryLoop" density="compact" hide-details class="inline-checkbox" />
+            </div>
+          </div>
         </v-card-text>
 
         <!-- Stiffness Controls Group -->
         <v-divider v-if="selectedPolicy.ui_controls && selectedPolicy.ui_controls.includes('stiffness')"></v-divider>
         <v-card-text v-if="selectedPolicy.ui_controls && selectedPolicy.ui_controls.includes('stiffness')"
           :class="{ 'mobile-padding': isMobile }">
-          <div class="control-section-title">Stiffness</div>
+          <div class="control-row">
+            <div class="control-label">Compliant</div>
+            <div class="control-unit">
+              <v-checkbox v-model="compliant_mode" @update:modelValue="updateCompliantModeCallback()"
+                density="compact" hide-details class="mobile-checkbox inline-checkbox" />
+            </div>
+          </div>
 
-          <v-checkbox v-model="compliant_mode" @update:modelValue="updateCompliantModeCallback()"
-            density="compact" hide-details class="mobile-checkbox">
-            <template v-slot:label>
-              <div class="checkbox-label">
-                <span class="label-text">Compliant Mode</span>
-              </div>
-            </template>
-          </v-checkbox>
-
-          <div class="slider-section">
-            <v-slider :disabled="compliant_mode" v-model="facet_kp" :min="0" :max="24" :step="1"
-              :thumb-size="isMobile ? 18 : 14" :track-size="isMobile ? 5 : 3" hide-details
-              @update:modelValue="updateFacetKpCallback()" class="mobile-slider">
-              <template v-slot:append>
-                <div class="slider-value">{{ facet_kp }}</div>
-              </template>
-            </v-slider>
+          <div class="control-row">
+            <div class="control-label">Stiffness Kp</div>
+            <div class="control-unit">
+              <v-slider :disabled="compliant_mode" v-model="facet_kp" :min="0" :max="24" :step="1"
+                :thumb-size="isMobile ? 18 : 14" :track-size="isMobile ? 5 : 3" hide-details
+                @update:modelValue="updateFacetKpCallback()" class="mobile-slider">
+                <template #append>
+                  <div class="slider-value">{{ facet_kp }}</div>
+                </template>
+              </v-slider>
+            </div>
           </div>
         </v-card-text>
       </template>
@@ -222,13 +247,17 @@
       <!-- Force Controls Group -->
       <v-divider></v-divider>
       <v-card-text v-if="selectedTask && selectedTask.name === 'Go2'" :class="{ 'mobile-padding': isMobile, 'pb-2': !isMobile }">
-        <div class="control-section-title">Force</div>
-        <v-btn @click="StartImpulse" color="primary" block :size="isMobile ? 'default' : 'small'" class="impulse-button">
-          Impulse
-        </v-btn>
+        <div class="control-row">
+          <div class="control-label">Force</div>
+          <div class="control-unit">
+            <v-btn @click="StartImpulse" color="primary" :size="isMobile ? 'default' : 'small'" class="impulse-button" block>
+              Impulse
+            </v-btn>
+          </div>
+        </div>
       </v-card-text>
 
-      <!-- Reset button -->
+      <!-- Reset button (previous design) -->
       <v-btn @click="reset" block text :size="isMobile ? 'default' : 'small'" class="reset-button">
         Reset
       </v-btn>
@@ -1092,6 +1121,43 @@ export default {
   opacity: 0.85;
 }
 
+/* Unified label + control rows */
+.control-row {
+  display: grid;
+  grid-template-columns: var(--cp-label-width, 96px) 1fr;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 6px;
+  width: 100%;
+}
+
+.control-label {
+  font-size: 0.85rem;
+  color: var(--ui-text);
+  opacity: 0.85;
+  user-select: none;
+}
+
+.control-unit {
+  min-width: 0; /* allow contents to shrink */
+}
+
+/* Make checkboxes tidy when used as a control unit */
+.inline-checkbox {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.inline-checkbox :deep(.v-selection-control) {
+  margin-inline-start: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .control-row {
+    grid-template-columns: var(--cp-label-width, 90px) 1fr;
+    column-gap: 10px;
+  }
+}
+
 .checkbox-label .label-text {
   font-size: 0.8rem;
   font-weight: 400; /* not bold */
@@ -1114,6 +1180,16 @@ export default {
   text-align: right;
   font-variant-numeric: tabular-nums;
   color: var(--ui-muted);
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* Remove default spacing before slider append content */
+.mobile-slider :deep(.v-input__append) {
+  margin-inline-start: 0 !important;
+  margin-left: 0 !important;
+  padding-inline-start: 0 !important;
+  gap: 0 !important;
 }
 
 .force-description {
@@ -1155,10 +1231,19 @@ export default {
   border-bottom-left-radius: 0 !important;
   padding: 0 10px !important;
   text-transform: none !important;
+  width: 100% !important;
 }
 
 .segment-button.v-btn:hover {
   background: var(--ui-surface) !important;
+}
+
+.segment-button.v-btn :deep(.v-btn__content) {
+  width: 100%;
+  justify-content: flex-start;
+}
+.segment-button.v-btn :deep(.v-btn__append) {
+  margin-left: auto !important;
 }
 
 .segment-value {
