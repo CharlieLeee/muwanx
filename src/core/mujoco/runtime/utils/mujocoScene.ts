@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { Reflector } from './Reflector';
 import { mujocoAssetCollector } from '../../utils/mujocoAssetCollector';
+import { createLights } from './lights';
 
 const SCENE_BASE_URL = './';
 const BINARY_EXTENSIONS = ['.png', '.stl', '.skn', '.mjb', '.msh', '.npy'];
@@ -70,17 +70,7 @@ function resolveAssetPath(xmlDirectory, assetPath) {
   return joined || normalized || null;
 }
 
-function createBaseTexture(mujoco, mjModel, texId) {
-  if (!mjModel || texId < 0) {
-    return null;
-  }
-
-  const type = mjModel.tex_type ? mjModel.tex_type[texId] : mujoco.mjtTexture.mjTEXTURE_2D.value;  // Default to 2D
-  if (type !== mujoco.mjtTexture.mjTEXTURE_2D.value) {
-    console.warn(`Cubemap or other texture types not yet supported for texId: ${texId}`);
-    return null;  // Non-2D textures are not handled here
-  }
-
+function create2DTexture(mujoco, mjModel, texId) {
   const width = mjModel.tex_width ? mjModel.tex_width[texId] : 0;
   const height = mjModel.tex_height ? mjModel.tex_height[texId] : 0;
   if (!width || !height) {
@@ -107,7 +97,7 @@ function createBaseTexture(mujoco, mjModel, texId) {
           textureData[d + 0] = l;
           textureData[d + 1] = l;
           textureData[d + 2] = l;
-          textureData[d + 3] = 1;
+          textureData[d + 3] = 255;
         }
         hasValidData = true;
         break;
@@ -129,7 +119,7 @@ function createBaseTexture(mujoco, mjModel, texId) {
           textureData[d + 0] = src[i + 0];
           textureData[d + 1] = src[i + 1];
           textureData[d + 2] = src[i + 2];
-          textureData[d + 3] = 1;
+          textureData[d + 3] = 255;
         }
         hasValidData = true;
         break;
@@ -166,6 +156,129 @@ function createBaseTexture(mujoco, mjModel, texId) {
     }
   }
   return texture;
+}
+
+function createCubeTexture(mujoco, mjModel, texId) {
+  const width = mjModel.tex_width ? mjModel.tex_width[texId] : 0;
+  const height = mjModel.tex_height ? mjModel.tex_height[texId] : 0;
+
+  if (!width || !height) {
+    return null;
+  }
+
+  const texAdr = mjModel.tex_adr ? mjModel.tex_adr[texId] : 0;
+  const nchannel = mjModel.tex_nchannel ? mjModel.tex_nchannel[texId] : 0;
+
+  // キューブマップは6面あり、各面はwidth x heightのサイズ
+  const facePixelCount = width * height;
+  const faceSrcByteCount = facePixelCount * nchannel;
+
+  // 6面分のテクスチャデータを準備
+  const faces = [];
+  const faceOrder = [
+    'px', 'nx',  // positive-x, negative-x
+    'py', 'ny',  // positive-y, negative-y
+    'pz', 'nz'   // positive-z, negative-z
+  ];
+
+  for (let faceIdx = 0; faceIdx < 6; faceIdx++) {
+    const faceOffset = texAdr + (faceIdx * faceSrcByteCount);
+    const faceData = new Uint8Array(facePixelCount * 4);  // RGBA
+
+    if (mjModel.tex_data && nchannel >= 1 && nchannel <= 4 &&
+        mjModel.tex_data.length >= faceOffset + faceSrcByteCount) {
+
+      const src = mjModel.tex_data.subarray(faceOffset, faceOffset + faceSrcByteCount);
+
+      // チャンネル数に応じてRGBAに変換
+      expandChannelsToRGBA(src, faceData, nchannel);
+      faces.push(faceData);
+    } else {
+      return null;
+    }
+  }
+
+  // THREE.jsのCubeTextureを作成
+  const cubeTexture = new THREE.CubeTexture();
+
+  // 各面のDataTextureを作成してキューブテクスチャに設定
+  cubeTexture.image = faces.map(faceData => {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(width, height);
+    imageData.data.set(faceData);
+    ctx.putImageData(imageData, 0, 0);
+    return canvas;
+  });
+
+  cubeTexture.needsUpdate = true;
+  cubeTexture.format = THREE.RGBAFormat;
+
+  // カラースペースの設定
+  if (mjModel.tex_colorspace) {
+    const cs = mjModel.tex_colorspace[texId];
+    if (cs === mujoco.mjtColorSpace.mjCOLORSPACE_SRGB.value && 'sRGBEncoding' in THREE) {
+      cubeTexture.encoding = THREE.sRGBEncoding;
+    }
+  }
+
+  return cubeTexture;
+}
+
+// チャンネル変換のヘルパー関数
+function expandChannelsToRGBA(src, dest, nchannel) {
+  switch (nchannel) {
+    case 1: // L
+      for (let i = 0, d = 0; i < src.length; i += 1, d += 4) {
+        const l = src[i];
+        dest[d + 0] = l;
+        dest[d + 1] = l;
+        dest[d + 2] = l;
+        dest[d + 3] = 255;
+      }
+      break;
+    case 2: // L+A
+      for (let i = 0, d = 0; i < src.length; i += 2, d += 4) {
+        const l = src[i + 0];
+        const a = src[i + 1];
+        dest[d + 0] = l;
+        dest[d + 1] = l;
+        dest[d + 2] = l;
+        dest[d + 3] = a;
+      }
+      break;
+    case 3: // RGB
+      for (let i = 0, d = 0; i < src.length; i += 3, d += 4) {
+        dest[d + 0] = src[i + 0];
+        dest[d + 1] = src[i + 1];
+        dest[d + 2] = src[i + 2];
+        dest[d + 3] = 255;
+      }
+      break;
+    case 4: // RGBA
+      dest.set(src);
+      break;
+  }
+}
+
+function createBaseTexture(mujoco, mjModel, texId) {
+  if (!mjModel || texId < 0) {
+    return null;
+  }
+
+  const type = mjModel.tex_type ? mjModel.tex_type[texId] : mujoco.mjtTexture.mjTEXTURE_2D.value;
+
+  if (type === mujoco.mjtTexture.mjTEXTURE_2D.value) { // 2D texture
+    return create2DTexture(mujoco, mjModel, texId);
+  }
+  if (type === mujoco.mjtTexture.mjTEXTURE_CUBE.value) { // Cubemap texture
+    // return createCubeTexture(mujoco, mjModel, texId);
+  }
+
+  console.warn(`Unsupported texture type ${type} for texId: ${texId}`);
+  return null;
 }
 
 export async function loadSceneFromURL(mujoco, filename, parent) {
@@ -234,12 +347,8 @@ export async function loadSceneFromURL(mujoco, filename, parent) {
   mujocoRoot.name = 'MuJoCo Root';
   parent.scene.add(mujocoRoot);
 
-  /** @type {Object.<number, THREE.Group>} */
-  let bodies = {};
-  /** @type {Object.<number, THREE.BufferGeometry>} */
-  let meshes = {};
-  /** @type {THREE.Light[]} */
-  let lights = [];
+  let bodies: Record<number, THREE.Group> = {};
+  let meshes: Record<number, THREE.BufferGeometry> = {};
 
   let material = new THREE.MeshPhysicalMaterial();
   material.color = new THREE.Color(1, 1, 1);
@@ -427,39 +536,7 @@ export async function loadSceneFromURL(mujoco, filename, parent) {
   mujocoRoot.add(mujocoRoot.spheres);
 
   // Lights
-  if (mjModel.nlight > 0 && mjModel.light_directional && mjModel.light_attenuation) {
-    for (let l = 0; l < mjModel.nlight; l++) {
-      let light = new THREE.SpotLight();
-      const isDirectional = mjModel.light_directional[l];
-      if (isDirectional) {
-        light = new THREE.DirectionalLight();
-      } else {
-        light = new THREE.SpotLight();
-      }
-      const attenuation = mjModel.light_attenuation[l];
-      light.decay = attenuation * 100;
-      light.penumbra = 0.5;
-      light.castShadow = true;
-
-      light.shadow.mapSize.width = 1024;
-      light.shadow.mapSize.height = 1024;
-      light.shadow.camera.near = 1;
-      light.shadow.camera.far = 10;
-      if (bodies[0]) {
-        bodies[0].add(light);
-      } else {
-        mujocoRoot.add(light);
-      }
-      lights.push(light);
-    }
-  }
-
-  // Add default light if no lights present
-  if (mjModel.nlight === 0 || !mjModel.light_directional) {
-    let light = new THREE.DirectionalLight();
-    mujocoRoot.add(light);
-    lights.push(light);
-  }
+  const lights: THREE.Light[] = createLights({mujoco, mjModel, mujocoRoot, bodies});
 
   for (let b = 0; b < mjModel.nbody; b++) {
     if (b === 0 || !bodies[0]) {

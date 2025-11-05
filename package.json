@@ -23,8 +23,8 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
-    "build:demo": "BUILD_MODE=demo vite build",
-    "build:lib": "vite build",
+    "build:demo": "vite build",
+    "build:lib": "BUILD_MODE=lib vite build",
     "preview": "vite preview"
   },
   "dependencies": {

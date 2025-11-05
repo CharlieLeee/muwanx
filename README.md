@@ -51,7 +51,7 @@ npm install
 npm run dev
 ```
 
-Open your browser and navigate to the localhost URL shown in the terminal to see muwanx in action.
+Open your browser and navigate to the localhost URL shown in the terminal.
 
 <img src="assets/muwanx_demo.gif" alt="muwanx demo" width="70%">
 

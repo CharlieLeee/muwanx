@@ -9,18 +9,12 @@ import { fileURLToPath, URL } from 'node:url'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const isDemoMode = process.env.BUILD_MODE === 'demo';
+  const isLibMode = process.env.BUILD_MODE === 'lib';
 
   return {
     base: '/muwanx/',
-    publicDir: isDemoMode ? 'examples' : false,
-    build: isDemoMode ?
-    {
-      outDir: 'dist',
-      rollupOptions: {
-        input: fileURLToPath(new URL('./index.html', import.meta.url)),
-      },
-    } : {
+    publicDir: isLibMode ? false : 'examples',
+    build: isLibMode ? {
       lib: {
         entry: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
         name: 'Muwanx',
@@ -37,6 +31,11 @@ export default defineConfig(({ mode }) => {
             'onnxruntime-web': 'ort',
           },
         },
+      },
+    } : {
+      outDir: 'dist',
+      rollupOptions: {
+        input: fileURLToPath(new URL('./index.html', import.meta.url)),
       },
     },
     plugins: [

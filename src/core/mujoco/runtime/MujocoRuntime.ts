@@ -6,8 +6,57 @@ import { TrajectoryActionManager } from './managers/actions/TrajectoryActionMana
 
 const DEFAULT_CONTAINER_ID = 'mujoco-container';
 
+interface MujocoRuntimeOptions {
+  containerId?: string;
+  commandManager?: any;
+  actionManager?: any;
+  observationManagers?: any[];
+  envManagers?: any[];
+}
+
 export class MujocoRuntime {
-  constructor(mujoco, options = {}) {
+  mujoco: any;
+  options: any;
+  container: HTMLElement;
+  commandManager: any;
+  actionManager: any;
+  observationManagers: any[];
+  envManagers: any[];
+  services: Map<string, any>;
+  params: any;
+  scene: THREE.Scene;
+  camera: THREE.PerspectiveCamera;
+  ambientLight: THREE.AmbientLight;
+  renderer: THREE.WebGLRenderer;
+  controls: OrbitControls;
+  lastSimState: any;
+  mjModel: any;
+  mjData: any;
+  policy: any;
+  inputDict: any;
+  loopHandle: any;
+  running: boolean;
+  alive: boolean;
+  actionContext: any;
+  assetMetadata: any;
+  loadingScene: Promise<void> | null;
+  timestep: number;
+  decimation: number;
+  mujoco_time: number;
+  simStepCount: number;
+  inferenceStepCount: number;
+  observationContext: any;
+  policyConfig: any;
+  isInferencing: boolean;
+  adapt_hx: Float32Array;
+  rpy: THREE.Euler;
+  quat: THREE.Quaternion;
+  bodies: any;
+  lights: any;
+  mujocoRoot: any;
+  loopPromise: Promise<void> | null;
+
+  constructor(mujoco, options: MujocoRuntimeOptions = {}) {
     this.mujoco = mujoco;
     const workingPath = '/working';
     try {
@@ -56,7 +105,6 @@ export class MujocoRuntime {
     this.scene.add(this.camera);
 
     this.scene.background = new THREE.Color(0.15, 0.25, 0.35);
-    this.scene.fog = new THREE.Fog(this.scene.background, 15, 25.5);
 
     this.ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
     this.ambientLight.name = 'AmbientLight';
@@ -93,13 +141,14 @@ export class MujocoRuntime {
     this.mjModel = null;
     this.mjData = null;
     this.policy = null;
-    this.inputDict = null;
     this.loopHandle = null;
     this.running = false;
     this.alive = false;
     this.actionContext = {};
     this.assetMetadata = null;
+    this.loopPromise = null;
 
+    this.attachManagers();
     this.attachManagers();
   }
 
@@ -130,7 +179,7 @@ export class MujocoRuntime {
     return this.services.get(name);
   }
 
-  async init(initialConfig = {}) {
+  async init(initialConfig: { scenePath?: string; metaPath?: string; policyPath?: string } = {}) {
     if (this.commandManager && typeof this.commandManager.onInit === 'function') {
       await this.commandManager.onInit();
     }
@@ -148,7 +197,7 @@ export class MujocoRuntime {
     }
   }
 
-  async loadEnvironment({ scenePath, metaPath, policyPath }) {
+  async loadEnvironment({ scenePath, metaPath, policyPath }: { scenePath?: string; metaPath?: string; policyPath?: string }) {
     await this.stop();
     await downloadExampleScenesFolder(this.mujoco, scenePath);
     await this.loadScene(scenePath, metaPath);
