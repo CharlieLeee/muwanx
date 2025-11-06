@@ -1,7 +1,39 @@
+import { MjData, MjModel } from 'mujoco-js';
 import { BaseManager } from '../BaseManager.js';
 
+interface IsaacActionManagerOptions {
+  actionSmoothing?: { prev: number; current: number };
+}
+
+interface ActuatorParams {
+  actionScale?: number | number[] | Float32Array;
+  stiffness?: number | number[] | Float32Array;
+  damping?: number | number[] | Float32Array;
+}
+
 export class IsaacActionManager extends BaseManager {
-  constructor(options = {}) {
+  options: IsaacActionManagerOptions;
+  actionScale: Float32Array | null;
+  controlType: string;
+  lastActions: Float32Array | null;
+  actionBuffer: Float32Array[];
+  actionSmoothing: { prev: number; current: number };
+  decimation: number;
+  defaultActuatorParams: any;
+  mjModel: MjModel;
+  mjData: MjData;
+  assetMeta: any;
+  jointNamesIsaac: string[];
+  ctrlAdrIsaac: number[];
+  qposAdrIsaac: number[];
+  qvelAdrIsaac: number[];
+  jointNamesMJC: string[];
+  numActions: number;
+  defaultJpos: Float32Array;
+  jntKp: Float32Array;
+  jntKd: Float32Array;
+
+  constructor(options: IsaacActionManagerOptions = {}) {
     super();
     this.options = options;
     this.actionScale = null;
@@ -111,14 +143,15 @@ export class IsaacActionManager extends BaseManager {
       if (!actuatorConfig || typeof actuatorConfig !== 'object') {
         continue;
       }
-      if (typeof actuatorConfig.action_scale === 'number') {
-        defaultParams.actionScale = actuatorConfig.action_scale;
+      const config = actuatorConfig as any;
+      if (typeof config.action_scale === 'number') {
+        defaultParams.actionScale = config.action_scale;
       }
-      if (typeof actuatorConfig.stiffness === 'number') {
-        defaultParams.stiffness = actuatorConfig.stiffness;
+      if (typeof config.stiffness === 'number') {
+        defaultParams.stiffness = config.stiffness;
       }
-      if (typeof actuatorConfig.damping === 'number') {
-        defaultParams.damping = actuatorConfig.damping;
+      if (typeof config.damping === 'number') {
+        defaultParams.damping = config.damping;
       }
       break;
     }
@@ -127,7 +160,7 @@ export class IsaacActionManager extends BaseManager {
     this.setActuatorParams(defaultParams);
   }
 
-  setActuatorParams({ actionScale, stiffness, damping } = {}) {
+  setActuatorParams({ actionScale, stiffness, damping }: ActuatorParams = {}) {
     const resolvedActionScale = this.normalizeParam(actionScale, 1.0);
     const resolvedStiffness = this.normalizeParam(stiffness, 0.0);
     const resolvedDamping = this.normalizeParam(damping, 0.0);

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { downloadExampleScenesFolder, getPosition, getQuaternion, loadSceneFromURL } from './utils/mujocoScene';
 import { ONNXModule } from './utils/onnxHelper';
-import { TrajectoryActionManager } from './managers/actions/TrajectoryActionManager';
+import type { MjModel, MjData } from 'mujoco-js';
 
 const DEFAULT_CONTAINER_ID = 'mujoco-container';
 
@@ -30,9 +30,9 @@ export class MujocoRuntime {
   renderer: THREE.WebGLRenderer;
   controls: OrbitControls;
   lastSimState: any;
-  mjModel: any;
-  mjData: any;
-  policy: any;
+  mjModel: MjModel | null;
+  mjData: MjData | null;
+  policy: ONNXModule | null;
   inputDict: any;
   loopHandle: any;
   running: boolean;
@@ -149,7 +149,6 @@ export class MujocoRuntime {
     this.loopPromise = null;
 
     this.attachManagers();
-    this.attachManagers();
   }
 
   attachManagers() {
@@ -238,7 +237,7 @@ export class MujocoRuntime {
       [this.mjModel, this.mjData, this.bodies, this.lights] =
         await loadSceneFromURL(this.mujoco, mjcfPath, this);
 
-      if (!this.mjModel || this.mjModel.deleted) {
+      if (!this.mjModel || this.mjModel.isDeleted()) {
         console.warn("MjModel is invalid after loadSceneFromURL");
         return;
       }
@@ -430,13 +429,7 @@ export class MujocoRuntime {
       const loopStart = performance.now();
       const ready = !this.params.paused && this.mjModel && this.mjData;
       if (ready) {
-        if (this.actionManager instanceof TrajectoryActionManager) {
-          const obsTensors = await this.collectObservations();
-          const action = await this.actionManager.generateAction(obsTensors);
-          this.applyAction(action);
-          await this.executeSimulationSteps();
-          this.updateCachedState();
-        } else if (this.policy) {
+        if (this.policy) {
           let time_start = performance.now();
           const quat = this.mjData.qpos.subarray(3, 7);
           this.quat.set(quat[1], quat[2], quat[3], quat[0]);

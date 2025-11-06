@@ -2,7 +2,32 @@ import * as THREE from 'three';
 import { Vector3 } from 'three';
 
 export class DragStateManager {
-  constructor(scene, renderer, camera, container, controls) {
+  scene: any;
+  renderer: any;
+  camera: any;
+  mousePos: THREE.Vector2;
+  raycaster: THREE.Raycaster;
+  grabDistance: number;
+  active: boolean;
+  physicsObject: any;
+  controls: any;
+  arrow: THREE.ArrowHelper;
+  previouslySelected: any;
+  highlightColor: number;
+  localHit: Vector3;
+  worldHit: Vector3;
+  currentWorld: Vector3;
+  offset: Vector3;
+  mouseDown: boolean;
+  doubleClick: boolean;
+
+  constructor(
+    scene: THREE.Scene,
+    renderer: THREE.WebGLRenderer,
+    camera: THREE.Camera,
+    container: HTMLElement,
+    controls: { enabled: boolean }
+  ) {
     this.scene = scene;
     this.renderer = renderer;
     this.camera = camera;
@@ -27,11 +52,14 @@ export class DragStateManager {
     this.arrow.visible = false;
 
     this.previouslySelected = null;
-    this.higlightColor = 0xff0000;  // 0x777777
+    this.highlightColor = 0xff0000;  // 0x777777
 
     this.localHit = new Vector3();
     this.worldHit = new Vector3();
     this.currentWorld = new Vector3();
+    this.offset = new Vector3();
+    this.mouseDown = false;
+    this.doubleClick = false;
 
     container.addEventListener('pointerdown', this.onPointer.bind(this), true);
     document.addEventListener('pointermove', this.onPointer.bind(this), true);
@@ -39,13 +67,13 @@ export class DragStateManager {
     document.addEventListener('pointerout', this.onPointer.bind(this), true);
     container.addEventListener('dblclick', this.onPointer.bind(this), false);
   }
-  updateRaycaster(x, y) {
+  updateRaycaster(x: number, y: number): void {
     var rect = this.renderer.domElement.getBoundingClientRect();
     this.mousePos.x = ((x - rect.left) / rect.width) * 2 - 1;
     this.mousePos.y = -((y - rect.top) / rect.height) * 2 + 1;
     this.raycaster.setFromCamera(this.mousePos, this.camera);
   }
-  start(x, y) {
+  start(x: number, y: number): void {
     this.physicsObject = null;
     this.updateRaycaster(x, y);
     let intersects = this.raycaster.intersectObjects(this.scene.children);
@@ -68,7 +96,7 @@ export class DragStateManager {
       }
     }
   }
-  move(x, y) {
+  move(x: number, y: number): void {
     if (this.active) {
       this.updateRaycaster(x, y);
       let hit = this.raycaster.ray.origin.clone();
@@ -92,7 +120,7 @@ export class DragStateManager {
       this.arrow.setLength(this.offset.clone().length());
     }
   }
-  end(evt) {
+  end(evt: PointerEvent): void {
     //this.physicsObject.endGrab();
     this.physicsObject = null;
 
@@ -102,14 +130,14 @@ export class DragStateManager {
     this.arrow.visible = false;
     this.mouseDown = false;
   }
-  onPointer(evt) {
+  onPointer(evt: PointerEvent | MouseEvent): void {
     if (evt.type == "pointerdown") {
       this.start(evt.clientX, evt.clientY);
       this.mouseDown = true;
     } else if (evt.type == "pointermove" && this.mouseDown) {
       if (this.active) { this.move(evt.clientX, evt.clientY); }
     } else if (evt.type == "pointerup" /*|| evt.type == "pointerout"*/) {
-      this.end(evt);
+      this.end(evt as PointerEvent);
     }
     if (evt.type == "dblclick") {
       this.start(evt.clientX, evt.clientY);
@@ -122,7 +150,7 @@ export class DragStateManager {
           if (this.previouslySelected) {
             this.previouslySelected.material.emissive.setHex(0x000000);
           }
-          this.physicsObject.material.emissive.setHex(this.higlightColor);
+          this.physicsObject.material.emissive.setHex(this.highlightColor);
           this.previouslySelected = this.physicsObject;
         }
       } else {

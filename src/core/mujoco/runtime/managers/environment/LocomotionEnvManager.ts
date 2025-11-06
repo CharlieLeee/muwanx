@@ -2,9 +2,39 @@ import * as THREE from 'three';
 import { BaseManager } from '../BaseManager.js';
 import { DragStateManager } from '../../utils/DragStateManager.js';
 import { getPosition, getQuaternion, toMujocoPos } from '../../utils/mujocoScene.js';
+import { MjData, MjModel } from 'mujoco-js';
+
+interface LocomotionEnvOptions {
+  ballHeight?: number;
+  dragForceScale?: number;
+  impulseForce?: THREE.Vector3;
+  serviceName?: string;
+}
 
 export class LocomotionEnvManager extends BaseManager {
-  constructor(options = {}) {
+  options: LocomotionEnvOptions;
+  ballHeight: number;
+  dragForceScale: number;
+  impulseForce: THREE.Vector3;
+  serviceName: string;
+  defaultBallPosition: THREE.Vector3;
+  activePolicyId: string | null;
+  isFacetPolicyActive: boolean;
+  desiredVisibility: boolean;
+  useSetpointActive: boolean;
+  compliantModeActive: boolean;
+  scene: any;
+  camera: any;
+  renderer: any;
+  controls: any;
+  container: any;
+  ball: THREE.Mesh;
+  dragStateManager: DragStateManager;
+  mjModel: MjModel;
+  mjData: MjData;
+  pelvisBodyId: number | null;
+
+  constructor(options: LocomotionEnvOptions = {}) {
     super();
     this.options = options;
     this.ballHeight = options.ballHeight ?? 0.5;
@@ -238,9 +268,6 @@ export class LocomotionEnvManager extends BaseManager {
       }
       this.ball.geometry.dispose();
       this.ball.material.dispose();
-    }
-    if (this.dragStateManager) {
-      this.dragStateManager.dispose?.();
     }
     this.runtime.unregisterService(this.serviceName);
   }

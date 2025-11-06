@@ -1,17 +1,18 @@
 import * as THREE from 'three';
 import { mujocoAssetCollector } from '../../utils/mujocoAssetCollector';
 import { createLights } from './lights';
+import type { MjModel, MjData } from 'mujoco-js';
 
 const SCENE_BASE_URL = './';
 const BINARY_EXTENSIONS = ['.png', '.stl', '.skn', '.mjb', '.msh', '.npy'];
 const sceneDownloadPromises = new Map();
 
-function isBinaryAsset(path) {
+function isBinaryAsset(path: string): boolean {
   const lower = path.toLowerCase();
   return BINARY_EXTENSIONS.some(ext => lower.endsWith(ext));
 }
 
-function ensureWorkingDirectories(mujoco, segments) {
+function ensureWorkingDirectories(mujoco: any, segments: string[]): void {
   if (!segments.length) {
     return;
   }
@@ -24,12 +25,12 @@ function ensureWorkingDirectories(mujoco, segments) {
   }
 }
 
-function normalizePathSegments(path) {
+function normalizePathSegments(path: string): string {
   if (!path) {
     return '';
   }
-  const parts = path.split('/');
-  const resolved = [];
+  const parts: string[] = path.split('/');
+  const resolved: string[] = [];
   for (const part of parts) {
     if (!part || part === '.') {
       continue;
@@ -45,12 +46,12 @@ function normalizePathSegments(path) {
   return resolved.join('/');
 }
 
-function resolveAssetPath(xmlDirectory, assetPath) {
+function resolveAssetPath(xmlDirectory: string, assetPath: string): string | null {
   if (!assetPath) {
     return null;
   }
 
-  let cleaned = assetPath.trim();
+  let cleaned: string = assetPath.trim();
   if (!cleaned) {
     return null;
   }
@@ -61,16 +62,16 @@ function resolveAssetPath(xmlDirectory, assetPath) {
     cleaned = cleaned.slice(1);
   }
 
-  const normalized = normalizePathSegments(cleaned);
+  const normalized: string = normalizePathSegments(cleaned);
   if (normalized.startsWith('examples/')) {
     return normalized;
   }
 
-  const joined = normalizePathSegments(`${xmlDirectory}/${cleaned}`);
+  const joined: string = normalizePathSegments(`${xmlDirectory}/${cleaned}`);
   return joined || normalized || null;
 }
 
-function create2DTexture(mujoco, mjModel, texId) {
+function create2DTexture(mujoco: any, mjModel: MjModel, texId: number) {
   const width = mjModel.tex_width ? mjModel.tex_width[texId] : 0;
   const height = mjModel.tex_height ? mjModel.tex_height[texId] : 0;
   if (!width || !height) {
@@ -158,9 +159,9 @@ function create2DTexture(mujoco, mjModel, texId) {
   return texture;
 }
 
-function createCubeTexture(mujoco, mjModel, texId) {
-  const width = mjModel.tex_width ? mjModel.tex_width[texId] : 0;
-  const height = mjModel.tex_height ? mjModel.tex_height[texId] : 0;
+function createCubeTexture(mujoco: any, mjModel: MjModel, texId: number) {
+  const width: number = mjModel.tex_width ? mjModel.tex_width[texId] : 0;
+  const height: number = mjModel.tex_height ? mjModel.tex_height[texId] : 0;
 
   if (!width || !height) {
     return null;
@@ -263,7 +264,7 @@ function expandChannelsToRGBA(src, dest, nchannel) {
   }
 }
 
-function createBaseTexture(mujoco, mjModel, texId) {
+function createBaseTexture(mujoco: any, mjModel: MjModel, texId: number) {
   if (!mjModel || texId < 0) {
     return null;
   }
@@ -281,7 +282,7 @@ function createBaseTexture(mujoco, mjModel, texId) {
   return null;
 }
 
-export async function loadSceneFromURL(mujoco, filename, parent) {
+export async function loadSceneFromURL(mujoco: any, filename: string, parent: any): Promise<any[]> {
   // Clean up existing resources
   if (parent.mjData != null) {
     try { parent.mjData.delete(); } catch (e) { /* ignore */ }
@@ -564,7 +565,7 @@ export async function loadSceneFromURL(mujoco, filename, parent) {
   return [mjModel, mjData, bodies, lights];
 }
 
-export function getPosition(buffer, index, target, swizzle = true) {
+export function getPosition(buffer: Float32Array, index: number, target: THREE.Vector3, swizzle = true) {
   if (swizzle) {
     return target.set(
       buffer[(index * 3) + 0],
@@ -577,7 +578,7 @@ export function getPosition(buffer, index, target, swizzle = true) {
     buffer[(index * 3) + 2]);
 }
 
-export function getQuaternion(buffer, index, target, swizzle = true) {
+export function getQuaternion(buffer: Float32Array, index: number, target: THREE.Quaternion, swizzle = true) {
   if (swizzle) {
     return target.set(
       -buffer[(index * 4) + 1],
@@ -592,11 +593,11 @@ export function getQuaternion(buffer, index, target, swizzle = true) {
     buffer[(index * 4) + 3]);
 }
 
-export function toMujocoPos(target) {
+export function toMujocoPos(target: THREE.Vector3): THREE.Vector3 {
   return target.set(target.x, -target.z, target.y);
 }
 
-export async function downloadExampleScenesFolder(mujoco, scenePath) {
+export async function downloadExampleScenesFolder(mujoco: any, scenePath: string) {
   if (!scenePath) {
     return;
   }

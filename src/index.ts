@@ -20,7 +20,6 @@ export { default as PolicySelector } from './viewer/components/PolicySelector.vu
 export { default as ProjectSelector } from './viewer/components/ProjectSelector.vue'
 export { default as SceneSelector } from './viewer/components/SceneSelector.vue'
 export { default as StiffnessControls } from './viewer/components/StiffnessControls.vue'
-export { default as TrajectoryControls } from './viewer/components/TrajectoryControls.vue'
 
 // Export composables for advanced usage
 export { useConfig } from './viewer/composables/useConfig'

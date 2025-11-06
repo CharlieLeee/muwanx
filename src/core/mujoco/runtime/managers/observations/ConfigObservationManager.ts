@@ -3,6 +3,10 @@ import { BaseManager } from '../BaseManager.js';
 import { Observations } from '../../observations/index.js';
 
 export class ConfigObservationManager extends BaseManager {
+  observationGroups: Record<string, any[]>;
+  historyBuffers: Record<string, Float32Array>;
+  historyConfig: Record<string, { steps: number; interleaved: boolean }>;
+
   constructor() {
     super();
     this.observationGroups = {};
@@ -18,15 +22,18 @@ export class ConfigObservationManager extends BaseManager {
     const obsConfig = config.obs_config || {};
 
     for (const [key, value] of Object.entries(obsConfig)) {
+      // Cast to any so we can safely check dynamic config properties
+      const val: any = value;
+
       // Check if this is a config with history settings
       // Must be an object (not array) and have history config properties
-      if (value && !Array.isArray(value) && (value.interleaved !== undefined || value.history_steps !== undefined)) {
+      if (val && !Array.isArray(val) && (val.interleaved !== undefined || val.history_steps !== undefined)) {
         // New format: { interleaved: true, history_steps: 6, components: [...] }
-        const components = value.components || [];
-        const historySteps = value.history_steps || 1;
-        const interleaved = value.interleaved || false;
+        const components = val.components || [];
+        const historySteps = val.history_steps || 1;
+        const interleaved = val.interleaved || false;
 
-        this.observationGroups[key] = components.map(obsConfigItem =>
+        this.observationGroups[key] = components.map((obsConfigItem: any) =>
           this.createObservationInstance({
             obsConfig: { ...obsConfigItem, history_steps: 1 }, // Force single timestep
             mjModel,
@@ -51,8 +58,8 @@ export class ConfigObservationManager extends BaseManager {
         console.log(`[ConfigObservationManager] Setup history for "${key}": ${dimsPerTimestep} dims/step × ${historySteps} steps = ${dimsPerTimestep * historySteps} total (interleaved: ${interleaved})`);
       } else {
         // Old format: just an array of observation configs
-        const obsList = Array.isArray(value) ? value : [value];
-        this.observationGroups[key] = obsList.map(obsConfigItem =>
+        const obsList = Array.isArray(val) ? val : [val];
+        this.observationGroups[key] = obsList.map((obsConfigItem: any) =>
           this.createObservationInstance({
             obsConfig: obsConfigItem,
             mjModel,
@@ -70,15 +77,18 @@ export class ConfigObservationManager extends BaseManager {
     this.historyConfig = {};
   }
 
-  createObservationInstance({ obsConfig, mjModel, mjData }) {
+  createObservationInstance({ obsConfig, mjModel, mjData, assetMeta }: { obsConfig: any; mjModel: any; mjData: any; assetMeta?: any }) {
     const ObsClass = Observations[obsConfig.name];
     if (!ObsClass) {
       throw new Error(`Unknown observation type: ${obsConfig.name}`);
     }
-    const kwargs = { ...obsConfig };
+    const kwargs = { ...obsConfig } as any;
     delete kwargs.name;
     if (kwargs.joint_names === 'isaac') {
       kwargs.joint_names = this.runtime.jointNamesIsaac;
+    }
+    if (assetMeta !== undefined) {
+      kwargs.assetMeta = assetMeta;
     }
     return new ObsClass(mjModel, mjData, this.runtime, kwargs);
   }

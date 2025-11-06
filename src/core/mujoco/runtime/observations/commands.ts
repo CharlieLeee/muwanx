@@ -2,6 +2,16 @@
  * Command observation components
  */
 import * as THREE from 'three';
+import type { MjModel, MjData } from 'mujoco-js';
+
+interface VelocityCommandKwargs {
+  angvel_kp?: number;
+  scale?: number[] | number;
+}
+
+interface ImpedanceCommandKwargs {
+  mass?: number;
+}
 
 /**
  * Helper function to generate oscillator features
@@ -24,7 +34,13 @@ function getOscillator(time) {
  * This is the clean, modular version for composition.
  */
 export class VelocityCommand {
-  constructor(mjModel, mjData, runtime, kwargs = {}) {
+  mjModel: MjModel;
+  mjData: MjData;
+  runtime: any;
+  angvel_kp: number;
+  scale: number[];
+
+  constructor(mjModel: MjModel, mjData: MjData, runtime: any, kwargs: VelocityCommandKwargs = {}) {
     this.mjModel = mjModel;
     this.mjData = mjData;
     this.runtime = runtime;
@@ -59,7 +75,12 @@ export class VelocityCommand {
  * This version includes oscillator features that some policies expect.
  */
 export class VelocityCommandWithOscillators {
-  constructor(mjModel, mjData, runtime, kwargs = {}) {
+  mjModel: MjModel;
+  mjData: MjData;
+  runtime: any;
+  angvel_kp: number;
+
+  constructor(mjModel: MjModel, mjData: MjData, runtime: any, kwargs: VelocityCommandKwargs = {}) {
     this.mjModel = mjModel;
     this.mjData = mjData;
     this.runtime = runtime;
@@ -86,7 +107,12 @@ export class VelocityCommandWithOscillators {
  * Dims: 27 (15 impedance params + 12 oscillator)
  */
 export class ImpedanceCommand {
-  constructor(mjModel, mjData, runtime, kwargs = {}) {
+  mjModel: MjModel;
+  mjData: MjData;
+  runtime: any;
+  mass: number;
+
+  constructor(mjModel: MjModel, mjData: MjData, runtime: any, kwargs: ImpedanceCommandKwargs = {}) {
     this.mjModel = mjModel;
     this.mjData = mjData;
     this.runtime = runtime;
@@ -144,7 +170,11 @@ export class ImpedanceCommand {
  * Dims: 12
  */
 export class Oscillator {
-  constructor(mjModel, mjData, runtime, kwargs = {}) {
+  mjModel: MjModel;
+  mjData: MjData;
+  runtime: any;
+
+  constructor(mjModel: MjModel, mjData: MjData, runtime: any, kwargs: ImpedanceCommandKwargs = {}) {
     this.mjModel = mjModel;
     this.mjData = mjData;
     this.runtime = runtime;

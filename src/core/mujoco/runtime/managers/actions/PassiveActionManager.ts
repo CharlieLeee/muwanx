@@ -1,6 +1,26 @@
+import { MjData, MjModel } from 'mujoco-js';
 import { BaseManager } from '../BaseManager.js';
 
 export class PassiveActionManager extends BaseManager {
+  controlType: string;
+  mjModel: MjModel;
+  mjData: MjData;
+  assetMeta: any;
+  policyConfig: any;
+  numActions: number;
+  lastActions: Float32Array;
+  actionBuffer: Float32Array[];
+  defaultJpos: Float32Array;
+  actionScale: Float32Array;
+  jntKp: Float32Array;
+  jntKd: Float32Array;
+  jointNamesIsaac: any[];
+  jointNamesMJC: any[];
+  ctrlAdrIsaac: any[];
+  qposAdrIsaac: any[];
+  qvelAdrIsaac: any[];
+  options: any;
+
   constructor(options = {}) {
     super();
     this.options = options;

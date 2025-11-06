@@ -4,7 +4,6 @@ import { MujocoRuntime } from '@/core/mujoco/runtime/MujocoRuntime.js';
 import { GoCommandManager } from '@/core/mujoco/runtime/managers/commands/GoCommandManager.js';
 import { IsaacActionManager } from '@/core/mujoco/runtime/managers/actions/IsaacActionManager.js';
 import { PassiveActionManager } from '@/core/mujoco/runtime/managers/actions/PassiveActionManager.js';
-import { TrajectoryActionManager } from '@/core/mujoco/runtime/managers/actions/TrajectoryActionManager.js';
 import { ConfigObservationManager } from '@/core/mujoco/runtime/managers/observations/ConfigObservationManager.js';
 import { LocomotionEnvManager } from '@/core/mujoco/runtime/managers/environment/LocomotionEnvManager.js';
 import type { PolicyConfigItem, TaskConfigItem } from '@/types/config';
@@ -14,7 +13,6 @@ export function useRuntime() {
   const runtime = ref<MujocoRuntime | null>(null);
   const commandManager = ref<any>(null);
   const actionManager = ref<any>(null);
-  const trajectoryManager = ref<TrajectoryActionManager | null>(null);
   const observationManager = ref<any>(null);
   const envManager = ref<any>(null);
 
@@ -25,9 +23,6 @@ export function useRuntime() {
 
   const state = ref<number>(0);
   const extra_error_message = ref<string>('');
-
-  const trajectoryPlaybackState = ref<'play' | 'stop' | 'reset'>('stop');
-  const trajectoryLoop = ref<boolean>(false);
 
   function resolveSceneConfig(task: TaskConfigItem | null, policy: PolicyConfigItem | null) {
     if (!task) return { scenePath: null as string | null, metaPath: null as string | null };
@@ -64,40 +59,7 @@ export function useRuntime() {
         needsIsaac = hasIsaacJoints || hasActuators || hasDefaultJpos;
       }
     }
-    const needsTrajectory = policyConfig?.type === 'trajectory';
     const current = actionManager.value;
-
-    if (needsTrajectory) {
-      const trajectoryPath = policyConfig?.trajectory_path ?? null;
-      if (current instanceof TrajectoryActionManager) {
-        await loadTrajectoryData(current, trajectoryPath);
-        trajectoryManager.value = current;
-        current.setLoop(trajectoryLoop.value);
-        trajectoryPlaybackState.value = 'stop';
-        return;
-      }
-      const nextManager = markRaw(new TrajectoryActionManager());
-      if (runtime.value) {
-        if (runtime.value.actionManager && typeof runtime.value.actionManager.dispose === 'function') {
-          runtime.value.actionManager.dispose();
-        }
-        runtime.value.actionManager = nextManager;
-        nextManager.attachRuntime(runtime.value);
-        if (typeof (nextManager as any).onInit === 'function') {
-          await (nextManager as any).onInit();
-        }
-      }
-      await loadTrajectoryData(nextManager, trajectoryPath);
-      nextManager.setLoop(trajectoryLoop.value);
-      actionManager.value = nextManager;
-      trajectoryManager.value = nextManager;
-      trajectoryPlaybackState.value = 'stop';
-      return;
-    }
-
-    trajectoryManager.value = null;
-    trajectoryPlaybackState.value = 'stop';
-    trajectoryLoop.value = false;
 
     if (needsIsaac && current instanceof IsaacActionManager) return;
     if (!needsIsaac && current instanceof PassiveActionManager) return;
@@ -114,21 +76,6 @@ export function useRuntime() {
       }
     }
     actionManager.value = next;
-  }
-
-  async function loadTrajectoryData(manager: TrajectoryActionManager, trajectoryPath: string | null | undefined) {
-    if (!manager || !trajectoryPath) return;
-    try {
-      const response = await fetch(trajectoryPath);
-      if (!response.ok) {
-        console.warn(`Failed to load trajectory from ${trajectoryPath}: ${response.status}`);
-        return;
-      }
-      const trajectoryData = await response.json();
-      manager.loadTrajectory(trajectoryData);
-    } catch (e) {
-      console.error('Error loading trajectory data:', e);
-    }
   }
 
   function applyCommandState() {
@@ -259,31 +206,6 @@ export function useRuntime() {
     commandManager.value.triggerImpulse();
   }
 
-  function playTrajectory() {
-    if (!trajectoryManager.value) return;
-    trajectoryManager.value.play();
-    trajectoryPlaybackState.value = 'play';
-  }
-
-  function stopTrajectory() {
-    if (!trajectoryManager.value) return;
-    trajectoryManager.value.stop();
-    trajectoryPlaybackState.value = 'stop';
-    (runtime.value as any)?.applyAction?.();
-  }
-
-  function resetTrajectory() {
-    if (!trajectoryManager.value) return;
-    const wasPlaying = trajectoryManager.value.isPlaying;
-    trajectoryManager.value.reset();
-    trajectoryPlaybackState.value = wasPlaying ? 'play' : 'reset';
-  }
-
-  function updateTrajectoryLoop(value: boolean) {
-    trajectoryLoop.value = value;
-    trajectoryManager.value?.setLoop(value);
-  }
-
   function dispose() {
     try {
       runtime.value?.dispose();
@@ -298,7 +220,6 @@ export function useRuntime() {
     runtime,
     commandManager,
     actionManager,
-    trajectoryManager,
     observationManager,
     envManager,
 
@@ -309,8 +230,6 @@ export function useRuntime() {
     compliant_mode,
     state,
     extra_error_message,
-    trajectoryPlaybackState,
-    trajectoryLoop,
 
     // api
     initRuntime,
@@ -323,10 +242,6 @@ export function useRuntime() {
     updateCommandVelX,
     updateCompliantMode,
     triggerImpulse,
-    playTrajectory,
-    stopTrajectory,
-    resetTrajectory,
-    updateTrajectoryLoop,
     dispose,
   };
 }

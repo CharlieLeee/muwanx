@@ -8,12 +8,11 @@
     :policy-items="policyItems" :policy-id="policy" :selected-task="selectedTask" :selected-policy="selectedPolicy"
     :collapsed="isPanelCollapsed"
     :use-setpoint="use_setpoint" :command-vel-x="command_vel_x" :compliant-mode="compliant_mode" :facet-kp="facet_kp"
-    :trajectory-state="trajectoryPlaybackState" :trajectory-loop="trajectoryLoop" @navigateRoute="goToRoute"
+    @navigateRoute="goToRoute"
     @toggle="togglePanel"
     @selectTask="onSelectTask" @selectPolicy="onSelectPolicy" @update:useSetpoint="onUpdateUseSetpoint"
     @update:commandVelX="onUpdateCommandVelX" @update:facetKp="onUpdateFacetKp"
-    @update:compliantMode="onUpdateCompliantMode" @playTrajectory="playTrajectory" @stopTrajectory="stopTrajectory"
-    @resetTrajectory="resetTrajectory" @update:trajectoryLoop="updateTrajectoryLoop" @impulse="triggerImpulse"
+    @update:compliantMode="onUpdateCompliantMode" @impulse="triggerImpulse"
     @reset="reset" />
 
   <StatusDialogs :state="state" :extra-error-message="extra_error_message"
@@ -57,8 +56,6 @@ const {
   command_vel_x,
   compliant_mode,
   facet_kp,
-  trajectoryPlaybackState,
-  trajectoryLoop,
   initRuntime,
   onTaskChange,
   onPolicyChange,
@@ -67,10 +64,6 @@ const {
   updateCommandVelX,
   updateCompliantMode,
   triggerImpulse,
-  playTrajectory,
-  stopTrajectory,
-  resetTrajectory,
-  updateTrajectoryLoop,
   reset,
   dispose,
 } = rt

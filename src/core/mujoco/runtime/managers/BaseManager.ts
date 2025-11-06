@@ -1,5 +1,8 @@
 export class BaseManager {
-  attachRuntime(runtime) {
+  protected runtime: any;
+  protected onRuntimeAttached?(runtime: any): void;
+
+  attachRuntime(runtime: any) {
     this.runtime = runtime;
     if (typeof this.onRuntimeAttached === 'function') {
       this.onRuntimeAttached(runtime);

@@ -127,7 +127,7 @@ export function createLights({ mujoco, mjModel, mujocoRoot, bodies }: CreateLigh
 
   // Add combined ambient light
   if (!ambientSum.equals(new THREE.Color(0, 0, 0))) {
-    const ambientLight = new THREE.AmbientLight(ambientSum, 0.5);
+    const ambientLight = new THREE.AmbientLight(ambientSum, 0.2);
     mujocoRoot.add(ambientLight);
     lights.push(ambientLight);
   }

@@ -23,10 +23,6 @@
           @update:useSetpoint="(v) => $emit('update:useSetpoint', v)"
           @update:commandVelX="(v) => $emit('update:commandVelX', v)" />
 
-        <TrajectoryControls :selected-policy="selectedPolicy" :state="trajectoryState" :loop="trajectoryLoop"
-          :is-mobile="isMobile" @play="$emit('playTrajectory')" @stop="$emit('stopTrajectory')"
-          @reset="$emit('resetTrajectory')" @update:loop="(v) => $emit('update:trajectoryLoop', v)" />
-
         <v-divider v-if="selectedPolicy?.ui_controls && selectedPolicy.ui_controls.includes('stiffness')" />
         <StiffnessControls :selected-policy="selectedPolicy" :facet-kp="facetKp" :compliant-mode="compliantMode"
           :is-mobile="isMobile" @update:facetKp="(v) => $emit('update:facetKp', v)"
@@ -48,7 +44,6 @@ import SceneSelector from './SceneSelector.vue'
 import PolicySelector from './PolicySelector.vue'
 import CommandControls from './CommandControls.vue'
 import StiffnessControls from './StiffnessControls.vue'
-import TrajectoryControls from './TrajectoryControls.vue'
 import ForceControls from './ForceControls.vue'
 
 defineProps({
@@ -68,8 +63,6 @@ defineProps({
   commandVelX: { type: Number, default: 0 },
   compliantMode: { type: Boolean, default: false },
   facetKp: { type: Number, default: 24 },
-  trajectoryState: { type: String, default: 'stop' },
-  trajectoryLoop: { type: Boolean, default: false },
 })
 
 defineEmits([
@@ -81,10 +74,6 @@ defineEmits([
   'update:commandVelX',
   'update:facetKp',
   'update:compliantMode',
-  'playTrajectory',
-  'stopTrajectory',
-  'resetTrajectory',
-  'update:trajectoryLoop',
   'impulse',
   'reset',
 ])

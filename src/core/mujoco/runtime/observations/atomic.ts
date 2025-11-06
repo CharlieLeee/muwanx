@@ -4,6 +4,7 @@
  * - history_steps = 1: returns single timestep (current state)
  * - history_steps > 1: returns temporal history (newest first)
  */
+import { MjModel, MjData } from 'mujoco-js';
 import * as THREE from 'three';
 
 /**
@@ -11,7 +12,14 @@ import * as THREE from 'three';
  * Dims: 3 * history_steps
  */
 export class BaseLinearVelocity {
-  constructor(mjModel, mjData, runtime, kwargs = {}) {
+  mjModel: MjModel;
+  mjData: MjData;
+  runtime: any;
+  steps: number;
+  scale: number;
+  history: Float32Array[];
+
+  constructor(mjModel: MjModel, mjData: MjData, runtime: any, kwargs: { history_steps?: number; scale?: number } = {}) {
     this.mjModel = mjModel;
     this.mjData = mjData;
     this.runtime = runtime;
@@ -55,7 +63,15 @@ export class BaseLinearVelocity {
  * Dims: 3 * history_steps
  */
 export class BaseAngularVelocity {
-  constructor(mjModel, mjData, runtime, kwargs = {}) {
+  mjModel: MjModel;
+  mjData: MjData;
+  runtime: any;
+  steps: number;
+  scale: number;
+  world_frame: boolean;
+  history: Float32Array[];
+
+  constructor(mjModel: MjModel, mjData: MjData, runtime: any, kwargs: { history_steps?: number; scale?: number; world_frame?: boolean } = {}) {
     this.mjModel = mjModel;
     this.mjData = mjData;
     this.runtime = runtime;
@@ -116,7 +132,15 @@ export class BaseAngularVelocity {
  * Dims: 3 * history_steps
  */
 export class ProjectedGravity {
-  constructor(mjModel, mjData, runtime, kwargs = {}) {
+  mjModel: MjModel;
+  mjData: MjData;
+  runtime: any;
+  steps: number;
+  joint_qpos_adr: number;
+  gravity: THREE.Vector3;
+  history: Float32Array[];
+
+  constructor(mjModel: MjModel, mjData: MjData, runtime: any, kwargs: { joint_name?: string; history_steps?: number; gravity?: number[] } = {}) {
     this.mjModel = mjModel;
     this.mjData = mjData;
     this.runtime = runtime;
@@ -156,7 +180,18 @@ export class ProjectedGravity {
  * Dims: num_joints * history_steps
  */
 export class JointPositions {
-  constructor(mjModel, mjData, runtime, kwargs = {}) {
+  mjModel: MjModel;
+  mjData: MjData;
+  runtime: any;
+  steps: number;
+  joint_names: string[];
+  num_joints: number;
+  subtract_default: boolean;
+  scale: number;
+  history: Float32Array[];
+  joint_qpos_adr: number[];
+
+  constructor(mjModel: MjModel, mjData: MjData, runtime: any, kwargs: { joint_names?: string[]; history_steps?: number; subtract_default?: boolean; scale?: number } = {}) {
     this.mjModel = mjModel;
     this.mjData = mjData;
     this.runtime = runtime;
@@ -212,7 +247,17 @@ export class JointPositions {
  * Dims: num_joints * history_steps
  */
 export class JointVelocities {
-  constructor(mjModel, mjData, runtime, kwargs = {}) {
+  mjModel: MjModel;
+  mjData: MjData;
+  runtime: any;
+  steps: number;
+  joint_names: string[];
+  num_joints: number;
+  scale: number;
+  history: Float32Array[];
+  joint_qvel_adr: number[];
+
+  constructor(mjModel: MjModel, mjData: MjData, runtime: any, kwargs: { joint_names?: string[]; history_steps?: number; scale?: number } = {}) {
     this.mjModel = mjModel;
     this.mjData = mjData;
     this.runtime = runtime;
@@ -267,7 +312,15 @@ export class JointVelocities {
  * - transpose=true: [a0_t0, a0_t1, a0_t2, a1_t0, a1_t1, a1_t2, ...]
  */
 export class PreviousActions {
-  constructor(mjModel, mjData, runtime, kwargs = {}) {
+  mjModel: MjModel;
+  mjData: MjData;
+  runtime: any;
+  steps: number;
+  transpose: boolean;
+  numActions: number;
+  actionBuffer: Float32Array[];
+
+  constructor(mjModel: MjModel, mjData: MjData, runtime: any, kwargs: { history_steps?: number; transpose?: boolean } = {}) {
     this.mjModel = mjModel;
     this.mjData = mjData;
     this.runtime = runtime;
@@ -306,7 +359,13 @@ export class PreviousActions {
  * Dims: 3 * history_steps
  */
 export class SimpleVelocityCommand {
-  constructor(mjModel, mjData, runtime, kwargs = {}) {
+  mjModel: MjModel;
+  mjData: MjData;
+  runtime: any;
+  steps: number;
+  scale: number[];
+
+  constructor(mjModel: MjModel, mjData: MjData, runtime: any, kwargs: { scale?: number | number[]; history_steps?: number } = {}) {
     this.mjModel = mjModel;
     this.mjData = mjData;
     this.runtime = runtime;

@@ -1,7 +1,17 @@
 import { BaseManager } from '../BaseManager.js';
 
+interface GoCommandManagerOptions {
+  setpointServiceName?: string;
+  minImpedance?: number;
+  maxImpedance?: number;
+  defaultImpedance?: number;
+}
+
 export class GoCommandManager extends BaseManager {
-  constructor(options = {}) {
+  options: GoCommandManagerOptions;
+  setpointServiceName: string;
+
+  constructor(options: GoCommandManagerOptions = {}) {
     super();
     this.options = options;
     this.setpointServiceName = options.setpointServiceName || 'setpoint-control';

@@ -1,5 +1,12 @@
 /** This class provides Debug Utilities. */
+declare global {
+  interface Window {
+    realConsoleError?: (...args: any[]) => void;
+  }
+}
 class Debug {
+  safari: boolean = false;
+  mobile: boolean = false;
 
   /** Reroute Console Errors to the Main Screen (for mobile) */
   constructor() {
@@ -17,12 +24,14 @@ class Debug {
   }
 
   // Log Errors as <div>s over the main viewport
-  fakeError(...args) {
+  fakeError(...args: any[]): void {
     if (args.length > 0 && args[0]) { this.display(JSON.stringify(args[0])); }
-    window.realConsoleError.apply(console, arguments);
+    if (window.realConsoleError) {
+      window.realConsoleError.apply(console, arguments as any);
+    }
   }
 
-  display(text) {
+  display(text: string): void {
     //if (this.mobile) {
     let errorNode = window.document.getElementById("error");
     errorNode.innerHTML += "\n\n" + text.fontcolor("red");

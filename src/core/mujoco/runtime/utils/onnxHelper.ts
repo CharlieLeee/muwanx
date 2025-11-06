@@ -7,6 +7,13 @@ import * as ort from 'onnxruntime-web';
 // ort.env.wasm.wasmPaths = "./ort/";
 
 export class ONNXModule {
+  public modelPath: string;
+  public metaData: any;
+  public isRecurrent: boolean;
+  public session: ort.InferenceSession | null = null;
+  public inKeys: string[] = [];
+  public outKeys: string[] = [];
+
   constructor(config) {
     if (!config || !config.path || !config.meta) {
       throw new Error('ONNXModule config must have path and meta properties');

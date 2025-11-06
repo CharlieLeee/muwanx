@@ -10,7 +10,13 @@
  */
 
 export class MuJoCoAssetCollector {
-  constructor(options = {}) {
+  private REFERENCE_ATTRS: Set<string>;
+  private TAG_DIRECTORY_HINTS: Record<string, string[]>;
+  private BINARY_EXTENSIONS: string[];
+  private cache: Map<string, string[]>;
+  private debug: boolean;
+
+  constructor(options: { debug?: boolean } = {}) {
     // Attributes that may reference external resources
     this.REFERENCE_ATTRS = new Set([
       'file', 'href', 'src',
@@ -38,9 +44,9 @@ export class MuJoCoAssetCollector {
    * Analyze a MuJoCo XML file and return all referenced assets
    * @param {string} xmlPath - Path to the root XML file (e.g., 'unitree_go2/scene.xml')
    * @param {string} baseUrl - Base URL for fetching files (default: './examples/scenes')
-   * @returns {Promise<string[]>} Array of relative asset paths
+   * @returns {Promise<Array<string>>} Array of relative asset paths
    */
-  async analyzeScene(xmlPath, baseUrl = './') {
+  async analyzeScene(xmlPath: string, baseUrl: string = './'): Promise<Array<string>> {
 
     // Input validation
     if (!xmlPath || typeof xmlPath !== 'string') {
@@ -62,7 +68,7 @@ export class MuJoCoAssetCollector {
 
     try {
       const result = await this._collectAssets(normalizedXmlPath, baseUrl);
-      const validResult = Array.isArray(result) ? result : [];
+      const validResult: Array<string> = Array.isArray(result) ? result : [];
       this.cache.set(cacheKey, validResult);
       return validResult;
     } catch (error) {
@@ -79,11 +85,11 @@ export class MuJoCoAssetCollector {
     this.cache.clear();
   }
 
-  async _collectAssets(rootPath, baseUrl) {
+  async _collectAssets(rootPath: string, baseUrl: string): Promise<Array<string>> {
     const rootDir = this._getDirectoryPath(rootPath);
 
     const visited = new Set();
-    const collected = new Set();
+    const collected = new Set<string>();
 
     const walk = async (filePath, parentHints = {}) => {
       const normalizedPath = this._normalizePath(filePath);
@@ -149,14 +155,14 @@ export class MuJoCoAssetCollector {
           );
 
           if (reference) {
-            if (reference.path) {
+            if ('path' in reference) {
               collected.add(reference.path);
 
               // Recursively process include files
               if (tagName === 'include' && attrName === 'file') {
                 await walk(reference.path, directoryHints);
               }
-            } else if (reference.text) {
+            } else if ('text' in reference) {
               collected.add(reference.text);
             }
           }
@@ -171,7 +177,7 @@ export class MuJoCoAssetCollector {
       throw error;
     }
 
-    const result = Array.from(collected).sort();
+    const result: Array<string> = Array.from(collected).sort();
 
     // Validate result
     if (!Array.isArray(result)) {
@@ -183,8 +189,8 @@ export class MuJoCoAssetCollector {
     return result;
   }
 
-  _parseCompilerDirectories(xmlContent, baseDir) {
-    const directories = {};
+  _parseCompilerDirectories(xmlContent: string, baseDir: string) {
+    const directories: Record<string, string[]> = {};
 
     // Parse XML properly to find all compiler elements
     const parser = new DOMParser();
@@ -263,8 +269,8 @@ export class MuJoCoAssetCollector {
     return directories;
   }
 
-  _mergeDirectoryHints(parentHints, localHints) {
-    const merged = { ...parentHints };
+  _mergeDirectoryHints(parentHints: Record<string, string[]>, localHints: Record<string, string[]>): Record<string, string[]> {
+    const merged: Record<string, string[]> = { ...parentHints };
 
     for (const [key, paths] of Object.entries(localHints)) {
       if (merged[key]) {
@@ -282,7 +288,7 @@ export class MuJoCoAssetCollector {
     return merged;
   }
 
-  _buildSearchOrder(tag, directoryHints, baseDir, rootDir) {
+  _buildSearchOrder(tag: string, directoryHints: Record<string, string[]>, baseDir: string | undefined, rootDir: string | undefined): string[] {
     const order = [];
 
     // For include files, prioritize the same directory first
@@ -336,7 +342,7 @@ export class MuJoCoAssetCollector {
     return [...new Set(order.filter(path => path !== undefined))];
   }
 
-  async _resolveLocalFile(value, baseDir, searchDirs, baseUrl) {
+  async _resolveLocalFile(value: string, baseDir: string | undefined, searchDirs: string[], baseUrl: string): Promise<string | null> {
     if (!value.trim()) return null;
 
     if (this.debug) {
@@ -386,11 +392,9 @@ export class MuJoCoAssetCollector {
     return null;
   }
 
-  async _resolveReference(rawValue, tag, attr, baseDir, directoryHints, baseUrl, rootDir) {
+  async _resolveReference(rawValue: string, tag: string, attr: string, baseDir: string | undefined, directoryHints: Record<string, string[]>, baseUrl: string, rootDir: string | undefined): Promise<{ text: string } | null | { path: string }> {
     const value = rawValue.trim();
     if (!value) return null;
-
-
 
     const lower = value.toLowerCase();
 
@@ -429,14 +433,14 @@ export class MuJoCoAssetCollector {
     return { path: resolved };
   }
 
-  _stripNamespace(tag) {
+  _stripNamespace(tag: string): string {
     if (tag.includes(':')) {
       return tag.split(':', 2)[1];
     }
     return tag;
   }
 
-  _normalizePath(path) {
+  _normalizePath(path: string): string {
     if (!path) return '';
 
     const isAbsolute = path.startsWith('/');
@@ -472,12 +476,12 @@ export class MuJoCoAssetCollector {
     return result || '';
   }
 
-  _getDirectoryPath(filePath) {
+  _getDirectoryPath(filePath: string): string {
     const parts = filePath.split('/');
     return parts.slice(0, -1).join('/');
   }
 
-  _joinPath(...parts) {
+  _joinPath(...parts: (string | undefined)[]): string {
     const filtered = parts.filter(part => part !== null && part !== undefined && part !== '.');
     if (filtered.length === 0) return '';
 
