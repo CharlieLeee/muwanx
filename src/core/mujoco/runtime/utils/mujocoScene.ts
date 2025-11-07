@@ -170,11 +170,11 @@ function createCubeTexture(mujoco: any, mjModel: MjModel, texId: number) {
   const texAdr = mjModel.tex_adr ? mjModel.tex_adr[texId] : 0;
   const nchannel = mjModel.tex_nchannel ? mjModel.tex_nchannel[texId] : 0;
 
-  // キューブマップは6面あり、各面はwidth x heightのサイズ
+  // A cubemap has 6 faces; each face is width x height in size
   const facePixelCount = width * height;
   const faceSrcByteCount = facePixelCount * nchannel;
 
-  // 6面分のテクスチャデータを準備
+  // Prepare texture data for all 6 faces
   const faces = [];
   const faceOrder = [
     'px', 'nx',  // positive-x, negative-x
@@ -191,7 +191,7 @@ function createCubeTexture(mujoco: any, mjModel: MjModel, texId: number) {
 
       const src = mjModel.tex_data.subarray(faceOffset, faceOffset + faceSrcByteCount);
 
-      // チャンネル数に応じてRGBAに変換
+      // Convert to RGBA based on the number of channels
       expandChannelsToRGBA(src, faceData, nchannel);
       faces.push(faceData);
     } else {
@@ -199,10 +199,10 @@ function createCubeTexture(mujoco: any, mjModel: MjModel, texId: number) {
     }
   }
 
-  // THREE.jsのCubeTextureを作成
+  // Create a THREE.js CubeTexture
   const cubeTexture = new THREE.CubeTexture();
 
-  // 各面のDataTextureを作成してキューブテクスチャに設定
+  // Create a DataTexture for each face and assign it to the cube texture
   cubeTexture.image = faces.map(faceData => {
     const canvas = document.createElement('canvas');
     canvas.width = width;
@@ -217,7 +217,7 @@ function createCubeTexture(mujoco: any, mjModel: MjModel, texId: number) {
   cubeTexture.needsUpdate = true;
   cubeTexture.format = THREE.RGBAFormat;
 
-  // カラースペースの設定
+  // Set color space
   if (mjModel.tex_colorspace) {
     const cs = mjModel.tex_colorspace[texId];
     if (cs === mujoco.mjtColorSpace.mjCOLORSPACE_SRGB.value && 'sRGBEncoding' in THREE) {
@@ -228,7 +228,7 @@ function createCubeTexture(mujoco: any, mjModel: MjModel, texId: number) {
   return cubeTexture;
 }
 
-// チャンネル変換のヘルパー関数
+// Helper function for channel conversion
 function expandChannelsToRGBA(src, dest, nchannel) {
   switch (nchannel) {
     case 1: // L

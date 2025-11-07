@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { downloadExampleScenesFolder, getPosition, getQuaternion, loadSceneFromURL } from './utils/mujocoScene';
 import { ONNXModule } from './utils/onnxHelper';
 import type { MjModel, MjData } from 'mujoco-js';
+import { updateHeadlightFromCamera, updateLightsFromData } from './utils/lights';
 
 const DEFAULT_CONTAINER_ID = 'mujoco-container';
 
@@ -52,7 +53,7 @@ export class MujocoRuntime {
   rpy: THREE.Euler;
   quat: THREE.Quaternion;
   bodies: any;
-  lights: any;
+  lights: THREE.Light[];
   mujocoRoot: any;
   loopPromise: Promise<void> | null;
 
@@ -106,10 +107,6 @@ export class MujocoRuntime {
 
     this.scene.background = new THREE.Color(0.15, 0.25, 0.35);
 
-    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
-    this.ambientLight.name = 'AmbientLight';
-    this.scene.add(this.ambientLight);
-
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -131,7 +128,6 @@ export class MujocoRuntime {
 
     this.lastSimState = {
       bodies: new Map(),
-      lights: new Map(),
       tendons: {
         numWraps: 0,
         matrix: new THREE.Matrix4()
@@ -585,19 +581,6 @@ export class MujocoRuntime {
       }
     }
 
-    for (let l = 0; l < this.mjModel.nlight; l++) {
-      if (this.lights[l]) {
-        if (!this.lastSimState.lights.has(l)) {
-          this.lastSimState.lights.set(l, {
-            position: new THREE.Vector3(),
-            direction: new THREE.Vector3()
-          });
-        }
-        getPosition(this.mjData.light_xpos, l, this.lastSimState.lights.get(l).position);
-        getPosition(this.mjData.light_xdir, l, this.lastSimState.lights.get(l).direction);
-      }
-    }
-
     if (this.mujocoRoot && this.mujocoRoot.cylinders) {
       let numWraps = 0;
       const mat = this.lastSimState.tendons.matrix;
@@ -639,6 +622,8 @@ export class MujocoRuntime {
 
     this.controls.update();
 
+    updateHeadlightFromCamera(this.camera, this.lights);
+
     for (const [b, state] of this.lastSimState.bodies) {
       if (this.bodies[b]) {
         this.bodies[b].position.copy(state.position);
@@ -647,12 +632,7 @@ export class MujocoRuntime {
       }
     }
 
-    for (const [l, state] of this.lastSimState.lights) {
-      if (this.lights[l]) {
-        this.lights[l].position.copy(state.position);
-        this.lights[l].lookAt(state.direction.add(this.lights[l].position));
-      }
-    }
+    updateLightsFromData(this.mujoco, this.mjData, this.lights);
 
     if (this.mujocoRoot && this.mujocoRoot.cylinders) {
       const numWraps = this.lastSimState.tendons.numWraps;
