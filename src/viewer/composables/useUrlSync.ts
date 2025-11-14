@@ -35,7 +35,11 @@ export function useUrlSync(options: {
       }
 
       // Update URL hash with new params
-      const hashBase = window.location.hash.split('?')[0] || '#';
+      let hashBase = window.location.hash.split('?')[0] || '#';
+      // Ensure default project uses #/ format
+      if (hashBase === '#') {
+        hashBase = '#/';
+      }
       const paramsString = params.toString();
       const newHash = paramsString ? `${hashBase}?${paramsString}` : hashBase;
 
