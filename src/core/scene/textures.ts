@@ -202,7 +202,7 @@ function createCubeTexture(mjModel: MjModel, texId: number): THREE.CubeTexture |
     images.push(canvas);
   }
 
-  cubeTexture.image = images;
+  cubeTexture.image = images as any;
 
   if (cubeTexture.image.some(img => img === null)) {
     console.warn(`Failed to create canvas for one or more faces in texId ${texId}`);

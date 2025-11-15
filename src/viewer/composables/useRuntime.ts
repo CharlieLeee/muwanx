@@ -1,4 +1,4 @@
-import { ref, markRaw } from 'vue';
+import { ref, markRaw, type Ref } from 'vue';
 import loadMujoco from 'mujoco-js';
 import { MujocoRuntime } from '@/core/engine/MujocoRuntime';
 import { GoCommandManager as CommandManager } from '@/core/engine/managers/CommandManager';
@@ -9,7 +9,33 @@ import { LocomotionEnvManager as EnvManager } from '@/core/engine/managers/EnvMa
 import type { PolicyConfigItem, TaskConfigItem } from '@/types/config';
 import { MUJOCO_CONTAINER_ID } from '@/viewer/utils/constants';
 
-export function useRuntime() {
+export interface UseRuntimeReturn {
+  runtime: Ref<any>;
+  commandManager: Ref<any>;
+  actionManager: Ref<any>;
+  observationManager: Ref<any>;
+  envManager: Ref<any>;
+  facet_kp: Ref<number>;
+  command_vel_x: Ref<number>;
+  use_setpoint: Ref<boolean>;
+  compliant_mode: Ref<boolean>;
+  state: Ref<number>;
+  extra_error_message: Ref<string>;
+  initRuntime: (initialTask: TaskConfigItem, initialPolicy: PolicyConfigItem | null) => Promise<void>;
+  onTaskChange: (taskItem: TaskConfigItem, defaultPolicy: PolicyConfigItem | null, withTransition: (msg: string, act: () => Promise<any>) => Promise<any>) => Promise<void>;
+  onPolicyChange: (taskItem: TaskConfigItem, policyItem: PolicyConfigItem, withTransition: (msg: string, act: () => Promise<any>) => Promise<any>) => Promise<void>;
+  applyCommandState: () => void;
+  reset: () => Promise<void>;
+  updateFacetKp: () => void;
+  updateUseSetpoint: () => void;
+  updateCommandVelX: () => void;
+  updateCompliantMode: () => void;
+  triggerImpulse: () => void;
+  toggleVRButton: () => void;
+  dispose: () => void;
+}
+
+export function useRuntime(): UseRuntimeReturn {
   const runtime = ref<MujocoRuntime | null>(null);
   const commandManager = ref<any>(null);
   const actionManager = ref<any>(null);

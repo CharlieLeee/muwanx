@@ -11,7 +11,18 @@
 // });
 // ... later on unmount: shortcuts.detach()
 
-export function createShortcuts(options = {}) {
+interface ShortcutsOptions {
+  target?: EventTarget | null;
+  onReset?: () => void;
+  onToggleUI?: () => void;
+  onToggleVRButton?: () => void;
+  onNavigateScene?: (direction: number) => void;
+  onNavigatePolicy?: (direction: number) => void;
+  getHelpVisible?: () => boolean;
+  setHelpVisible?: (visible: boolean) => void;
+}
+
+export function createShortcuts(options: ShortcutsOptions = {}) {
   const {
     target = typeof document !== 'undefined' ? document : null,
     onReset,

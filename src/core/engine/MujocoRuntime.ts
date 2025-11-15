@@ -742,10 +742,10 @@ export class MujocoRuntime {
     if (this.scene) {
       // Recursively dispose all objects in the scene
       this.scene.traverse((object) => {
-        if (object.geometry) {
-          object.geometry.dispose();
+        if ('geometry' in object && object.geometry && typeof (object.geometry as any).dispose === 'function') {
+          (object.geometry as any).dispose();
         }
-        if (object.material) {
+        if ('material' in object && object.material) {
           if (Array.isArray(object.material)) {
             object.material.forEach(material => {
               this.disposeMaterial(material);
