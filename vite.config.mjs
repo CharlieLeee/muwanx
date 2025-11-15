@@ -68,8 +68,6 @@ export default defineConfig(({ mode }) => {
       },
     }),
     // Generate TypeScript declarations in library mode
-    // Note: skipDiagnostics is set to true to avoid build failures from existing type issues
-    // These type issues should be fixed in a separate PR
     ...(isLibMode ? [dts({
       include: ['src/**/*.ts', 'src/**/*.vue'],
       exclude: ['src/**/*.spec.ts', 'src/**/*.test.ts'],
@@ -77,7 +75,7 @@ export default defineConfig(({ mode }) => {
       copyDtsFiles: true,
       staticImport: true,
       rollupTypes: true,
-      skipDiagnostics: true,  // Skip type checking for now
+      skipDiagnostics: false,
     })] : []),
   ],
   optimizeDeps: {

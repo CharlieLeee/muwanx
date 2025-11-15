@@ -184,7 +184,7 @@ defineEmits([
 
 <style>
 :root {
-  --ui-surface: rgba(255, 255, 255, 0.5);
+  --ui-surface: rgba(255, 255, 255, 0.8);
 }
 
 body.interactive-mode .control-panel {

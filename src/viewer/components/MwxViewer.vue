@@ -132,6 +132,12 @@ function clearUrlWarning() { urlParamErrorMessage.value = '' }
 watch([selectedTask, selectedPolicy], () => sync())
 
 onMounted(async () => {
+  // Disable scrollbars on body and html
+  document.documentElement.style.overflow = 'hidden'
+  document.body.style.overflow = 'hidden'
+  document.body.style.margin = '0'
+  document.body.style.padding = '0'
+
   await loadConfig()
   if (selectedTask.value) {
     const initialTask = selectedTask.value
@@ -160,6 +166,13 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   dispose()
   if (shortcuts && typeof shortcuts.detach === 'function') shortcuts.detach()
+
+  // Restore scrollbars
+  document.documentElement.style.overflow = ''
+  document.body.style.overflow = ''
+  document.body.style.margin = ''
+  document.body.style.padding = ''
+
   document.body.classList.remove('interactive-mode')
 })
 </script>
