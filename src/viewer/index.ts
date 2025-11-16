@@ -2,8 +2,16 @@
  * Viewer module - Main exports for muwanx viewer
  */
 
+// High-level API classes
+export { MwxViewer, Project, Scene, Policy } from './MwxViewer';
+export type {
+  ViewerEvents,
+  ViewerEventName,
+  ViewerEventCallback,
+} from './MwxViewer';
+
 // Main viewer component
-export { default as MwxViewer } from './MwxViewer.vue';
+export { default as MwxViewerComponent } from './components/MwxViewer.vue';
 
 // UI Components
 export { default as ControlPanel } from './components/ControlPanel.vue';

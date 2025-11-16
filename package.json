@@ -1,7 +1,7 @@
 {
   "name": "muwanx",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/ttktjmt/muwanx.git"
@@ -12,11 +12,21 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/muwanx.es.js",
       "require": "./dist/muwanx.umd.js"
     },
     "./viewer": {
-      "import": "./src/viewer/MuwanxViewer.vue"
+      "types": "./src/viewer/components/MwxViewer.vue",
+      "import": "./src/viewer/components/MwxViewer.vue"
+    },
+    "./api": {
+      "types": "./src/viewer/MwxViewer.ts",
+      "import": "./src/viewer/MwxViewer.ts"
+    },
+    "./types": {
+      "types": "./src/types/api.ts",
+      "import": "./src/types/api.ts"
     }
   },
   "files": [
@@ -50,6 +60,7 @@
     "unplugin-fonts": "^1.3.1",
     "unplugin-vue-components": "^28.4.1",
     "vite": "^6.3.5",
+    "vite-plugin-dts": "^4.3.0",
     "vite-plugin-vuetify": "^2.1.1"
   }
 }

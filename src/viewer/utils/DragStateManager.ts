@@ -45,10 +45,12 @@ export class DragStateManager {
     this.arrow.setLength(15, 3, 1);
     this.scene.add(this.arrow);
     //this.residuals.push(arrow);
-    this.arrow.line.material.transparent = true;
-    this.arrow.cone.material.transparent = true;
-    this.arrow.line.material.opacity = 0.5;
-    this.arrow.cone.material.opacity = 0.5;
+    const lineMaterial = Array.isArray(this.arrow.line.material) ? this.arrow.line.material[0] : this.arrow.line.material;
+    const coneMaterial = Array.isArray(this.arrow.cone.material) ? this.arrow.cone.material[0] : this.arrow.cone.material;
+    lineMaterial.transparent = true;
+    coneMaterial.transparent = true;
+    lineMaterial.opacity = 0.5;
+    coneMaterial.opacity = 0.5;
     this.arrow.visible = false;
 
     this.previouslySelected = null;
@@ -120,7 +122,7 @@ export class DragStateManager {
       this.arrow.setLength(this.offset.clone().length());
     }
   }
-  end(evt: PointerEvent): void {
+  end(evt?: PointerEvent | { type: string }): void {
     //this.physicsObject.endGrab();
     this.physicsObject = null;
 

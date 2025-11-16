@@ -356,7 +356,7 @@ export async function loadSceneFromURL(mujoco: any, filename: string, parent: an
               // Group ranges are automatically handled by BoxGeometry creation; if not BoxGeometry, fallback below.
             }
 
-            const baseParams = (currentMaterial as THREE.MeshPhysicalMaterial).toJSON().materials?.[0];
+            const baseParams = (currentMaterial as THREE.MeshPhysicalMaterial).toJSON();
             const materials: THREE.MeshPhysicalMaterial[] = [];
             for (let i = 0; i < 6; i++) {
               const canvas = images[i];

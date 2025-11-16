@@ -4,7 +4,7 @@
   <div id="mujoco-container" class="mujoco-container" />
 
   <ControlPanel :project-name="projectName" :project-link="projectLink" :route-items="routeItems"
-    :current-route-name="$route.name" :is-mobile="isMobile" :task-items="taskItems" :task-id="task"
+    :current-route-name="currentRouteName" :is-mobile="isMobile" :task-items="taskItems" :task-id="task"
     :policy-items="policyItems" :policy-id="policy" :selected-task="selectedTask" :selected-policy="selectedPolicy"
     :collapsed="isPanelCollapsed" :use-setpoint="use_setpoint" :command-vel-x="command_vel_x"
     :compliant-mode="compliant_mode" :facet-kp="facet_kp" @navigateRoute="goToRoute" @toggle="togglePanel"
@@ -25,21 +25,23 @@
 
 <script setup>
 import { onMounted, onBeforeUnmount, watch, ref, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import ControlPanel from './components/ControlPanel.vue'
-import StatusDialogs from './components/StatusDialogs.vue'
-import HelpDialog from './components/HelpDialog.vue'
-import Notice from './components/Notice.vue'
-import StatusOverlay from './components/StatusOverlay.vue'
-import { useConfig } from './composables/useConfig'
-import { useRuntime } from './composables/useRuntime'
-import { useScenePolicy } from './composables/useScenePolicy'
-import { useUrlSync } from './composables/useUrlSync'
-import { useTransition } from './composables/useTransition'
-import { useResponsive } from './composables/useResponsive'
-import { createShortcuts } from './utils/shortcuts'
+import ControlPanel from './ControlPanel.vue'
+import StatusDialogs from './StatusDialogs.vue'
+import HelpDialog from './HelpDialog.vue'
+import Notice from './Notice.vue'
+import StatusOverlay from './StatusOverlay.vue'
+import { useConfig } from '../composables/useConfig'
+import { useRuntime } from '../composables/useRuntime'
+import { useScenePolicy } from '../composables/useScenePolicy'
+import { useUrlSync } from '../composables/useUrlSync'
+import { useTransition } from '../composables/useTransition'
+import { useResponsive } from '../composables/useResponsive'
+import { createShortcuts } from '../utils/shortcuts'
 
-const props = defineProps({ configPath: { type: String, default: './assets/config.json' } })
+const props = defineProps({
+  configPath: { type: String, default: './assets/config.json' },
+  config: { type: Object, default: null }
+})
 
 const transitionApi = useTransition()
 const isTransitioning = transitionApi.isTransitioning
@@ -67,16 +69,22 @@ const {
   dispose,
 } = rt
 
-const conf = useConfig(props.configPath)
+// Use config object if provided (imperative), otherwise use configPath (declarative)
+const conf = useConfig(props.config || props.configPath)
 const { config: appConfig, task, policy, taskItems, policyItems, selectedTask, selectedPolicy, urlParamErrorMessage, resolveDefaultPolicy, loadConfig } = conf
 const projectName = computed(() => appConfig.value?.project_name)
 const projectLink = computed(() => appConfig.value?.project_link)
 
 const { routeItems, goToRoute, sync } = useUrlSync({
-  router: useRouter(),
-  route: useRoute(),
   getSceneName: () => selectedTask.value?.name || null,
   getPolicyName: () => selectedPolicy.value?.name || null,
+})
+
+// Detect current route from URL hash
+const currentRouteName = computed(() => {
+  const hash = window.location.hash.slice(1).split('?')[0] // Remove # and query params
+  if (!hash || hash === '' || hash === '/') return 'default'
+  return hash.replace('/', '') // Remove leading slash if present
 })
 
 const { selectTask, selectPolicy, navigateScene, navigatePolicy } = useScenePolicy({
@@ -124,6 +132,12 @@ function clearUrlWarning() { urlParamErrorMessage.value = '' }
 watch([selectedTask, selectedPolicy], () => sync())
 
 onMounted(async () => {
+  // Disable scrollbars on body and html
+  document.documentElement.style.overflow = 'hidden'
+  document.body.style.overflow = 'hidden'
+  document.body.style.margin = '0'
+  document.body.style.padding = '0'
+
   await loadConfig()
   if (selectedTask.value) {
     const initialTask = selectedTask.value
@@ -152,6 +166,13 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   dispose()
   if (shortcuts && typeof shortcuts.detach === 'function') shortcuts.detach()
+
+  // Restore scrollbars
+  document.documentElement.style.overflow = ''
+  document.body.style.overflow = ''
+  document.body.style.margin = ''
+  document.body.style.padding = ''
+
   document.body.classList.remove('interactive-mode')
 })
 </script>

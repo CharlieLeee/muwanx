@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/muwanx-banner.png" alt="muwanx">
+  <img src="assets/muwanx_banner.png" alt="muwanx">
 </div>
 <div align="center">
     <em>Real-time Interactive AI Robot Simulation in Your Browser</em>
@@ -56,29 +56,17 @@ npm run dev
 
 Open your browser and navigate to the localhost URL shown in the terminal.
 
-<img src="assets/muwanx-demo.gif" alt="muwanx demo" width="70%">
+<img src="assets/muwanx_demo.gif" alt="muwanx demo" width="70%">
 
-<!-- 
 ## Usage
 
-Muwanx is available as an [npm package](https://www.npmjs.com/package/muwanx).  
+Muwanx is available as an [npm package](https://www.npmjs.com/package/muwanx) for building interactive mujoco simulation applications with policy controls.
 
-You can install it with:
 ```bash
 npm install muwanx
 ```
 
-Then, you can import and use it in your JS/TS scripts:
-```javascript
-import { MuwanxSimulator } from 'muwanx';
-const muwanx = new MuwanxSimulator({
-    container: document.getElementById('muwanx-container'),
-    model_path: 'path/to/your/root_model.xml', // asset files will be collected automatically
-    policy_path: 'path/to/your/policy.onnx',
-});
-muwanx.start();
-```
- -->
+Please refer to the [usage guide](docs/usage.md) for detailed instructions on building applications with muwanx.
 
 ## Third-Party Assets
 

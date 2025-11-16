@@ -267,7 +267,11 @@ export class LocomotionEnvManager extends BaseManager {
         this.scene.remove(this.ball);
       }
       this.ball.geometry.dispose();
-      this.ball.material.dispose();
+      if (Array.isArray(this.ball.material)) {
+        this.ball.material.forEach((mat) => mat.dispose());
+      } else {
+        this.ball.material.dispose();
+      }
     }
     this.runtime.unregisterService(this.serviceName);
   }
