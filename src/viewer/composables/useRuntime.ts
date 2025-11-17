@@ -52,6 +52,7 @@ export function useRuntime(): UseRuntimeReturn {
 
   function resolveSceneConfig(task: TaskConfigItem | null, policy: PolicyConfigItem | null) {
     if (!task) return { scenePath: null as string | null, metaPath: null as string | null };
+    // For legacy support, model_xml is treated as either path or content (auto-detected)
     const scenePath = policy?.model_xml ?? task.model_xml;
     const metaRaw = policy?.asset_meta ?? task.asset_meta ?? null;
     const metaPath = metaRaw === 'null' || metaRaw === '' ? null : metaRaw;

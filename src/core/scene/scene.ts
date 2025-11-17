@@ -14,6 +14,15 @@ function isBinaryAsset(path: string): boolean {
   return BINARY_EXTENSIONS.some(ext => lower.endsWith(ext));
 }
 
+/**
+ * Detect if the input is inline XML content rather than a file path
+ */
+function isInlineXML(input: string): boolean {
+  if (!input) return false;
+  const trimmed = input.trim();
+  return trimmed.startsWith('<mujoco') || trimmed.startsWith('<?xml');
+}
+
 function ensureWorkingDirectories(mujoco: any, segments: string[]): void {
   if (!segments.length) {
     return;
@@ -85,14 +94,28 @@ export async function loadSceneFromURL(mujoco: any, filename: string, parent: an
   }
 
   // Load new model and data with guards
-  // Normalize input path to avoid '/./' or leading './' issues in MuJoCo loader
-  const cleanedFilename = String(filename || '')
-    .trim()
-    .replace(/^(\.\/)+/, '')
-    .replace(/^public\//, '');
-  const normalizedFilename = normalizePathSegments(cleanedFilename);
-  const modelPath = `/working/${normalizedFilename}`;
-  const modelDir = modelPath.substring(0, modelPath.lastIndexOf('/'));
+  // Handle inline XML content
+  let modelPath: string;
+  let modelDir: string;
+
+  if (isInlineXML(filename)) {
+    // For inline XML, compute the same hash to find the virtual file
+    const xmlHash = Math.abs(filename.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0));
+    const virtualPath = `inline_model_${xmlHash}.xml`;
+    modelPath = `/working/${virtualPath}`;
+    modelDir = '/working';
+  } else {
+    // Normalize input path to avoid '/./' or leading './' issues in MuJoCo loader
+    const cleanedFilename = String(filename || '')
+      .trim()
+      .replace(/^(\.\/)+/, '');
+    const normalizedFilename = normalizePathSegments(cleanedFilename);
+    modelPath = `/working/${normalizedFilename}`;
+    modelDir = modelPath.substring(0, modelPath.lastIndexOf('/'));
+  }
   try {
     const exists = mujoco.FS.analyzePath(modelPath).exists;
     if (!exists) {
@@ -482,6 +505,28 @@ export function toMujocoPos(target: THREE.Vector3): THREE.Vector3 {
 
 export async function downloadExampleScenesFolder(mujoco: any, scenePath: string) {
   if (!scenePath) {
+    return;
+  }
+
+  // Handle inline XML content
+  if (isInlineXML(scenePath)) {
+    // For inline XML, write directly to a virtual file
+    // Use a hash or timestamp-based filename to avoid collisions
+    const xmlHash = Math.abs(scenePath.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0));
+    const virtualPath = `inline_model_${xmlHash}.xml`;
+    const fullPath = `/working/${virtualPath}`;
+
+    // Write the inline XML to the virtual filesystem
+    try {
+      mujoco.FS.writeFile(fullPath, scenePath);
+      console.log(`[downloadExampleScenesFolder] Wrote inline XML to ${fullPath}`);
+    } catch (error) {
+      console.error(`[downloadExampleScenesFolder] Failed to write inline XML:`, error);
+      throw error;
+    }
     return;
   }
 

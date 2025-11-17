@@ -4,7 +4,7 @@
  * Main package entry point for the muwanx npm package.
  *
  * This package provides a customizable API for building interactive
- * MuJoCo-based applications with neural network policies.
+ * MuJoCo-based applications with RL/NN policies.
  *
  * @example
  * ```typescript
@@ -150,5 +150,6 @@ export { useConfig } from './viewer/composables/useConfig';
 export { useRuntime } from './viewer/composables/useRuntime';
 export { useScenePolicy } from './viewer/composables/useScenePolicy';
 export { useUrlSync } from './viewer/composables/useUrlSync';
+export type { RouteItem, ProjectItem } from './viewer/composables/useUrlSync';
 export { useTransition } from './viewer/composables/useTransition';
 export { useResponsive } from './viewer/composables/useResponsive';

@@ -33,6 +33,7 @@ export { useRuntime } from './composables/useRuntime';
 export { useScenePolicy } from './composables/useScenePolicy';
 export { useTransition } from './composables/useTransition';
 export { useUrlSync } from './composables/useUrlSync';
+export type { RouteItem, ProjectItem } from './composables/useUrlSync';
 
 // Utilities
 export * from './utils';

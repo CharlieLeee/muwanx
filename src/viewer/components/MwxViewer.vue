@@ -40,7 +40,8 @@ import { createShortcuts } from '../utils/shortcuts'
 
 const props = defineProps({
   configPath: { type: String, default: './assets/config.json' },
-  config: { type: Object, default: null }
+  config: { type: Object, default: null },
+  projects: { type: Array, default: () => [] }
 })
 
 const transitionApi = useTransition()
@@ -78,6 +79,7 @@ const projectLink = computed(() => appConfig.value?.project_link)
 const { routeItems, goToRoute, sync } = useUrlSync({
   getSceneName: () => selectedTask.value?.name || null,
   getPolicyName: () => selectedPolicy.value?.name || null,
+  projects: props.projects
 })
 
 // Detect current route from URL hash

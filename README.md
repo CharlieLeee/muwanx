@@ -58,7 +58,7 @@ Open your browser and navigate to the localhost URL shown in the terminal.
 
 <img src="assets/muwanx_demo.gif" alt="muwanx demo" width="70%">
 
-## Usage
+## NPM Package
 
 Muwanx is available as an [npm package](https://www.npmjs.com/package/muwanx) for building interactive mujoco simulation applications with policy controls.
 

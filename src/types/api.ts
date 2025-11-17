@@ -189,7 +189,11 @@ export interface PolicyConfig {
   stiffness?: number;
   /** Default PD controller damping */
   damping?: number;
-  /** Optional scene override (MuJoCo XML path) */
+  /**
+   * Optional scene override - can be either:
+   * - A file path to an XML file (e.g., "./assets/scene.xml")
+   * - Inline XML content as a string (must start with "<mujoco" or "<?xml")
+   */
   model_xml?: string | null;
   /** Optional asset metadata override path */
   asset_meta?: string | null;
@@ -208,7 +212,11 @@ export interface SceneConfig {
   id: string;
   /** Display name */
   name: string;
-  /** Path to MuJoCo XML model file */
+  /**
+   * MuJoCo XML model - can be either:
+   * - A file path to an XML file (e.g., "./assets/scene.xml")
+   * - Inline XML content as a string (must start with "<mujoco" or "<?xml")
+   */
   model_xml: string;
   /** Path to asset metadata JSON file */
   asset_meta?: string | null;

@@ -1,10 +1,23 @@
 import { computed } from 'vue';
 
+export interface RouteItem {
+  name: string;
+  path: string;
+  title: string;
+}
+
+export interface ProjectItem {
+  id: string;
+  name: string;
+  config?: string | null;
+}
+
 export function useUrlSync(options: {
   getSceneName: () => string | null;
   getPolicyName: () => string | null;
+  projects?: ProjectItem[];
 }) {
-  const { getSceneName, getPolicyName } = options;
+  const { getSceneName, getPolicyName, projects } = options;
 
   function getSearchParams() {
     // Get search params from hash (e.g., #project?scene=x&policy=y)
@@ -53,12 +66,15 @@ export function useUrlSync(options: {
 
   // Define available projects for the dropdown
   const routeItems = computed(() => {
-    return [
-      { name: 'default', path: '#/', title: 'Muwanx Demo' },
-      { name: 'menagerie', path: '#/menagerie', title: 'MuJoCo Menagerie' },
-      { name: 'playground', path: '#/playground', title: 'MuJoCo Playground' },
-      { name: 'myosuite', path: '#/myosuite', title: 'MyoSuite' },
-    ];
+    // If projects list is provided, use it to generate route items
+    if (projects && projects.length > 0) {
+      return projects.map((project, index) => ({
+        name: project.id,
+        path: index === 0 ? '#/' : `#/${project.id}`,
+        title: project.name
+      }));
+    }
+    return [];
   });
 
   // Handle project switching via hash navigation
