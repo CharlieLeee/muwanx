@@ -40,7 +40,7 @@ function buildBaseMyoSuiteConfig(): LegacyAppConfig {
     project_link: "https://github.com/MyoHub/myosuite",
     tasks: [
       {
-        id: "1",
+        id: "hand",
         name: "Hand",
         model_xml: "./assets/scene/myosuite/myosuite/simhive/myo_sim/hand/myohand.xml",
         camera: {
@@ -51,7 +51,7 @@ function buildBaseMyoSuiteConfig(): LegacyAppConfig {
         policies: []
       },
       {
-        id: "2",
+        id: "arm",
         name: "Arm",
         model_xml: "./assets/scene/myosuite/myosuite/simhive/myo_sim/arm/myoarm.xml",
         camera: {
@@ -62,7 +62,7 @@ function buildBaseMyoSuiteConfig(): LegacyAppConfig {
         policies: []
       },
       {
-        id: "3",
+        id: "elbow",
         name: "Elbow",
         model_xml: "./assets/scene/myosuite/myosuite/simhive/myo_sim/elbow/myoelbow_2dof6muscles.xml",
         camera: {
@@ -73,7 +73,7 @@ function buildBaseMyoSuiteConfig(): LegacyAppConfig {
         policies: []
       },
       {
-        id: "4",
+        id: "legs",
         name: "Legs",
         model_xml: "./assets/scene/myosuite/myosuite/simhive/myo_sim/leg/myolegs.xml",
         camera: {
@@ -82,7 +82,18 @@ function buildBaseMyoSuiteConfig(): LegacyAppConfig {
         },
         default_policy: undefined,
         policies: []
-      }
+      },
+      {
+        id: "finger",
+        name: "Finger",
+        model_xml: "./assets/scene/myosuite/myosuite/simhive/myo_sim/finger/myofinger_v0.xml",
+        camera: {
+          position: [1.0, 1.0, 1.0] as [number, number, number],
+          target: [0, 0.2, 0] as [number, number, number]
+        },
+        default_policy: undefined,
+        policies: []
+      },
     ]
   }
 }
@@ -212,7 +223,7 @@ function addMyoChallengeScenes(baseConfig: LegacyAppConfig): LegacyAppConfig {
 
   // MyoChallenge 2023 scenes - using imperative API
   const mc23_relocate = project.addScene({
-    id: "5",
+    id: "relocate",
     name: "mc23_Relocate",
     model_xml: "./assets/scene/myosuite/myosuite/envs/myo/assets/arm/myoarm_relocate.xml",
   })
@@ -222,7 +233,7 @@ function addMyoChallengeScenes(baseConfig: LegacyAppConfig): LegacyAppConfig {
   })
 
   const mc23_chasetag = project.addScene({
-    id: "6",
+    id: "chasetag",
     name: "mc23_ChaseTag",
     model_xml: "./assets/scene/myosuite/myosuite/envs/myo/assets/leg/myolegs_chasetag.xml",
   })
@@ -233,7 +244,7 @@ function addMyoChallengeScenes(baseConfig: LegacyAppConfig): LegacyAppConfig {
 
   // MyoChallenge 2024 scenes
   const mc24_bimanual = project.addScene({
-    id: "7",
+    id: "bimanual",
     name: "mc24_Bimanual",
     model_xml: "./assets/scene/myosuite/myosuite/envs/myo/assets/arm/myoarm_bionic_bimanual.xml",
   })
@@ -243,7 +254,7 @@ function addMyoChallengeScenes(baseConfig: LegacyAppConfig): LegacyAppConfig {
   })
 
   const mc24_runtrack = project.addScene({
-    id: "8",
+    id: "runtrack",
     name: "mc24_RunTrack",
     model_xml: "./assets/scene/myosuite/myosuite/envs/myo/assets/leg/myoosl_runtrack.xml",
   })
@@ -254,7 +265,7 @@ function addMyoChallengeScenes(baseConfig: LegacyAppConfig): LegacyAppConfig {
 
   // MyoChallenge 2025 scenes
   const mc25_tabletennis = project.addScene({
-    id: "9",
+    id: "tabletennis",
     name: "mc25_TableTennis",
     model_xml: "./assets/scene/myosuite/myosuite/envs/myo/assets/arm/myoarm_tabletennis.xml",
   })
@@ -264,7 +275,7 @@ function addMyoChallengeScenes(baseConfig: LegacyAppConfig): LegacyAppConfig {
   })
 
   const mc25_soccer = project.addScene({
-    id: "10",
+    id: "soccer",
     name: "mc25_Soccer",
     model_xml: "./assets/scene/myosuite/myosuite/envs/myo/assets/leg_soccer/myolegs_soccer.xml",
   })
