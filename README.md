@@ -25,8 +25,8 @@ Perfect for sharing interactive demos as static sites (which can be hosted on Gi
 ### 🚀 [Visit the Live Demo](https://ttktjmt.github.io/muwanx/)
 
 **╰▶ [Live Demo: MyoSuite](https://ttktjmt.github.io/muwanx/#/myosuite)** &nbsp;&nbsp;© [MyoSuite](https://github.com/MyoHub/myosuite)  
-**╰▶ [Live Demo: MuJoCo Menagerie](https://ttktjmt.github.io/muwanx/#/mujoco_menagerie)** &nbsp;&nbsp;© [Google DeepMind](https://github.com/google-deepmind/mujoco_menagerie)  
-**╰▶ [Live Demo: MuJoCo Playground](https://ttktjmt.github.io/muwanx/#/mujoco_playground)** &nbsp;&nbsp;© [Google DeepMind](https://github.com/google-deepmind/mujoco_playground)  
+**╰▶ [Live Demo: MuJoCo Menagerie](https://ttktjmt.github.io/muwanx/#/menagerie)** &nbsp;&nbsp;© [Google DeepMind](https://github.com/google-deepmind/mujoco_menagerie)  
+**╰▶ [Live Demo: MuJoCo Playground](https://ttktjmt.github.io/muwanx/#/playground)** &nbsp;&nbsp;© [Google DeepMind](https://github.com/google-deepmind/mujoco_playground)  
 
 ## Features
 - **Real-time**: Run MuJoCo simulations with real-time policy control.
