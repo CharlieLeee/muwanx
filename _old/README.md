@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/banner.png" alt="muwanx">
+  <img src="assets/muwanx_banner.png" alt="muwanx">
 </div>
 <div align="center">
     <em>Real-time Interactive AI Robot Simulation in Your Browser</em>
@@ -38,6 +38,45 @@ Perfect for sharing interactive demos as static sites (which can be hosted on Gi
 - **Customizable**: Add your own MuJoCo models and ONNX policies quickly.
 
 
+## Quick Start
+
+To run muwanx locally, ensure you have [Node.js](https://nodejs.org/) installed.
+
+Clone the repository:
+```bash
+git clone https://github.com/ttktjmt/muwanx.git
+cd muwanx
+```
+
+Install the dependencies and start the development server:
+```bash
+npm install
+npm run dev
+```
+
+Open your browser and navigate to the localhost URL shown in the terminal.
+
+<img src="assets/muwanx_demo.gif" alt="muwanx demo" width="70%">
+
+## NPM Package
+
+Muwanx is available as an [npm package](https://www.npmjs.com/package/muwanx) for building interactive mujoco simulation applications with policy controls.
+
+```bash
+npm install muwanx
+```
+
+Please refer to the [usage guide](docs/usage.md) for detailed instructions on building applications with muwanx.
+
+## Python SDK
+
+A [Python SDK](https://pypi.org/project/muwanx/) is also available for programmatic control of muwanx simulations.
+
+```bash
+pip install muwanx
+```
+
+See the [python/README.md](python/README.md) for installation and usage instructions.
 
 ## Third-Party Assets
 
