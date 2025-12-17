@@ -17,8 +17,7 @@ class Builder:
     """Builder for creating muwanx applications.
 
     The Builder class provides a fluent API for programmatically constructing
-    interactive MuJoCo simulations with ONNX policies. It follows a structure
-    inspired by viser, with hierarchical handles for projects, scenes, and policies.
+    interactive MuJoCo simulations with ONNX policies. It handles projects, scenes, and policies hierarchically.
 
     Example:
         >>> import muwanx as mwx
@@ -76,7 +75,6 @@ class Builder:
         Example:
             >>> builder = mwx.Builder()
             >>> demo = builder.add_project(name="Demo Robots")
-            >>> menagerie = builder.add_project(name="MuJoCo Menagerie", id="menagerie")
         """
         if metadata is None:
             metadata = {}
