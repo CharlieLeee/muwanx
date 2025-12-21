@@ -201,7 +201,12 @@ class Builder:
 
             # Copy all files from template to output_path
             # We use shutil.copytree with dirs_exist_ok=True (Python 3.8+)
-            shutil.copytree(template_dir, output_path, dirs_exist_ok=True)
+            shutil.copytree(
+                template_dir,
+                output_path,
+                dirs_exist_ok=True,
+                ignore=shutil.ignore_patterns(".nodeenv", "__pycache__", "*.pyc"),
+            )
         else:
             warnings.warn(
                 f"Template directory not found at {template_dir}.",

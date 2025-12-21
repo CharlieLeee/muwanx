@@ -573,18 +573,18 @@ def setup_builder() -> mwx.Builder:
         ),
         name="LEAP Hand Cube",
     )
-    # playground_project.add_scene(
-    #     model=mujoco.MjModel.from_xml_path(
-    #         "assets/scene/mujoco_playground/mujoco_playground/_src/manipulation/franka_emika_panda/xmls/mjx_single_cube.xml"
-    #     ),
-    #     name="Panda Single Cube",
-    # )
-    # playground_project.add_scene(
-    #     model=mujoco.MjModel.from_xml_path(
-    #         "assets/scene/mujoco_playground/mujoco_playground/_src/manipulation/franka_emika_panda/xmls/mjx_single_cube_camera.xml"
-    #     ),
-    #     name="Panda Single Cube (Camera)",
-    # )
+    playground_project.add_scene(
+        model=mujoco.MjModel.from_xml_path(
+            "assets/scene/mujoco_playground/mujoco_playground/_src/manipulation/franka_emika_panda/xmls/mjx_single_cube.xml"
+        ),
+        name="Panda Single Cube",
+    )
+    playground_project.add_scene(
+        model=mujoco.MjModel.from_xml_path(
+            "assets/scene/mujoco_playground/mujoco_playground/_src/manipulation/franka_emika_panda/xmls/mjx_single_cube_camera.xml"
+        ),
+        name="Panda Single Cube (Camera)",
+    )
     playground_project.add_scene(
         model=mujoco.MjModel.from_xml_path(
             "assets/scene/mujoco_playground/mujoco_playground/_src/manipulation/franka_emika_panda/xmls/mjx_cabinet.xml"

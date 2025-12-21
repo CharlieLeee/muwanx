@@ -48,7 +48,7 @@ Muwanx incorporates mujoco models from the external sources in its demo. See the
 
 ## Acknowledgments
 
-This project was greatly inspired by the [Facet project demo](https://facet.pages.dev/) from the research group at Tsinghua University.
+This project was greatly inspired by the [Facet project demo](https://facet.pages.dev/) from the research group at Tsinghua University.<br>
 It is also built upon the excellent work of [zalo/mujoco_wasm](https://github.com/zalo/mujoco_wasm), one of the earliest efforts to run MuJoCo simulations in a browser.
 
 ## License
