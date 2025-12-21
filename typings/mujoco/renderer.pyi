@@ -6,11 +6,11 @@ import mujoco._enums
 from mujoco import _enums
 from mujoco import _functions
 from mujoco import _render
-from mujoco import _structs
 import mujoco._structs
+from mujoco import _structs
 from mujoco import gl_context
-import numpy as np
 import numpy
+import numpy as np
 __all__: list[str] = ['Renderer', 'gl_context', 'np']
 class Renderer:
     """

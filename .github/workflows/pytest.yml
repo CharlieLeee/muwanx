@@ -1,10 +1,10 @@
-name: pytest
+
 
 on:
   push:
-    branches: [reorg]
+    branches: [main, reorg]
   pull_request:
-    branches: [reorg]
+    branches: [main, reorg]
 
 jobs:
   build:
@@ -25,4 +25,4 @@ jobs:
           uv pip install --system -e ".[dev]"
       - name: Test with pytest
         run: |
-          pytest
+          uv run pytest
