@@ -810,6 +810,8 @@ def main():
     builder = setup_builder()
     # Build and launch the application
     app = builder.build()
+    if os.getenv("MUWANX_NO_LAUNCH") == "1":
+        return
     app.launch()
 
 

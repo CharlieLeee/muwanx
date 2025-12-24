@@ -114,11 +114,14 @@ class Builder:
             >>> app.launch()
         """
         if not self._projects:
-            warnings.warn(
-                "Building an empty application with no projects. "
-                "Use add_project() to add content.",
-                category=UserWarning,
-                stacklevel=2,
+            raise ValueError(
+                "Cannot build an empty application. "
+                "You must add at least one project using builder.add_project() before building.\n"
+                "Example:\n"
+                "  builder = mwx.Builder()\n"
+                "  project = builder.add_project(name='My Project')\n"
+                "  scene = project.add_scene(model=mujoco_model, name='Scene 1')\n"
+                "  app = builder.build()"
             )
 
         # Get caller's file path
@@ -226,12 +229,15 @@ class Builder:
                 # Clean up development files that shouldn't be in production
                 dev_files = [
                     "src",
-                    "public",
                     "node_modules",
                     ".nodeenv",
                     "package.json",
                     "package-lock.json",
                     "tsconfig.json",
+                    "vite.config.ts",
+                    "eslint.config.cjs",
+                    ".browserslistrc",
+                    ".gitignore",
                 ]
                 for dev_file in dev_files:
                     dev_path = output_path / dev_file
@@ -240,6 +246,11 @@ class Builder:
                             shutil.rmtree(dev_path)
                         else:
                             dev_path.unlink()
+
+                # Remove public directory after build (assets are already in dist)
+                public_dir = output_path / "public"
+                if public_dir.exists():
+                    shutil.rmtree(public_dir)
         else:
             warnings.warn(
                 f"Template directory not found at {template_dir}.",
