@@ -1,0 +1,649 @@
+{
+  "version": "0.0.0",
+  "projects": [
+    {
+      "name": "Muwanx Demo",
+      "id": null,
+      "metadata": {},
+      "scenes": [
+        {
+          "name": "Go2",
+          "metadata": {},
+          "policies": [
+            {
+              "name": "Facet",
+              "metadata": {}
+            },
+            {
+              "name": "Vanilla",
+              "metadata": {}
+            },
+            {
+              "name": "Robust",
+              "metadata": {}
+            }
+          ]
+        },
+        {
+          "name": "Go1",
+          "metadata": {},
+          "policies": [
+            {
+              "name": "HiMLoco",
+              "metadata": {}
+            },
+            {
+              "name": "Decap",
+              "metadata": {}
+            }
+          ]
+        },
+        {
+          "name": "G1",
+          "metadata": {},
+          "policies": [
+            {
+              "name": "Locomotion",
+              "metadata": {}
+            },
+            {
+              "name": "Balance",
+              "metadata": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MuJoCo Menagerie",
+      "id": "menagerie",
+      "metadata": {},
+      "scenes": [
+        {
+          "name": "Agilex Piper",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Agility Cassie",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "ALOHA",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "ANYmal B",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "ANYmal C",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Apptronik Apollo",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "ARX L5",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Berkeley Humanoid",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Bitcraze Crazyflie 2",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Booster T1",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Boston Dynamics Spot",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Dynamixel 2R",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Flybody",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Fourier N1",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Franka Emika Panda",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Franka FR3",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Google Barkour v0",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Google Barkour vB",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Google Robot",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Hello Robot Stretch",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Hello Robot Stretch 3",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "i2RT YAM",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "IIT SoftFoot",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Kinova Gen3",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "KUKA iiwa 14",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "LEAP Hand Left",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "LEAP Hand Right",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Low Cost Robot Arm",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "PAL Talos (Motor Control)",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "PAL Talos (Position Control)",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "PAL TIAGo (Motor Control)",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "PAL TIAGo (Position Control)",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "PAL TIAGo (Velocity Control)",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "PAL TIAGo Dual (Motor Control)",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "PAL TIAGo Dual (Position Control)",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "PAL TIAGo Dual (Velocity Control)",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "PNDBiotics Adam Lite",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Rethink Robotics Sawyer",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Robot Soccer Kit",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Robotiq 2F85",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Robotiq 2F85 v4",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Robotis OP3",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Shadow DEXEE",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Shadow Hand Left",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Shadow Hand Right",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Skydio X2",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Stanford TidyBot",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "TetherIA Aero Hand Open",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Trossen VX300S",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Trossen WX250S",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "TRS SO-ARM100",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "UFactory Lite6",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "UFactory xArm7",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "UMI Gripper",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Unitree A1",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Unitree G1",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Unitree Go1",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Unitree Go2",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Unitree H1",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Unitree Z1",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Universal Robots UR5e",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Universal Robots UR10e",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Wonik Allegro Left",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Wonik Allegro Right",
+          "metadata": {},
+          "policies": []
+        }
+      ]
+    },
+    {
+      "name": "MuJoCo Playground",
+      "id": "playground",
+      "metadata": {},
+      "scenes": [
+        {
+          "name": "DMC Acrobot",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "DMC Ball In Cup",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "DMC Cartpole",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "DMC Cheetah",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "DMC Finger",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "DMC Fish",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "DMC Hopper",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "DMC Humanoid",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "DMC Manipulator",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "DMC Pendulum",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "DMC Point Mass",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "DMC Reacher",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "DMC Swimmer",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "DMC Walker",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "LEAP Hand Cube",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Panda Single Cube",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Panda Single Cube (Camera)",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Panda Cabinet",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "ALOHA Hand Over",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "ALOHA Single Peg Insertion",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Panda Robotiq Cube",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Go1 Flat Terrain",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Go1 FeetOnly Flat",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Go1 FeetOnly Bowl",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Go1 FeetOnly Rough",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Go1 FeetOnly Stairs",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Go1 FullCollisions Flat",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "G1 FeetOnly",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "G1 FeetOnly Flat",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "G1 FeetOnly Rough",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "H1 FeetOnly",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "T1 FeetOnly Flat",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "T1 FeetOnly Rough",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Spot Flat Terrain",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Spot FeetOnly Flat",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Apollo FeetOnly Flat",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "OP3 FeetOnly",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Berkeley Humanoid Flat",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Berkeley Humanoid Rough",
+          "metadata": {},
+          "policies": []
+        }
+      ]
+    },
+    {
+      "name": "MyoSuite",
+      "id": "myosuite",
+      "metadata": {},
+      "scenes": [
+        {
+          "name": "Hand",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Arm",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Elbow",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Legs",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "Finger",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "mc23_Relocate",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "mc23_ChaseTag",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "mc24_Bimanual",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "mc24_RunTrack",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "mc25_TableTennis",
+          "metadata": {},
+          "policies": []
+        },
+        {
+          "name": "mc25_Soccer",
+          "metadata": {},
+          "policies": []
+        }
+      ]
+    }
+  ]
+}
