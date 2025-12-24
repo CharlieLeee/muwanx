@@ -2,6 +2,7 @@
 import Vue from '@vitejs/plugin-vue'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 import Fonts from 'unplugin-fonts/vite'
+import dts from 'vite-plugin-dts'
 
 // Utilities
 import { defineConfig } from 'vite'
@@ -9,25 +10,20 @@ import { fileURLToPath, URL } from 'node:url'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const isDemoMode = process.env.BUILD_MODE === 'demo';
+  const isLibMode = process.env.BUILD_MODE === 'lib';
 
   return {
     base: '/muwanx/',
-    publicDir: isDemoMode ? 'examples' : false,
-    build: isDemoMode ?
-    {
-      outDir: 'dist',
-      rollupOptions: {
-        input: fileURLToPath(new URL('./index.html', import.meta.url)),
-      },
-    } : {
+    publicDir: isLibMode ? false : 'examples',
+    build: isLibMode ? {
       lib: {
         entry: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
         name: 'Muwanx',
         fileName: (format) => `muwanx.${format}.js`,
+        formats: ['es', 'umd'],
       },
       rollupOptions: {
-        external: ['vue', 'vuetify', 'vue-router', 'three', 'onnxruntime-web'],
+        external: ['vue', 'vuetify', 'vue-router', 'three', 'onnxruntime-web', 'mujoco-js'],
         output: {
           globals: {
             vue: 'Vue',
@@ -35,8 +31,19 @@ export default defineConfig(({ mode }) => {
             'vue-router': 'VueRouter',
             three: 'THREE',
             'onnxruntime-web': 'ort',
+            'mujoco-js': 'MuJoCo',
           },
+          // Preserve module structure for better tree-shaking
+          preserveModules: false,
+          exports: 'named',
         },
+      },
+      // Generate TypeScript declarations
+      emitAssets: true,
+    } : {
+      outDir: 'dist',
+      rollupOptions: {
+        input: fileURLToPath(new URL('./index.html', import.meta.url)),
       },
     },
     plugins: [
@@ -60,6 +67,16 @@ export default defineConfig(({ mode }) => {
         ],
       },
     }),
+    // Generate TypeScript declarations in library mode
+    ...(isLibMode ? [dts({
+      include: ['src/**/*.ts', 'src/**/*.vue'],
+      exclude: ['src/**/*.spec.ts', 'src/**/*.test.ts'],
+      outDir: 'dist',
+      copyDtsFiles: true,
+      staticImport: true,
+      rollupTypes: true,
+      skipDiagnostics: false,
+    })] : []),
   ],
   optimizeDeps: {
     exclude: ['vuetify', 'onnxruntime-web'],
@@ -69,6 +86,8 @@ export default defineConfig(({ mode }) => {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@examples': fileURLToPath(new URL('./examples', import.meta.url)),
+      // Alias 'muwanx' to local src for development
+      'muwanx': fileURLToPath(new URL('./src/index.ts', import.meta.url)),
     },
     extensions: [
       '.js',

@@ -1,20 +1,46 @@
-import { ref, markRaw } from 'vue';
+import { ref, markRaw, type Ref } from 'vue';
 import loadMujoco from 'mujoco-js';
-import { MujocoRuntime } from '@/core/mujoco/runtime/MujocoRuntime.js';
-import { GoCommandManager } from '@/core/mujoco/runtime/managers/commands/GoCommandManager.js';
-import { IsaacActionManager } from '@/core/mujoco/runtime/managers/actions/IsaacActionManager.js';
-import { PassiveActionManager } from '@/core/mujoco/runtime/managers/actions/PassiveActionManager.js';
-import { TrajectoryActionManager } from '@/core/mujoco/runtime/managers/actions/TrajectoryActionManager.js';
-import { ConfigObservationManager } from '@/core/mujoco/runtime/managers/observations/ConfigObservationManager.js';
-import { LocomotionEnvManager } from '@/core/mujoco/runtime/managers/environment/LocomotionEnvManager.js';
+import { MujocoRuntime } from '@/core/engine/MujocoRuntime';
+import { GoCommandManager as CommandManager } from '@/core/engine/managers/CommandManager';
+import { IsaacActionManager as ActionManager } from '@/core/action/IsaacActionManager';
+import { PassiveActionManager } from '@/core/action/PassiveActionManager';
+import { ConfigObservationManager as ObservationManager } from '@/core/observation/ObservationManager';
+import { LocomotionEnvManager as EnvManager } from '@/core/engine/managers/EnvManager';
 import type { PolicyConfigItem, TaskConfigItem } from '@/types/config';
-import { MUJOCO_CONTAINER_ID } from '@/viewer/constants';
+import { MUJOCO_CONTAINER_ID } from '@/viewer/utils/constants';
 
-export function useRuntime() {
+export interface UseRuntimeReturn {
+  runtime: Ref<any>;
+  commandManager: Ref<any>;
+  actionManager: Ref<any>;
+  observationManager: Ref<any>;
+  envManager: Ref<any>;
+  facet_kp: Ref<number>;
+  command_vel_x: Ref<number>;
+  use_setpoint: Ref<boolean>;
+  compliant_mode: Ref<boolean>;
+  drag_force_scale: Ref<number>;
+  state: Ref<number>;
+  extra_error_message: Ref<string>;
+  initRuntime: (initialTask: TaskConfigItem, initialPolicy: PolicyConfigItem | null) => Promise<void>;
+  onTaskChange: (taskItem: TaskConfigItem, defaultPolicy: PolicyConfigItem | null, withTransition: (msg: string, act: () => Promise<any>) => Promise<any>) => Promise<void>;
+  onPolicyChange: (taskItem: TaskConfigItem, policyItem: PolicyConfigItem, withTransition: (msg: string, act: () => Promise<any>) => Promise<any>) => Promise<void>;
+  applyCommandState: () => void;
+  reset: () => Promise<void>;
+  updateFacetKp: () => void;
+  updateUseSetpoint: () => void;
+  updateCommandVelX: () => void;
+  updateCompliantMode: () => void;
+  updateDragForceScale: () => void;
+  triggerImpulse: () => void;
+  toggleVRButton: () => void;
+  dispose: () => void;
+}
+
+export function useRuntime(): UseRuntimeReturn {
   const runtime = ref<MujocoRuntime | null>(null);
   const commandManager = ref<any>(null);
   const actionManager = ref<any>(null);
-  const trajectoryManager = ref<TrajectoryActionManager | null>(null);
   const observationManager = ref<any>(null);
   const envManager = ref<any>(null);
 
@@ -22,15 +48,14 @@ export function useRuntime() {
   const command_vel_x = ref<number>(0.0);
   const use_setpoint = ref<boolean>(true);
   const compliant_mode = ref<boolean>(false);
+  const drag_force_scale = ref<number>(25);
 
   const state = ref<number>(0);
   const extra_error_message = ref<string>('');
 
-  const trajectoryPlaybackState = ref<'play' | 'stop' | 'reset'>('stop');
-  const trajectoryLoop = ref<boolean>(false);
-
   function resolveSceneConfig(task: TaskConfigItem | null, policy: PolicyConfigItem | null) {
     if (!task) return { scenePath: null as string | null, metaPath: null as string | null };
+    // For legacy support, model_xml is treated as either path or content (auto-detected)
     const scenePath = policy?.model_xml ?? task.model_xml;
     const metaRaw = policy?.asset_meta ?? task.asset_meta ?? null;
     const metaPath = metaRaw === 'null' || metaRaw === '' ? null : metaRaw;
@@ -64,45 +89,12 @@ export function useRuntime() {
         needsIsaac = hasIsaacJoints || hasActuators || hasDefaultJpos;
       }
     }
-    const needsTrajectory = policyConfig?.type === 'trajectory';
     const current = actionManager.value;
 
-    if (needsTrajectory) {
-      const trajectoryPath = policyConfig?.trajectory_path ?? null;
-      if (current instanceof TrajectoryActionManager) {
-        await loadTrajectoryData(current, trajectoryPath);
-        trajectoryManager.value = current;
-        current.setLoop(trajectoryLoop.value);
-        trajectoryPlaybackState.value = 'stop';
-        return;
-      }
-      const nextManager = markRaw(new TrajectoryActionManager());
-      if (runtime.value) {
-        if (runtime.value.actionManager && typeof runtime.value.actionManager.dispose === 'function') {
-          runtime.value.actionManager.dispose();
-        }
-        runtime.value.actionManager = nextManager;
-        nextManager.attachRuntime(runtime.value);
-        if (typeof (nextManager as any).onInit === 'function') {
-          await (nextManager as any).onInit();
-        }
-      }
-      await loadTrajectoryData(nextManager, trajectoryPath);
-      nextManager.setLoop(trajectoryLoop.value);
-      actionManager.value = nextManager;
-      trajectoryManager.value = nextManager;
-      trajectoryPlaybackState.value = 'stop';
-      return;
-    }
-
-    trajectoryManager.value = null;
-    trajectoryPlaybackState.value = 'stop';
-    trajectoryLoop.value = false;
-
-    if (needsIsaac && current instanceof IsaacActionManager) return;
+    if (needsIsaac && current instanceof ActionManager) return;
     if (!needsIsaac && current instanceof PassiveActionManager) return;
 
-    const next = markRaw(needsIsaac ? new IsaacActionManager() : new PassiveActionManager());
+    const next = markRaw(needsIsaac ? new ActionManager() : new PassiveActionManager());
     if (runtime.value) {
       if (runtime.value.actionManager && typeof runtime.value.actionManager.dispose === 'function') {
         runtime.value.actionManager.dispose();
@@ -114,21 +106,6 @@ export function useRuntime() {
       }
     }
     actionManager.value = next;
-  }
-
-  async function loadTrajectoryData(manager: TrajectoryActionManager, trajectoryPath: string | null | undefined) {
-    if (!manager || !trajectoryPath) return;
-    try {
-      const response = await fetch(trajectoryPath);
-      if (!response.ok) {
-        console.warn(`Failed to load trajectory from ${trajectoryPath}: ${response.status}`);
-        return;
-      }
-      const trajectoryData = await response.json();
-      manager.loadTrajectory(trajectoryData);
-    } catch (e) {
-      console.error('Error loading trajectory data:', e);
-    }
   }
 
   function applyCommandState() {
@@ -167,9 +144,9 @@ export function useRuntime() {
       const mujoco = await loadMujoco();
       const { scenePath, metaPath } = resolveSceneConfig(initialTask, initialPolicy);
       await ensureActionManager(metaPath, initialPolicy);
-      commandManager.value = markRaw(new GoCommandManager());
-      observationManager.value = markRaw(new ConfigObservationManager());
-      envManager.value = markRaw(new LocomotionEnvManager());
+      commandManager.value = markRaw(new CommandManager());
+      observationManager.value = markRaw(new ObservationManager());
+      envManager.value = markRaw(new EnvManager());
 
       runtime.value = markRaw(new MujocoRuntime(mujoco, {
         containerId: MUJOCO_CONTAINER_ID,
@@ -183,6 +160,18 @@ export function useRuntime() {
         metaPath,
         policyPath: initialPolicy?.path,
       });
+
+      // Apply camera config from task if provided
+      if (initialTask.camera) {
+        runtime.value.applyCameraFromMetadata({
+          camera: {
+            pos: initialTask.camera.position,
+            target: initialTask.camera.target,
+            fov: initialTask.camera.fov,
+          },
+        });
+      }
+
       updateFacetballService(initialPolicy);
       runtime.value.resume();
       applyCommandState();
@@ -203,6 +192,18 @@ export function useRuntime() {
       metaPath,
       policyPath: policyItem?.path ?? null,
     });
+
+    // Apply camera config from task if provided
+    if (taskItem.camera) {
+      runtime.value.applyCameraFromMetadata({
+        camera: {
+          pos: taskItem.camera.position,
+          target: taskItem.camera.target,
+          fov: taskItem.camera.fov,
+        },
+      });
+    }
+
     updateFacetballService(policyItem);
     runtime.value.resume();
     applyCommandState();
@@ -254,34 +255,20 @@ export function useRuntime() {
     facet_kp.value = (runtime.value as any)?.params?.impedance_kp ?? facet_kp.value;
   }
 
+  function updateDragForceScale() {
+    if (!envManager.value) return;
+    envManager.value.dragForceScale = drag_force_scale.value;
+  }
+
   function triggerImpulse() {
     if (!commandManager.value) return;
     commandManager.value.triggerImpulse();
   }
 
-  function playTrajectory() {
-    if (!trajectoryManager.value) return;
-    trajectoryManager.value.play();
-    trajectoryPlaybackState.value = 'play';
-  }
-
-  function stopTrajectory() {
-    if (!trajectoryManager.value) return;
-    trajectoryManager.value.stop();
-    trajectoryPlaybackState.value = 'stop';
-    (runtime.value as any)?.applyAction?.();
-  }
-
-  function resetTrajectory() {
-    if (!trajectoryManager.value) return;
-    const wasPlaying = trajectoryManager.value.isPlaying;
-    trajectoryManager.value.reset();
-    trajectoryPlaybackState.value = wasPlaying ? 'play' : 'reset';
-  }
-
-  function updateTrajectoryLoop(value: boolean) {
-    trajectoryLoop.value = value;
-    trajectoryManager.value?.setLoop(value);
+  function toggleVRButton() {
+    if (runtime.value) {
+      runtime.value.toggleVRButton();
+    }
   }
 
   function dispose() {
@@ -298,7 +285,6 @@ export function useRuntime() {
     runtime,
     commandManager,
     actionManager,
-    trajectoryManager,
     observationManager,
     envManager,
 
@@ -307,10 +293,9 @@ export function useRuntime() {
     command_vel_x,
     use_setpoint,
     compliant_mode,
+    drag_force_scale,
     state,
     extra_error_message,
-    trajectoryPlaybackState,
-    trajectoryLoop,
 
     // api
     initRuntime,
@@ -322,11 +307,9 @@ export function useRuntime() {
     updateUseSetpoint,
     updateCommandVelX,
     updateCompliantMode,
+    updateDragForceScale,
     triggerImpulse,
-    playTrajectory,
-    stopTrajectory,
-    resetTrajectory,
-    updateTrajectoryLoop,
+    toggleVRButton,
     dispose,
   };
 }

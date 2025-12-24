@@ -1,42 +1,155 @@
 /**
  * Muwanx
  *
- * Main package entry point
- * This file exports the core components and utilities for use as an npm package
+ * Main package entry point for the muwanx npm package.
+ *
+ * This package provides a customizable API for building interactive
+ * MuJoCo-based applications with RL/NN policies.
+ *
+ * @example
+ * ```typescript
+ * // Pattern A: Declarative (load from config)
+ * import { MwxViewer } from 'muwanx';
+ *
+ * const viewer = new MwxViewer('#container');
+ * await viewer.loadConfig('./config.json');
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Pattern B: Imperative (programmatic)
+ * import { MwxViewer } from 'muwanx';
+ *
+ * const viewer = new MwxViewer('#container');
+ * const project = viewer.addProject({
+ *   name: "My Project",
+ *   link: "https://..."
+ * });
+ * const scene = project.addScene({
+ *   id: "scene1",
+ *   name: "My Scene",
+ *   model_xml: "./assets/scene.xml"
+ * });
+ * const policy = scene.addPolicy({
+ *   id: "policy1",
+ *   name: "My Policy",
+ *   path: "./assets/policy.json"
+ * });
+ * await viewer.initialize();
+ * ```
  */
 
-// Export the main viewer component
-export { default as MuwanxViewer } from './viewer/MuwanxViewer.vue'
+// ============================================================================
+// Main API - MwxViewer class and builders
+// ============================================================================
+export { MwxViewer, Project, Scene, Policy } from './viewer/MwxViewer';
+export type {
+  ViewerEvents,
+  ViewerEventName,
+  ViewerEventCallback,
+} from './viewer/MwxViewer';
 
-// Export viewer components for customization
-export { default as ControlPanel } from './viewer/components/ControlPanel.vue'
-export { default as StatusDialogs } from './viewer/components/StatusDialogs.vue'
-export { default as StatusOverlay } from './viewer/components/StatusOverlay.vue'
-export { default as HelpDialog } from './viewer/components/HelpDialog.vue'
-export { default as Notice } from './viewer/components/Notice.vue'
-export { default as CommandControls } from './viewer/components/CommandControls.vue'
-export { default as ForceControls } from './viewer/components/ForceControls.vue'
-export { default as PolicySelector } from './viewer/components/PolicySelector.vue'
-export { default as ProjectSelector } from './viewer/components/ProjectSelector.vue'
-export { default as SceneSelector } from './viewer/components/SceneSelector.vue'
-export { default as StiffnessControls } from './viewer/components/StiffnessControls.vue'
-export { default as TrajectoryControls } from './viewer/components/TrajectoryControls.vue'
+// ============================================================================
+// API Type Definitions
+// ============================================================================
+export type {
+  // Main configuration types
+  ViewerConfig,
+  ProjectConfig,
+  SceneConfig,
+  PolicyConfig,
 
-// Export composables for advanced usage
-export { useConfig } from './viewer/composables/useConfig'
-export { useResponsive } from './viewer/composables/useResponsive'
-export { useRuntime } from './viewer/composables/useRuntime'
-export { useScenePolicy } from './viewer/composables/useScenePolicy'
-export { useTransition } from './viewer/composables/useTransition'
-export { useUrlSync } from './viewer/composables/useUrlSync'
+  // Camera configuration
+  CameraConfig,
 
-// Export constants
-export * from './viewer/constants'
+  // Asset metadata
+  AssetMetadata,
+  InitialState,
+  ActuatorConfig,
 
-// Export type definitions
-export type * from './types/config'
-export type * from './types/events'
-export type * from './types/state'
+  // Observation configuration
+  ObservationConfig,
+  ObservationConfigMap,
+  BaseObservationConfig,
+  ProjectedGravityConfig,
+  JointPositionsConfig,
+  JointVelocitiesConfig,
+  BaseLinearVelocityConfig,
+  BaseAngularVelocityConfig,
+  PreviousActionsConfig,
+  VelocityCommandConfig,
+  VelocityCommandWithOscillatorsConfig,
+  ImpedanceCommandConfig,
 
-// Export core MuJoCo utilities
-export { MujocoRuntime } from './core/mujoco/runtime/MujocoRuntime'
+  // Policy configuration
+  ONNXConfig,
+  ONNXMetadata,
+  UIControlType,
+
+  // Runtime state
+  RuntimeState,
+  RuntimeParams,
+
+  // Legacy types
+  LegacyAppConfig,
+} from './types/api';
+
+// Utility functions
+export { convertLegacyConfig } from './types/api';
+
+// ============================================================================
+// Legacy type definitions (for backward compatibility)
+// ============================================================================
+export type * from './types/config';
+export type * from './types/events';
+export type * from './types/state';
+
+// ============================================================================
+// Core Engine (Advanced Usage)
+// ============================================================================
+export { MujocoRuntime } from './core/engine/MujocoRuntime';
+export type { MujocoRuntimeOptions } from './core/engine/MujocoRuntime';
+
+// Action managers
+export { IsaacActionManager } from './core/action/IsaacActionManager';
+export { PassiveActionManager } from './core/action/PassiveActionManager';
+
+// Observation managers and components
+export { ConfigObservationManager } from './core/observation/ObservationManager';
+// Alias for convenience
+export { ConfigObservationManager as ObservationManager } from './core/observation/ObservationManager';
+export * from './core/observation/atomic';
+export * from './core/observation/commands';
+
+// Command managers
+export { GoCommandManager } from './core/engine/managers/CommandManager';
+
+// Environment managers
+export { LocomotionEnvManager } from './core/engine/managers/EnvManager';
+
+// ONNX helper
+export { ONNXModule } from './core/agent/onnxHelper';
+
+// Scene utilities
+export * from './core/scene/scene';
+export * from './core/scene/lights';
+export * from './core/scene/textures';
+export * from './core/scene/tendons';
+
+// ============================================================================
+// Vue Viewer Components (Optional)
+// ============================================================================
+// Note: These are exported separately via the './viewer' export path
+// Import them using: import MwxViewerComponent from 'muwanx/viewer';
+
+// Re-export viewer for convenience
+export { default as MwxViewerComponent } from './viewer/components/MwxViewer.vue';
+
+// Composables
+export { useConfig } from './viewer/composables/useConfig';
+export { useRuntime } from './viewer/composables/useRuntime';
+export { useScenePolicy } from './viewer/composables/useScenePolicy';
+export { useUrlSync } from './viewer/composables/useUrlSync';
+export type { RouteItem, ProjectItem } from './viewer/composables/useUrlSync';
+export { useTransition } from './viewer/composables/useTransition';
+export { useResponsive } from './viewer/composables/useResponsive';
