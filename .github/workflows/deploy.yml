@@ -1,24 +1,19 @@
 name: deploy
 
 on:
-  # Allow manual trigger from Actions tab
-  workflow_dispatch:
   push:
-    branches: [main, reorg]
-  pull_request:
-    branches: [main, reorg]
+    branches: [ reorg ]
+  workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -40,27 +35,14 @@ jobs:
     - name: Build demo application
       run: MUWANX_NO_LAUNCH=1 python examples/demo/demo.py
 
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-
-    - name: Organize files for deployment
+    - name: Organize files
       run: |
-        mkdir -p tree
-        mv examples/demo/dist tree/
+        mkdir -p deploy
+        mv examples/demo/dist deploy/
 
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
+    - name: Deploy to gh-pages (/reorg)
+      uses: peaceiris/actions-gh-pages@v4
       with:
-        path: '.'
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./deploy
+        destination_dir: reorg

@@ -2,22 +2,22 @@
   <img src="assets/banner.png" alt="muwanx" width="80%">
 </p>
 <p align="center">
-    <strong><em>Real-time Interactive AI Robot Simulation in Your Browser</em></strong>
+  <strong><em>Real-time Interactive AI Robot Simulation in Your Browser</em></strong>
 </p>
 
 <p align="center">
-    <a href="https://github.com/ttktjmt/muwanx/actions/workflows/deploy.yml"><img src="https://github.com/ttktjmt/muwanx/actions/workflows/deploy.yml/badge.svg" alt="deploy"/></a>
-    <a href="https://github.com/ttktjmt/muwanx/actions/workflows/pytest.yml"><img src="https://github.com/ttktjmt/muwanx/actions/workflows/pytest.yml/badge.svg" alt="test"/></a>
-    <a href="https://pypi.org/project/muwanx"><img src="https://img.shields.io/pypi/v/muwanx.svg?logo=pypi" alt="pypi version"></a>
-    <a href="https://www.npmjs.com/package/muwanx"><img src="https://img.shields.io/npm/v/muwanx.svg?logo=nodedotjs" alt="npm version"></a>
+  <a href="https://github.com/ttktjmt/muwanx/actions/workflows/deploy.yml"><img src="https://github.com/ttktjmt/muwanx/actions/workflows/deploy.yml/badge.svg" alt="deploy"/></a>
+  <a href="https://github.com/ttktjmt/muwanx/actions/workflows/pytest.yml"><img src="https://github.com/ttktjmt/muwanx/actions/workflows/pytest.yml/badge.svg" alt="test"/></a>
+  <a href="https://pypi.org/project/muwanx"><img src="https://img.shields.io/pypi/v/muwanx.svg?logo=pypi" alt="pypi version"></a>
+  <a href="https://www.npmjs.com/package/muwanx"><img src="https://img.shields.io/npm/v/muwanx.svg?logo=nodedotjs" alt="npm version"></a>
 </p>
 
-Create your own interactive MuJoCo simulations with real-time policy control, all running directly in the browser, built on top of <a href="https://github.com/google-deepmind/mujoco/tree/main/wasm"><strong>MU</strong>joco <strong>WA</strong>sm</a>, <a href="https://github.com/microsoft/onnxruntime">on<strong>NX</strong> runtime</a>, and <a href="https://github.com/mrdoob/three.js/">three.js</a>. This enables easy sharing of AI robot simulation demos as static sites, perfect for GitHub Pages hosting and rapid visualization of custom MuJoCo scenes with policy control.
+<p align="center">
+  Create your own interactive MuJoCo simulations with real-time policy control, all running directly in the browser. It is built on top of <a href="https://github.com/google-deepmind/mujoco/tree/main/wasm"><strong>MU</strong>joco <strong>WA</strong>sm</a>, <a href="https://github.com/microsoft/onnxruntime">on<strong>NX</strong> runtime</a>, and <a href="https://github.com/mrdoob/three.js/">three.js</a>. This enables easy sharing of AI robot simulation demos as static sites, perfect for GitHub Pages hosting and rapid visualization of custom MuJoCo scenes with policy control.
+</p>
 
 <p align="center">
-  <a href="https://ttktjmt.github.io/muwanx/">
-    <img src="https://raw.githubusercontent.com/ttktjmt/muwanx/refs/heads/main/assets/muwanx_demo.gif" width="70%"/>
-  </a>
+  <a href="https://ttktjmt.github.io/muwanx/"><img src="assets/demo.gif" width="70%"/></a>
 </p>
 
 
@@ -79,4 +79,4 @@ It is also built upon the excellent work of [zalo/mujoco_wasm](https://github.co
 
 ## License
 
-This project is licensed under the [Apache-2.0 License](./LICENSE).
+This project is licensed under the [Apache-2.0 License](LICENSE).
