@@ -150,8 +150,13 @@ class Builder:
         return MuwanxApp(output_path)
 
     def _save_json(self, output_path: Path) -> None:
-        """Save configuration as JSON."""
-        config = {
+        """Save configuration as JSON.
+
+        Creates root assets/config.json with project metadata and structure information.
+        Individual project assets (scenes/policies) are saved under project-id/assets/.
+        """
+        # Create root config with project metadata and structure info
+        root_config = {
             "version": "0.0.0",
             "projects": [
                 {
@@ -177,20 +182,27 @@ class Builder:
             ],
         }
 
-        # Save config.json in assets directory
+        # Save root config.json in assets directory
         assets_dir = output_path / "assets"
         assets_dir.mkdir(exist_ok=True)
-        config_file = assets_dir / "config.json"
-        with open(config_file, "w") as f:
-            json.dump(config, f, indent=2)
+        root_config_file = assets_dir / "config.json"
+        with open(root_config_file, "w") as f:
+            json.dump(root_config, f, indent=2)
 
     def _save_web(self, output_path: Path) -> None:
-        """Save as a complete web application."""
+        """Save as a complete web application with hybrid structure.
+
+        Structure:
+        dist/
+        ├── index.html (main app for all projects)
+        ├── assets/ (shared JS/CSS and root config.json)
+        └── project-id/ (or 'main' for projects without ID)
+            └── assets/
+                ├── scene/
+                └── policy/
+        """
         if output_path.exists():
-            # Clean up existing directory if needed, or just overwrite
-            # For now we just overwrite, but maybe we should warn?
-            # The previous implementation had an overwrite flag.
-            pass
+            shutil.rmtree(output_path)
 
         output_path.mkdir(parents=True, exist_ok=True)
 
@@ -212,7 +224,6 @@ class Builder:
                     )
 
             # Copy all files from template to output_path
-            # We use shutil.copytree with dirs_exist_ok=True (Python 3.8+)
             shutil.copytree(
                 template_dir,
                 output_path,
@@ -256,7 +267,7 @@ class Builder:
                         else:
                             dev_path.unlink()
 
-                # Remove public directory after build (assets are already in dist)
+                # Remove public directory after build
                 public_dir = output_path / "public"
                 if public_dir.exists():
                     shutil.rmtree(public_dir)
@@ -266,41 +277,58 @@ class Builder:
                 category=RuntimeWarning,
             )
 
-        # Create directory structure
+        # Create root assets directory for shared config
         assets_dir = output_path / "assets"
-        scene_dir = assets_dir / "scene"
-        policy_dir = assets_dir / "policy"
-
         assets_dir.mkdir(exist_ok=True)
-        scene_dir.mkdir(exist_ok=True)
-        policy_dir.mkdir(exist_ok=True)
 
-        # Save configuration
+        # Save root configuration (project metadata and structure)
         self._save_json(output_path)
 
-        # Save MuJoCo models and ONNX policies
-        for project in self._projects:
-            project_name = self._sanitize_name(project.name)
+        # 404.html is not required when each project has its own index.html
 
+        # Save MuJoCo models and ONNX policies per project
+        for project in self._projects:
+            # Use 'main' for projects without ID, otherwise use the project ID
+            project_dir_name = project.id if project.id else "main"
+            project_dir = output_path / project_dir_name
+            project_assets_dir = project_dir / "assets"
+            scene_dir = project_assets_dir / "scene"
+            policy_dir = project_assets_dir / "policy"
+
+            # Create directories
+            project_assets_dir.mkdir(parents=True, exist_ok=True)
+            scene_dir.mkdir(exist_ok=True)
+            policy_dir.mkdir(exist_ok=True)
+
+            # Copy index.html to each project directory so direct navigation works
+            root_index = output_path / "index.html"
+            if root_index.exists():
+                shutil.copy(str(root_index), str(project_dir / "index.html"))
+
+            # Save scenes and policies
             for scene in project.scenes:
                 scene_name = self._sanitize_name(scene.name)
-                scene_path = scene_dir / project_name / scene_name
+                scene_path = scene_dir / scene_name
                 scene_path.mkdir(parents=True, exist_ok=True)
 
                 # Save MuJoCo model
-                # mj_saveLastXML writes directly to file, so we provide the full path
                 scene_xml_path = str(scene_path / "scene.xml")
                 mujoco.mj_saveLastXML(scene_xml_path, scene.model)
 
                 # Save policies
                 for policy in scene.policies:
                     policy_name = self._sanitize_name(policy.name)
-                    policy_path = policy_dir / project_name / scene_name
+                    policy_path = policy_dir / scene_name
                     policy_path.mkdir(parents=True, exist_ok=True)
 
                     onnx.save(policy.model, str(policy_path / f"{policy_name}.onnx"))
 
         print(f"✓ Saved muwanx application to: {output_path}")
+        print("  Structure: Hybrid (shared app, per-project assets)")
+        print(f"  Root config: {assets_dir / 'config.json'}")
+        for project in self._projects:
+            project_dir_name = project.id if project.id else "main"
+            print(f"  Project assets: {output_path / project_dir_name / 'assets'}")
 
     def _sanitize_name(self, name: str) -> str:
         """Sanitize a name for use as a filename."""

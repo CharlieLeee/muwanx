@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 
 interface PolicyConfig {
   name: string;
@@ -23,14 +23,65 @@ interface AppConfig {
   projects: ProjectConfig[];
 }
 
+/**
+ * Extract project ID from current location
+ * Returns null for main project (no path or path is /)
+ * Returns the first path segment for other projects
+ */
+function getProjectIdFromLocation(): string | null {
+  const path = window.location.pathname;
+  // Remove leading slash and trailing slashes
+  const cleanPath = path.replace(/^\/|\/$/g, '');
+
+  // If no path or path is empty, it's the main project
+  if (!cleanPath) {
+    return null;
+  }
+
+  // Extract first path segment (project ID)
+  const segments = cleanPath.split('/');
+  const projectId = segments[0];
+
+  // Ignore if it looks like a file or reserved path
+  if (projectId.includes('.') || projectId === 'assets') {
+    return null;
+  }
+
+  return projectId;
+}
+
 function App() {
   const [allProjects, setAllProjects] = useState<ProjectConfig[]>([]);
+  const [currentProject, setCurrentProject] = useState<ProjectConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const projectId = useMemo(() => getProjectIdFromLocation(), []);
+
+  /**
+   * Compute the base URL for assets.
+   * Since each project directory has its own index.html,
+   * we need to navigate up one level to reach the shared assets.
+   * - From root (/) or /?query: BASE_URL/assets/
+   * - From /project-id/: ../assets/ (or ../../assets/ relative to current location)
+   */
+  const assetBaseUrl = useMemo(() => {
+    if (projectId === null) {
+      // Main project: use BASE_URL directly
+      return `${import.meta.env.BASE_URL}assets/`.replace(/\/+/g, '/');
+    } else {
+      // Project-specific: go up one level from /project-id/
+      // The index.html is at /project-id/index.html
+      // Assets are at /assets/
+      // So we use ../assets/ relative path
+      const base = import.meta.env.BASE_URL;
+      return `${base}../assets/`.replace(/\/+/g, '/');
+    }
+  }, [projectId]);
+
   useEffect(() => {
-    // Load config.json from assets directory with proper base path
-    const configPath = `${import.meta.env.BASE_URL}assets/config.json`.replace(/\/+/g, '/');
+    // Load root config.json from assets directory
+    const configPath = `${assetBaseUrl}config.json`;
     fetch(configPath)
       .then(response => {
         if (!response.ok) {
@@ -40,6 +91,18 @@ function App() {
       })
       .then((config: AppConfig) => {
         setAllProjects(config.projects);
+
+        // Find the current project based on URL
+        const found = config.projects.find(p => {
+          // For main project (id=null), only match if projectId is null
+          if (projectId === null) {
+            return p.id === null;
+          }
+          // For other projects, match by id
+          return p.id === projectId;
+        });
+
+        setCurrentProject(found || null);
         setLoading(false);
       })
       .catch(err => {
@@ -47,7 +110,7 @@ function App() {
         setError(err.message);
         setLoading(false);
       });
-  }, []);
+  }, [projectId, assetBaseUrl]);
 
 
   if (loading) {
@@ -64,6 +127,38 @@ function App() {
         <div style={styles.error}>
           <h2>Error</h2>
           <p>{error}</p>
+          <p style={{marginTop: '1rem', fontSize: '0.9rem', color: '#666'}}>
+            Project ID: {projectId ? projectId : '(main)'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentProject) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.error}>
+          <h2>Project Not Found</h2>
+          <p>
+            {projectId
+              ? `Project "${projectId}" not found.`
+              : 'No main project configured.'}
+          </p>
+          {allProjects.length > 0 && (
+            <div style={{marginTop: '1rem'}}>
+              <p style={{marginBottom: '0.5rem'}}>Available projects:</p>
+              <ul style={{margin: 0, paddingLeft: '1.5rem'}}>
+                {allProjects.map(p => (
+                  <li key={p.id || 'main'}>
+                    <a href={p.id ? `/${p.id}/` : '/'} style={{color: '#0066cc'}}>
+                      {p.name} {p.id ? `(/${p.id}/)` : '(/)'}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -71,65 +166,72 @@ function App() {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Muwanx Configuration Tree</h1>
+      <h1 style={styles.title}>{currentProject.name}</h1>
+
+      <nav style={styles.nav}>
+        <div style={styles.navItem}>
+          <span style={styles.navLabel}>Current Project:</span>
+          <span style={styles.navValue}>
+            {currentProject.id || '(main)'}
+          </span>
+        </div>
+        {allProjects.length > 1 && (
+          <div style={styles.navItem}>
+            <span style={styles.navLabel}>Other Projects:</span>
+            <div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
+              {allProjects.map(p => (
+                p.id !== currentProject.id && (
+                  <a
+                    key={p.id || 'main'}
+                    href={p.id ? `/${p.id}/` : '/'}
+                    style={styles.projectLink}
+                  >
+                    {p.name}
+                  </a>
+                )
+              ))}
+            </div>
+          </div>
+        )}
+      </nav>
 
       <div style={styles.section}>
+        <h2 style={styles.subtitle}>Scenes & Policies</h2>
+        <p style={{color: '#666', fontSize: '0.9rem', marginBottom: '1rem'}}>
+          Asset Base Path: <code style={{backgroundColor: '#f5f5f5', padding: '0.2rem 0.4rem'}}>{assetBaseUrl}</code>
+        </p>
         <ul style={styles.tree}>
-          {allProjects.map(project => {
-            const metadataKeys = Object.keys(project.metadata || {});
+          {currentProject.scenes.map(scene => {
+            const sceneMetadataKeys = Object.keys(scene.metadata || {});
             return (
-              <li key={project.name} style={styles.treeNode}>
-                <details style={styles.projectDetails} open>
-                  <summary style={styles.projectSummary}>
-                    <span aria-hidden="true" style={styles.projectDot} />
-                    <span style={styles.projectName}>{project.name}</span>
+              <li key={scene.name} style={styles.treeNode}>
+                <details style={styles.sceneDetails} open>
+                  <summary style={styles.sceneSummary}>
+                    <span aria-hidden="true" style={styles.sceneDot} />
+                    <span style={styles.sceneName}>{scene.name}</span>
                     <span style={styles.metaPill}>
-                      {project.id ? `id: ${project.id}` : 'id: (main)'}
+                      {scene.policies.length} {scene.policies.length === 1 ? 'policy' : 'policies'}
                     </span>
-                    <span style={styles.metaPill}>
-                      {project.scenes.length} {project.scenes.length === 1 ? 'scene' : 'scenes'}
-                    </span>
-                    {metadataKeys.length > 0 && (
-                      <span style={styles.metaPill}>metadata: {metadataKeys.length} keys</span>
+                    {sceneMetadataKeys.length > 0 && (
+                      <span style={styles.metaPill}>
+                        metadata: {sceneMetadataKeys.length} keys
+                      </span>
                     )}
                   </summary>
                   <ul style={styles.treeBranch}>
-                    {project.scenes.map(scene => {
-                      const sceneMetadataKeys = Object.keys(scene.metadata || {});
+                    {scene.policies.map(policy => {
+                      const policyMetadataKeys = Object.keys(policy.metadata || {});
                       return (
-                        <li key={scene.name} style={styles.treeNode}>
-                          <details style={styles.sceneDetails}>
-                            <summary style={styles.sceneSummary}>
-                              <span aria-hidden="true" style={styles.sceneDot} />
-                              <span style={styles.sceneName}>{scene.name}</span>
+                        <li key={policy.name} style={styles.treeNode}>
+                          <div style={styles.policyRow}>
+                            <span aria-hidden="true" style={styles.policyDot} />
+                            <span style={styles.policyName}>{policy.name}</span>
+                            {policyMetadataKeys.length > 0 && (
                               <span style={styles.metaPill}>
-                                {scene.policies.length} {scene.policies.length === 1 ? 'policy' : 'policies'}
+                                metadata: {policyMetadataKeys.length} keys
                               </span>
-                              {sceneMetadataKeys.length > 0 && (
-                                <span style={styles.metaPill}>
-                                  metadata: {sceneMetadataKeys.length} keys
-                                </span>
-                              )}
-                            </summary>
-                            <ul style={styles.treeBranch}>
-                              {scene.policies.map(policy => {
-                                const policyMetadataKeys = Object.keys(policy.metadata || {});
-                                return (
-                                  <li key={policy.name} style={styles.treeNode}>
-                                    <div style={styles.policyRow}>
-                                      <span aria-hidden="true" style={styles.policyDot} />
-                                      <span style={styles.policyName}>{policy.name}</span>
-                                      {policyMetadataKeys.length > 0 && (
-                                        <span style={styles.metaPill}>
-                                          metadata: {policyMetadataKeys.length} keys
-                                        </span>
-                                      )}
-                                    </div>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </details>
+                            )}
+                          </div>
                         </li>
                       );
                     })}
@@ -143,7 +245,7 @@ function App() {
 
       <footer style={styles.footer}>
         <p style={styles.footerText}>
-          Muwanx - Configuration loaded from config.json
+          Muwanx - Hybrid Structure (shared app, per-project assets)
         </p>
       </footer>
     </div>
@@ -173,9 +275,46 @@ const styles: Record<string, React.CSSProperties> = {
   },
   title: {
     fontSize: '2.5rem',
-    marginBottom: '2rem',
+    marginBottom: '1rem',
     color: '#1a1a1a',
     fontWeight: '700',
+  },
+  nav: {
+    marginBottom: '2rem',
+    padding: '1rem',
+    backgroundColor: '#f8f9fa',
+    borderRadius: '8px',
+    border: '1px solid #e9ecef',
+  },
+  navItem: {
+    marginBottom: '0.75rem',
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: '0.75rem',
+  },
+  navLabel: {
+    fontWeight: '600',
+    color: '#495057',
+    minWidth: '150px',
+  },
+  navValue: {
+    padding: '0.35rem 0.6rem',
+    backgroundColor: '#e7f5ff',
+    borderRadius: '4px',
+    color: '#0b7285',
+    fontFamily: 'monospace',
+    fontSize: '0.9rem',
+  },
+  projectLink: {
+    padding: '0.5rem 0.75rem',
+    backgroundColor: '#ffffff',
+    border: '1px solid #dee2e6',
+    borderRadius: '6px',
+    color: '#0066cc',
+    textDecoration: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
   },
   section: {
     marginBottom: '2rem',
@@ -205,22 +344,6 @@ const styles: Record<string, React.CSSProperties> = {
     margin: '0.35rem 0',
     color: '#495057',
   },
-  projectDetails: {
-    margin: '0',
-  },
-  projectSummary: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: '0.5rem',
-    padding: '0.5rem 0.75rem',
-    backgroundColor: '#ffffff',
-    border: '1px solid #e9ecef',
-    borderRadius: '10px',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-    cursor: 'pointer',
-    listStyle: 'none',
-  },
   sceneDetails: {
     margin: '0',
   },
@@ -243,12 +366,6 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '0.5rem',
     padding: '0.3rem 0.5rem',
   },
-  projectDot: {
-    width: '12px',
-    height: '12px',
-    borderRadius: '999px',
-    backgroundColor: '#0b7285',
-  },
   sceneDot: {
     width: '10px',
     height: '10px',
@@ -260,10 +377,6 @@ const styles: Record<string, React.CSSProperties> = {
     height: '8px',
     borderRadius: '999px',
     backgroundColor: '#2f9e44',
-  },
-  projectName: {
-    fontWeight: '700',
-    color: '#212529',
   },
   sceneName: {
     fontWeight: '600',
