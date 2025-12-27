@@ -28,6 +28,9 @@ class SceneConfig:
     model: mujoco.MjModel
     """MuJoCo model for the scene."""
 
+    source_path: str | None = None
+    """Optional source XML path for the scene."""
+
     policies: list[PolicyConfig] = field(default_factory=list)
     """List of policies available for this scene."""
 

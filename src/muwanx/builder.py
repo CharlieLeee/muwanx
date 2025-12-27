@@ -19,6 +19,7 @@ import onnx
 from ._build_client import ClientBuilder
 from .app import MuwanxApp
 from .project import ProjectConfig, ProjectHandle
+from .scene import SceneConfig
 
 
 class Builder:
@@ -167,6 +168,7 @@ class Builder:
                         {
                             "name": scene.name,
                             "metadata": scene.metadata,
+                            "path": self._get_scene_web_path(scene),
                             "policies": [
                                 {
                                     "name": policy.name,
@@ -283,6 +285,7 @@ class Builder:
 
         # Save root configuration (project metadata and structure)
         self._save_json(output_path)
+        root_config_file = assets_dir / "config.json"
 
         # Save MuJoCo models and ONNX policies per project
         for project in self._projects:
@@ -292,11 +295,18 @@ class Builder:
             project_assets_dir = project_dir / "assets"
             scene_dir = project_assets_dir / "scene"
             policy_dir = project_assets_dir / "policy"
+            copied_scene_roots: set[Path] = set()
 
             # Create directories
             project_assets_dir.mkdir(parents=True, exist_ok=True)
             scene_dir.mkdir(exist_ok=True)
             policy_dir.mkdir(exist_ok=True)
+
+            # Copy root config into project assets for standalone hosting.
+            if root_config_file.exists():
+                shutil.copy(
+                    str(root_config_file), str(project_assets_dir / "config.json")
+                )
 
             # Copy index.html to each project directory so direct navigation works
             root_index = output_path / "index.html"
@@ -315,9 +325,29 @@ class Builder:
                 scene_path = scene_dir / scene_name
                 scene_path.mkdir(parents=True, exist_ok=True)
 
-                # Save MuJoCo model
-                scene_xml_path = str(scene_path / "scene.xml")
-                mujoco.mj_saveLastXML(scene_xml_path, scene.model)
+                scene_source = self._resolve_scene_source(scene)
+                if scene_source:
+                    source_path, rel_scene_path, copy_root, copy_target = scene_source
+                    if copy_root and copy_target:
+                        if copy_root not in copied_scene_roots:
+                            shutil.copytree(
+                                copy_root,
+                                project_assets_dir / copy_target,
+                                dirs_exist_ok=True,
+                            )
+                            copied_scene_roots.add(copy_root)
+                    if rel_scene_path:
+                        target_path = project_assets_dir / rel_scene_path
+                        target_path.parent.mkdir(parents=True, exist_ok=True)
+                        if (
+                            source_path
+                            and source_path.exists()
+                            and not target_path.exists()
+                        ):
+                            shutil.copy(str(source_path), str(target_path))
+                else:
+                    scene_xml_path = str(scene_path / "scene.xml")
+                    mujoco.mj_saveLastXML(scene_xml_path, scene.model)
 
                 # Save policies
                 for policy in scene.policies:
@@ -337,6 +367,48 @@ class Builder:
     def _sanitize_name(self, name: str) -> str:
         """Sanitize a name for use as a filename."""
         return name.lower().replace(" ", "_").replace("-", "_")
+
+    def _resolve_scene_source(
+        self, scene: SceneConfig
+    ) -> tuple[Path | None, Path | None, Path | None, Path | None] | None:
+        if not scene.source_path:
+            return None
+
+        source_path = Path(scene.source_path).expanduser()
+        if not source_path.is_absolute():
+            source_path = (Path.cwd() / source_path).resolve()
+
+        if not source_path.exists():
+            warnings.warn(
+                f"Scene source path not found: {source_path}",
+                category=RuntimeWarning,
+                stacklevel=2,
+            )
+            return None
+
+        parts = source_path.parts
+        for idx in range(len(parts) - 1):
+            if parts[idx] == "assets" and parts[idx + 1] == "scene":
+                assets_scene_root = Path(*parts[: idx + 2])
+                rel_under = Path(*parts[idx + 2 :])
+                if not rel_under.parts:
+                    break
+                library_root = assets_scene_root / rel_under.parts[0]
+                rel_scene_path = Path("scene") / rel_under
+                copy_target = Path("scene") / rel_under.parts[0]
+                return source_path, rel_scene_path, library_root, copy_target
+
+        rel_scene_path = Path("scene") / self._sanitize_name(scene.name) / "scene.xml"
+        return source_path, rel_scene_path, source_path.parent, rel_scene_path.parent
+
+    def _get_scene_web_path(self, scene: SceneConfig) -> str:
+        resolved = self._resolve_scene_source(scene)
+        if resolved:
+            _, rel_scene_path, _, _ = resolved
+            if rel_scene_path:
+                return rel_scene_path.as_posix()
+        scene_name = self._sanitize_name(scene.name)
+        return f"scene/{scene_name}/scene.xml"
 
     def get_projects(self) -> list[ProjectConfig]:
         """Get a copy of all project configurations.

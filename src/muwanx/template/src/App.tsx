@@ -1,20 +1,22 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import MujocoViewer from './components/MujocoViewer';
 
 interface PolicyConfig {
   name: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 interface SceneConfig {
   name: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   policies: PolicyConfig[];
+  path?: string;
 }
 
 interface ProjectConfig {
   name: string;
   id: string | null;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   scenes: SceneConfig[];
 }
 
@@ -23,379 +25,274 @@ interface AppConfig {
   projects: ProjectConfig[];
 }
 
-/**
- * Extract project ID from current location
- * Returns null for main project (no path or path is /)
- * Returns the first path segment for other projects
- */
 function getProjectIdFromLocation(): string | null {
   const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '/');
   const pathname = window.location.pathname;
 
-  // strip leading/trailing slashes
   let pathClean = pathname.replace(/^\/+|\/+$/g, '');
   const baseClean = base.replace(/^\/+|\/+$/g, '');
 
-  // Remove base path prefix if present
   if (baseClean) {
     if (pathClean === baseClean) {
       pathClean = '';
-    } else if (pathClean.startsWith(baseClean + '/')) {
+    } else if (pathClean.startsWith(`${baseClean}/`)) {
       pathClean = pathClean.slice(baseClean.length + 1);
     }
   }
 
   if (!pathClean) {
-    return null; // main project
+    return null;
   }
 
   const projectId = pathClean.split('/')[0];
+  if (projectId === 'main') {
+    return null;
+  }
   if (projectId.includes('.') || projectId === 'assets') {
     return null;
   }
   return projectId;
 }
 
-function App() {
-  const [allProjects, setAllProjects] = useState<ProjectConfig[]>([]);
-  const [currentProject, setCurrentProject] = useState<ProjectConfig | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+function sanitizeName(name: string): string {
+  return name.toLowerCase().replace(/ /g, '_').replace(/-/g, '_');
+}
 
-  const projectId = useMemo(() => getProjectIdFromLocation(), []);
+function buildConfigCandidates(baseUrl: string, projectId: string | null): string[] {
+  const normalizedBase = (baseUrl || '/').replace(/\/+$/, '/');
+  const candidates = new Set<string>();
+  const add = (path: string, base?: string) => {
+    if (!path) {
+      return;
+    }
+    try {
+      const resolved = new URL(path, base || window.location.href).toString();
+      candidates.add(resolved);
+    } catch {
+      candidates.add(path.replace(/\/+/g, '/'));
+    }
+  };
 
-  useEffect(() => {
-    // Load root config.json from assets directory
-    // All project index.html files reference the same root assets using absolute path
-    const configPath = `${import.meta.env.BASE_URL}assets/config.json`.replace(/\/+/g, '/');
-    fetch(configPath)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Failed to load config.json: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((config: AppConfig) => {
-        setAllProjects(config.projects);
+  const originBase = `${window.location.origin}/`;
+  const appBase = new URL(normalizedBase, originBase).toString();
+  add('assets/config.json', appBase);
 
-        // Find the current project based on URL
-        const found = config.projects.find(p => {
-          // For main project (id=null), only match if projectId is null
-          if (projectId === null) {
-            return p.id === null;
-          }
-          // For other projects, match by id
-          return p.id === projectId;
-        });
+  const pathname = window.location.pathname;
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts.length > 0) {
+    const last = parts[parts.length - 1];
+    if (last === 'index.html') {
+      parts.pop();
+    }
+  }
+  if (parts.length > 0) {
+    const last = parts[parts.length - 1];
+    if (last === (projectId ?? 'main')) {
+      parts.pop();
+    }
+  }
+  const rootPath = `/${parts.join('/')}${parts.length ? '/' : ''}`;
+  const rootBase = `${window.location.origin}${rootPath}`;
+  add('assets/config.json', rootBase);
 
-        setCurrentProject(found || null);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to load config:', err);
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [projectId]);
+  add('assets/config.json');
+  add('../assets/config.json');
+  add('../../assets/config.json');
 
+  return Array.from(candidates);
+}
 
-  if (loading) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.loading}>Loading configuration...</div>
-      </div>
-    );
+async function loadConfig(baseUrl: string, projectId: string | null): Promise<AppConfig> {
+  const params = new URLSearchParams(window.location.search);
+  const override = params.get('config');
+  const candidates = buildConfigCandidates(baseUrl, projectId);
+  if (override) {
+    try {
+      candidates.unshift(new URL(override, window.location.href).toString());
+    } catch {
+      candidates.unshift(override);
+    }
+  }
+  let lastError: Error | null = null;
+
+  for (const url of candidates) {
+    try {
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${url}: ${response.status}`);
+      }
+      const text = await response.text();
+      const trimmed = text.trim();
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('text/html') || trimmed.startsWith('<!doctype') || trimmed.startsWith('<html')) {
+        throw new Error(`Received HTML from ${url}`);
+      }
+      try {
+        return JSON.parse(text) as AppConfig;
+      } catch (error) {
+        throw new Error(`Invalid JSON from ${url}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
   }
 
-  if (error) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.error}>
-          <h2>Error</h2>
-          <p>{error}</p>
-          <p style={{marginTop: '1rem', fontSize: '0.9rem', color: '#666'}}>
-            Project ID: {projectId ? projectId : '(main)'}
-          </p>
-        </div>
-      </div>
-    );
-  }
+  throw lastError ?? new Error('Failed to load config.json.');
+}
 
-  if (!currentProject) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.error}>
-          <h2>Project Not Found</h2>
-          <p>
-            {projectId
-              ? `Project "${projectId}" not found.`
-              : 'No main project configured.'}
-          </p>
-          {allProjects.length > 0 && (
-            <div style={{marginTop: '1rem'}}>
-              <p style={{marginBottom: '0.5rem'}}>Available projects:</p>
-              <ul style={{margin: 0, paddingLeft: '1.5rem'}}>
-                {allProjects.map(p => {
-                  const href = `${import.meta.env.BASE_URL}${p.id ? `${p.id}/` : ''}`.replace(/\/+/g, '/');
-                  return (
-                    <li key={p.id || 'main'}>
-                      <a href={href} style={{color: '#0066cc'}}>
-                        {p.name} {p.id ? `(${href})` : `(${import.meta.env.BASE_URL})`}
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
-        </div>
-      </div>
-    );
+function pickScene(project: ProjectConfig, sceneQuery: string | null): SceneConfig | null {
+  if (!project.scenes.length) {
+    return null;
   }
-
+  if (!sceneQuery) {
+    return project.scenes[0];
+  }
+  const normalized = sceneQuery.trim().toLowerCase();
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>{currentProject.name}</h1>
-
-      <nav style={styles.nav}>
-        <div style={styles.navItem}>
-          <span style={styles.navLabel}>Current Project:</span>
-          <span style={styles.navValue}>
-            {currentProject.id || '(main)'}
-          </span>
-        </div>
-        {allProjects.length > 1 && (
-          <div style={styles.navItem}>
-            <span style={styles.navLabel}>Other Projects:</span>
-            <div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
-              {allProjects.map(p => {
-                if (p.id === currentProject.id) return null;
-                const href = `${import.meta.env.BASE_URL}${p.id ? `${p.id}/` : ''}`.replace(/\/+/g, '/');
-                return (
-                  <a
-                    key={p.id || 'main'}
-                    href={href}
-                    style={styles.projectLink}
-                  >
-                    {p.name}
-                  </a>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </nav>
-
-      <div style={styles.section}>
-        <h2 style={styles.subtitle}>Scenes & Policies</h2>
-        <p style={{color: '#666', fontSize: '0.9rem', marginBottom: '1rem'}}>
-          Project Asset Path: <code style={{backgroundColor: '#f5f5f5', padding: '0.2rem 0.4rem'}}>
-            {`${import.meta.env.BASE_URL}${projectId ? `${projectId}/assets/` : 'main/assets/'}`.replace(/\/+/g, '/')}
-          </code>
-        </p>
-        <ul style={styles.tree}>
-          {currentProject.scenes.map(scene => {
-            const sceneMetadataKeys = Object.keys(scene.metadata || {});
-            return (
-              <li key={scene.name} style={styles.treeNode}>
-                <details style={styles.sceneDetails} open>
-                  <summary style={styles.sceneSummary}>
-                    <span aria-hidden="true" style={styles.sceneDot} />
-                    <span style={styles.sceneName}>{scene.name}</span>
-                    <span style={styles.metaPill}>
-                      {scene.policies.length} {scene.policies.length === 1 ? 'policy' : 'policies'}
-                    </span>
-                    {sceneMetadataKeys.length > 0 && (
-                      <span style={styles.metaPill}>
-                        metadata: {sceneMetadataKeys.length} keys
-                      </span>
-                    )}
-                  </summary>
-                  <ul style={styles.treeBranch}>
-                    {scene.policies.map(policy => {
-                      const policyMetadataKeys = Object.keys(policy.metadata || {});
-                      return (
-                        <li key={policy.name} style={styles.treeNode}>
-                          <div style={styles.policyRow}>
-                            <span aria-hidden="true" style={styles.policyDot} />
-                            <span style={styles.policyName}>{policy.name}</span>
-                            {policyMetadataKeys.length > 0 && (
-                              <span style={styles.metaPill}>
-                                metadata: {policyMetadataKeys.length} keys
-                              </span>
-                            )}
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </details>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-
-      <footer style={styles.footer}>
-        <p style={styles.footerText}>
-          Muwanx - Hybrid Structure (shared app, per-project assets)
-        </p>
-      </footer>
-    </div>
+    project.scenes.find(scene => scene.name.toLowerCase() === normalized) ||
+    project.scenes.find(scene => sanitizeName(scene.name) === normalized) ||
+    project.scenes[0]
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    maxWidth: '1000px',
-    margin: '0 auto',
-    padding: '20px',
-    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    lineHeight: '1.6',
-  },
-  loading: {
-    textAlign: 'center',
-    padding: '3rem',
-    fontSize: '1.2rem',
-    color: '#6c757d',
-  },
-  error: {
-    padding: '2rem',
-    backgroundColor: '#f8d7da',
-    border: '1px solid #f5c2c7',
-    borderRadius: '8px',
-    color: '#842029',
-  },
-  title: {
-    fontSize: '2.5rem',
-    marginBottom: '1rem',
-    color: '#1a1a1a',
-    fontWeight: '700',
-  },
-  nav: {
-    marginBottom: '2rem',
-    padding: '1rem',
-    backgroundColor: '#f8f9fa',
-    borderRadius: '8px',
-    border: '1px solid #e9ecef',
-  },
-  navItem: {
-    marginBottom: '0.75rem',
-    display: 'flex',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: '0.75rem',
-  },
-  navLabel: {
-    fontWeight: '600',
-    color: '#495057',
-    minWidth: '150px',
-  },
-  navValue: {
-    padding: '0.35rem 0.6rem',
-    backgroundColor: '#e7f5ff',
-    borderRadius: '4px',
-    color: '#0b7285',
-    fontFamily: 'monospace',
-    fontSize: '0.9rem',
-  },
-  projectLink: {
-    padding: '0.5rem 0.75rem',
-    backgroundColor: '#ffffff',
-    border: '1px solid #dee2e6',
-    borderRadius: '6px',
-    color: '#0066cc',
-    textDecoration: 'none',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-  },
-  section: {
-    marginBottom: '2rem',
-    padding: '1.5rem',
-    backgroundColor: '#f8f9fa',
-    borderRadius: '8px',
-    border: '1px solid #e9ecef',
-  },
-  subtitle: {
-    fontSize: '1.5rem',
-    marginBottom: '1rem',
-    color: '#495057',
-    fontWeight: '600',
-  },
-  tree: {
-    margin: '0',
-    paddingLeft: '0',
-    listStyle: 'none',
-  },
-  treeBranch: {
-    margin: '0.5rem 0 0.5rem 1.5rem',
-    paddingLeft: '1rem',
-    listStyle: 'none',
-    borderLeft: '2px solid #dee2e6',
-  },
-  treeNode: {
-    margin: '0.35rem 0',
-    color: '#495057',
-  },
-  sceneDetails: {
-    margin: '0',
-  },
-  sceneSummary: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: '0.5rem',
-    padding: '0.4rem 0.6rem',
-    backgroundColor: '#f8f9fa',
-    border: '1px solid #e9ecef',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    listStyle: 'none',
-  },
-  policyRow: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: '0.5rem',
-    padding: '0.3rem 0.5rem',
-  },
-  sceneDot: {
-    width: '10px',
-    height: '10px',
-    borderRadius: '999px',
-    backgroundColor: '#1971c2',
-  },
-  policyDot: {
-    width: '8px',
-    height: '8px',
-    borderRadius: '999px',
-    backgroundColor: '#2f9e44',
-  },
-  sceneName: {
-    fontWeight: '600',
-    color: '#343a40',
-  },
-  policyName: {
-    fontWeight: '500',
-    color: '#495057',
-  },
-  metaPill: {
-    padding: '2px 8px',
-    borderRadius: '999px',
-    backgroundColor: '#f1f3f5',
-    color: '#495057',
-    fontSize: '0.85rem',
-  },
-  footer: {
-    marginTop: '3rem',
-    paddingTop: '2rem',
-    borderTop: '1px solid #dee2e6',
-    textAlign: 'center',
-  },
-  footerText: {
-    color: '#6c757d',
-    fontSize: '0.9rem',
-  },
-};
+function App() {
+  const [config, setConfig] = useState<AppConfig | null>(null);
+  const [currentProject, setCurrentProject] = useState<ProjectConfig | null>(null);
+  const [currentScene, setCurrentScene] = useState<SceneConfig | null>(null);
+  const [viewerStatus, setViewerStatus] = useState<string>('Loading configuration...');
+  const [error, setError] = useState<string | null>(null);
+
+  const projectId = useMemo(() => getProjectIdFromLocation(), []);
+  const sceneQuery = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('scene');
+  }, []);
+
+  useEffect(() => {
+    loadConfig(import.meta.env.BASE_URL || '/', projectId)
+      .then((data: AppConfig) => {
+        setConfig(data);
+        const project = data.projects.find(p => {
+          if (projectId === null) {
+            return p.id === null;
+          }
+          return p.id === projectId;
+        });
+        if (!project) {
+          throw new Error(`Project "${projectId ?? '(main)'}" not found in config.json.`);
+        }
+        setCurrentProject(project);
+        const selectedScene = pickScene(project, sceneQuery);
+        setCurrentScene(selectedScene);
+        if (selectedScene && sceneQuery) {
+          const normalizedQuery = sceneQuery.trim().toLowerCase();
+          const matched =
+            selectedScene.name.toLowerCase() === normalizedQuery ||
+            sanitizeName(selectedScene.name) === normalizedQuery;
+          setViewerStatus(
+            matched
+              ? 'Preparing scene...'
+              : `Scene "${sceneQuery}" not found. Loading "${selectedScene.name}".`
+          );
+        } else {
+          setViewerStatus('Preparing scene...');
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load config:', err);
+        setError(err.message || 'Failed to load config.');
+      });
+  }, [projectId, sceneQuery]);
+
+  const scenePath = useMemo(() => {
+    if (!currentProject || !currentScene) {
+      return null;
+    }
+    const projectDir = currentProject.id ? currentProject.id : 'main';
+    const sceneRelPath = currentScene.path
+      ? currentScene.path
+      : `scene/${sanitizeName(currentScene.name)}/scene.xml`;
+    return `${projectDir}/assets/${sceneRelPath}`.replace(/\/+/g, '/');
+  }, [currentProject, currentScene]);
+
+  const handleViewerError = useCallback((err: Error) => {
+    setError(err.message);
+  }, []);
+
+  if (error) {
+    return (
+      <div className="app">
+        <div className="hud hud-error">
+          <h1 className="hud-title">Muwanx</h1>
+          <p className="hud-message">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentProject || !currentScene || !scenePath) {
+    return (
+      <div className="app">
+        <div className="hud">
+          <h1 className="hud-title">Muwanx</h1>
+          <p className="hud-message">{viewerStatus}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const projectLabel = currentProject.id ? currentProject.id : '(main)';
+  const sceneLabel = currentScene.name;
+
+  return (
+    <div className="app">
+      <MujocoViewer
+        scenePath={scenePath}
+        baseUrl={import.meta.env.BASE_URL || '/'}
+        onStatusChange={setViewerStatus}
+        onError={handleViewerError}
+      />
+      <div className="hud">
+        <div className="hud-row">
+          <span className="hud-kicker">Project</span>
+          <span className="hud-value">{currentProject.name}</span>
+          <span className="hud-tag">{projectLabel}</span>
+        </div>
+        <div className="hud-row">
+          <span className="hud-kicker">Scene</span>
+          <span className="hud-value">{sceneLabel}</span>
+          {sceneQuery && (
+            <span className="hud-tag">scene={sceneQuery}</span>
+          )}
+        </div>
+        <div className="hud-row hud-muted">
+          <span className="hud-kicker">Status</span>
+          <span className="hud-value">{viewerStatus}</span>
+        </div>
+        {config && config.projects.length > 1 && (
+          <div className="hud-row hud-links">
+            {config.projects.map(project => {
+              const href = `${import.meta.env.BASE_URL}${project.id ? `${project.id}/` : ''}`.replace(/\/+/g, '/');
+              const isActive = project.id === currentProject.id;
+              return (
+                <a
+                  key={project.id || 'main'}
+                  className={isActive ? 'hud-link active' : 'hud-link'}
+                  href={href}
+                >
+                  {project.name}
+                </a>
+              );
+            })}
+          </div>
+        )}
+        <div className="hud-row hud-muted">
+          <span className="hud-kicker">Hint</span>
+          <span className="hud-value">Use ?scene=SceneName in the URL.</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default App;

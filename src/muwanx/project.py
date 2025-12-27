@@ -7,6 +7,7 @@ managing projects containing multiple scenes.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import mujoco
@@ -57,17 +58,19 @@ class ProjectHandle:
 
     def add_scene(
         self,
-        model: mujoco.MjModel,
+        model: mujoco.MjModel | str | Path,
         name: str,
         *,
         metadata: dict[str, Any] | None = None,
+        source_path: str | None = None,
     ) -> SceneHandle:
         """Add a MuJoCo scene to this project.
 
         Args:
-            model: MuJoCo model for the scene.
+            model: MuJoCo model for the scene, or a path to an MJCF XML file.
             name: Name for the scene (displayed in the UI).
             metadata: Optional metadata dictionary for the scene.
+            source_path: Optional MJCF XML path for asset copying.
 
         Returns:
             SceneHandle for adding policies and further configuration.
@@ -75,7 +78,16 @@ class ProjectHandle:
         if metadata is None:
             metadata = {}
 
-        scene_config = SceneConfig(name=name, model=model, metadata=metadata)
+        if isinstance(model, (str, Path)):
+            source_path = str(model)
+            model = mujoco.MjModel.from_xml_path(str(model))
+
+        scene_config = SceneConfig(
+            name=name,
+            model=model,
+            metadata=metadata,
+            source_path=source_path,
+        )
         self._config.scenes.append(scene_config)
         return SceneHandle(scene_config, self)
 
