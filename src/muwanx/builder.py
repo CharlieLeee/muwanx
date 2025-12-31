@@ -16,6 +16,7 @@ from typing import Any
 import mujoco
 import onnx
 
+from . import __version__
 from ._build_client import ClientBuilder
 from .app import MuwanxApp
 from .project import ProjectConfig, ProjectHandle
@@ -146,6 +147,21 @@ class Builder:
             # Resolve relative paths against the caller's directory
             output_path = base_dir / Path(output_dir)
 
+        # Build TypeScript/JavaScript client
+        template_dir = Path(__file__).parent / "template"
+        package_json = template_dir / "package.json"
+        if package_json.exists():
+            print("Building the client...")
+            try:
+                builder = ClientBuilder(template_dir)
+                builder.build(base_path=self._base_path)
+            except Exception as e:
+                warnings.warn(
+                    f"Client build failed: {e}. Continuing with template files.",
+                    category=RuntimeWarning,
+                    stacklevel=2,
+                )
+
         self._save_web(output_path)
 
         return MuwanxApp(output_path)
@@ -156,24 +172,28 @@ class Builder:
         Creates root assets/config.json with project metadata and structure information.
         Individual project assets (scenes/policies) are saved under project-id/assets/.
         """
-        # Create root config with project metadata and structure info
+        # Create root config with project structure info
         root_config = {
-            "version": "0.0.0",
+            "version": __version__,
             "projects": [
                 {
                     "name": project.name,
                     "id": project.id,
-                    "metadata": project.metadata,
                     "scenes": [
                         {
                             "name": scene.name,
-                            "metadata": scene.metadata,
                             "path": self._get_scene_web_path(scene),
                             "policies": [
-                                {
-                                    "name": policy.name,
-                                    "metadata": policy.metadata,
-                                }
+                                (
+                                    {
+                                        "name": policy.name,
+                                        **(
+                                            {"source": policy.source_path}
+                                            if getattr(policy, "source_path", None)
+                                            else {}
+                                        ),
+                                    }
+                                )
                                 for policy in scene.policies
                             ],
                         }
@@ -194,14 +214,22 @@ class Builder:
     def _save_web(self, output_path: Path) -> None:
         """Save as a complete web application with hybrid structure.
 
+        Args:
+            output_path: Directory to save the web application. (default: <script_dir>/dist)
+
         Structure:
-        dist/
-        ├── index.html (main app for all projects)
-        ├── assets/ (shared JS/CSS and root config.json)
-        └── project-id/ (or 'main' for projects without ID)
-            └── assets/
-                ├── scene/
-                └── policy/
+            dist/
+            ├── index.html
+            ├── logo.svg
+            ├── manifest.json
+            ├── robots.txt
+            ├── assets/
+            │   ├── config.json
+            │   └── (compiled JS/CSS files)
+            └── project-id/ (or 'main')
+                └── assets/
+                    ├── scene/
+                    └── policy/
         """
         if output_path.exists():
             shutil.rmtree(output_path)
@@ -210,74 +238,61 @@ class Builder:
 
         # Copy template directory
         template_dir = Path(__file__).parent / "template"
-        if template_dir.exists():
-            # Build TypeScript/JavaScript client first
-            package_json = template_dir / "package.json"
-            if package_json.exists():
-                print("Building TypeScript/JavaScript client...")
-                try:
-                    builder = ClientBuilder(template_dir)
-                    builder.build(base_path=self._base_path)
-                except Exception as e:
-                    warnings.warn(
-                        f"Client build failed: {e}. Continuing with template files.",
-                        category=RuntimeWarning,
-                        stacklevel=2,
-                    )
-
-            # Copy all files from template to output_path
-            shutil.copytree(
-                template_dir,
-                output_path,
-                dirs_exist_ok=True,
-                ignore=shutil.ignore_patterns(".nodeenv", "__pycache__", "*.pyc"),
-            )
-
-            # Move built files from nested dist/ to output_path root
-            built_dist = output_path / "dist"
-            if built_dist.exists() and built_dist.is_dir():
-                # Move all files from dist/ to output_path
-                for item in built_dist.iterdir():
-                    dest = output_path / item.name
-                    if dest.exists():
-                        if dest.is_dir():
-                            shutil.rmtree(dest)
-                        else:
-                            dest.unlink()
-                    shutil.move(str(item), str(output_path))
-                # Remove the now-empty dist directory
-                built_dist.rmdir()
-
-                # Clean up development files that shouldn't be in production
-                dev_files = [
-                    "src",
-                    "node_modules",
-                    ".nodeenv",
-                    "package.json",
-                    "package-lock.json",
-                    "tsconfig.json",
-                    "vite.config.ts",
-                    "eslint.config.cjs",
-                    ".browserslistrc",
-                    ".gitignore",
-                ]
-                for dev_file in dev_files:
-                    dev_path = output_path / dev_file
-                    if dev_path.exists():
-                        if dev_path.is_dir():
-                            shutil.rmtree(dev_path)
-                        else:
-                            dev_path.unlink()
-
-                # Remove public directory after build
-                public_dir = output_path / "public"
-                if public_dir.exists():
-                    shutil.rmtree(public_dir)
-        else:
+        if not template_dir.exists():
             warnings.warn(
                 f"Template directory not found at {template_dir}.",
                 category=RuntimeWarning,
             )
+            return
+
+        # Copy all files from template to output_path
+        shutil.copytree(
+            template_dir,
+            output_path,
+            dirs_exist_ok=True,
+            ignore=shutil.ignore_patterns(".nodeenv", "node_modules", "dist"),
+        )
+
+        # Move built files from nested dist/ to output_path root
+        built_dist = output_path / "dist"
+        if built_dist.exists() and built_dist.is_dir():
+            # Move all files from dist/ to output_path
+            for item in built_dist.iterdir():
+                dest = output_path / item.name
+                if dest.exists():
+                    if dest.is_dir():
+                        shutil.rmtree(dest)
+                    else:
+                        dest.unlink()
+                shutil.move(str(item), str(output_path))
+            # Remove the now-empty dist directory
+            built_dist.rmdir()
+
+            # Clean up development files that shouldn't be in production
+            dev_files = [
+                "src",
+                "node_modules",
+                ".nodeenv",
+                "package.json",
+                "package-lock.json",
+                "tsconfig.json",
+                "vite.config.ts",
+                "eslint.config.cjs",
+                ".browserslistrc",
+                ".gitignore",
+            ]
+            for dev_file in dev_files:
+                dev_path = output_path / dev_file
+                if dev_path.exists():
+                    if dev_path.is_dir():
+                        shutil.rmtree(dev_path)
+                    else:
+                        dev_path.unlink()
+
+            # Remove public directory after build
+            public_dir = output_path / "public"
+            if public_dir.exists():
+                shutil.rmtree(public_dir)
 
         # Create root assets directory for shared config
         assets_dir = output_path / "assets"
@@ -293,13 +308,11 @@ class Builder:
             project_dir_name = project.id if project.id else "main"
             project_dir = output_path / project_dir_name
             project_assets_dir = project_dir / "assets"
-            scene_dir = project_assets_dir / "scene"
             policy_dir = project_assets_dir / "policy"
             copied_scene_roots: set[Path] = set()
 
             # Create directories
             project_assets_dir.mkdir(parents=True, exist_ok=True)
-            scene_dir.mkdir(exist_ok=True)
             policy_dir.mkdir(exist_ok=True)
 
             # Copy root config into project assets for standalone hosting.
@@ -322,8 +335,6 @@ class Builder:
             # Save scenes and policies
             for scene in project.scenes:
                 scene_name = self._sanitize_name(scene.name)
-                scene_path = scene_dir / scene_name
-                scene_path.mkdir(parents=True, exist_ok=True)
 
                 scene_source = self._resolve_scene_source(scene)
                 if scene_source:
@@ -346,7 +357,7 @@ class Builder:
                         ):
                             shutil.copy(str(source_path), str(target_path))
                 else:
-                    scene_xml_path = str(scene_path / "scene.xml")
+                    scene_xml_path = str(project_assets_dir / f"{scene_name}.xml")
                     mujoco.mj_saveLastXML(scene_xml_path, scene.model)
 
                 # Save policies
@@ -358,11 +369,6 @@ class Builder:
                     onnx.save(policy.model, str(policy_path / f"{policy_name}.onnx"))
 
         print(f"✓ Saved muwanx application to: {output_path}")
-        print("  Structure: Hybrid (shared app, per-project assets)")
-        print(f"  Root config: {assets_dir / 'config.json'}")
-        for project in self._projects:
-            project_dir_name = project.id if project.id else "main"
-            print(f"  Project assets: {output_path / project_dir_name / 'assets'}")
 
     def _sanitize_name(self, name: str) -> str:
         """Sanitize a name for use as a filename."""
@@ -398,7 +404,7 @@ class Builder:
                 copy_target = Path("scene") / rel_under.parts[0]
                 return source_path, rel_scene_path, library_root, copy_target
 
-        rel_scene_path = Path("scene") / self._sanitize_name(scene.name) / "scene.xml"
+        rel_scene_path = Path(f"{self._sanitize_name(scene.name)}.xml")
         return source_path, rel_scene_path, source_path.parent, rel_scene_path.parent
 
     def _get_scene_web_path(self, scene: SceneConfig) -> str:
@@ -408,7 +414,7 @@ class Builder:
             if rel_scene_path:
                 return rel_scene_path.as_posix()
         scene_name = self._sanitize_name(scene.name)
-        return f"scene/{scene_name}/scene.xml"
+        return f"{scene_name}.xml"
 
     def get_projects(self) -> list[ProjectConfig]:
         """Get a copy of all project configurations.

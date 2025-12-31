@@ -58,7 +58,7 @@ or with `npm`:
 npm install muwanx
 ```
 
-For detailed installation instructions, visit the [documentation](https://github.com/ttktjmt/muwanx/blob/main/docs/usage.md).
+For detailed installation instructions, visit the documentation.
 
 
 ## Third-Party Assets
@@ -76,4 +76,4 @@ It is also built upon the excellent work of [zalo/mujoco_wasm](https://github.co
 
 ## License
 
-This project is licensed under the [Apache-2.0 License](LICENSE). When using Muwanx, please retain attribution notices in the app.
+This project is licensed under the [Apache-2.0 License](LICENSE). When using Muwanx, please retain attribution notices in the app to help other users discover this project.

@@ -7,6 +7,8 @@ with multiple robot scenes (Go2, Go1, and G1).
 import os
 from pathlib import Path
 
+import mujoco
+
 import muwanx as mwx
 
 
@@ -29,15 +31,15 @@ def setup_builder() -> mwx.Builder:
     )
 
     demo_project.add_scene(
-        model="assets/scene/muwanx/unitree_go2/scene.xml",
+        model=mujoco.MjModel.from_xml_path("assets/scene/muwanx/unitree_go2/scene.xml"),
         name="Go2",
     )
     demo_project.add_scene(
-        model="assets/scene/muwanx/unitree_go1/go1.xml",
+        model=mujoco.MjModel.from_xml_path("assets/scene/muwanx/unitree_go1/go1.xml"),
         name="Go1",
     )
     demo_project.add_scene(
-        model="assets/scene/muwanx/unitree_g1/scene.xml",
+        model=mujoco.MjModel.from_xml_path("assets/scene/muwanx/unitree_g1/scene.xml"),
         name="G1",
     )
 
