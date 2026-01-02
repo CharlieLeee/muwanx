@@ -7,7 +7,7 @@
       "scenes": [
         {
           "name": "Go2",
-          "path": "go2.xml",
+          "path": "scene/muwanx/unitree_go2/scene.xml",
           "policies": [
             {
               "name": "Facet"
@@ -22,7 +22,7 @@
         },
         {
           "name": "Go1",
-          "path": "go1.xml",
+          "path": "scene/muwanx/unitree_go1/go1.xml",
           "policies": [
             {
               "name": "HiMLoco"
@@ -34,7 +34,7 @@
         },
         {
           "name": "G1",
-          "path": "g1.xml",
+          "path": "scene/muwanx/unitree_g1/scene.xml",
           "policies": [
             {
               "name": "Locomotion"
@@ -52,322 +52,322 @@
       "scenes": [
         {
           "name": "Agilex Piper",
-          "path": "agilex_piper.xml",
+          "path": "scene/mujoco_menagerie/agilex_piper/scene.xml",
           "policies": []
         },
         {
           "name": "Agility Cassie",
-          "path": "agility_cassie.xml",
+          "path": "scene/mujoco_menagerie/agility_cassie/scene.xml",
           "policies": []
         },
         {
           "name": "ALOHA",
-          "path": "aloha.xml",
+          "path": "scene/mujoco_menagerie/aloha/scene.xml",
           "policies": []
         },
         {
           "name": "ANYmal B",
-          "path": "anymal_b.xml",
+          "path": "scene/mujoco_menagerie/anybotics_anymal_b/scene.xml",
           "policies": []
         },
         {
           "name": "ANYmal C",
-          "path": "anymal_c.xml",
+          "path": "scene/mujoco_menagerie/anybotics_anymal_c/scene.xml",
           "policies": []
         },
         {
           "name": "Apptronik Apollo",
-          "path": "apptronik_apollo.xml",
+          "path": "scene/mujoco_menagerie/apptronik_apollo/scene.xml",
           "policies": []
         },
         {
           "name": "ARX L5",
-          "path": "arx_l5.xml",
+          "path": "scene/mujoco_menagerie/arx_l5/scene.xml",
           "policies": []
         },
         {
           "name": "Berkeley Humanoid",
-          "path": "berkeley_humanoid.xml",
+          "path": "scene/mujoco_menagerie/berkeley_humanoid/scene.xml",
           "policies": []
         },
         {
           "name": "Bitcraze Crazyflie 2",
-          "path": "bitcraze_crazyflie_2.xml",
+          "path": "scene/mujoco_menagerie/bitcraze_crazyflie_2/scene.xml",
           "policies": []
         },
         {
           "name": "Booster T1",
-          "path": "booster_t1.xml",
+          "path": "scene/mujoco_menagerie/booster_t1/scene.xml",
           "policies": []
         },
         {
           "name": "Boston Dynamics Spot",
-          "path": "boston_dynamics_spot.xml",
+          "path": "scene/mujoco_menagerie/boston_dynamics_spot/scene.xml",
           "policies": []
         },
         {
           "name": "Dynamixel 2R",
-          "path": "dynamixel_2r.xml",
+          "path": "scene/mujoco_menagerie/dynamixel_2r/scene.xml",
           "policies": []
         },
         {
           "name": "Flybody",
-          "path": "flybody.xml",
+          "path": "scene/mujoco_menagerie/flybody/scene.xml",
           "policies": []
         },
         {
           "name": "Fourier N1",
-          "path": "fourier_n1.xml",
+          "path": "scene/mujoco_menagerie/fourier_n1/scene.xml",
           "policies": []
         },
         {
           "name": "Franka Emika Panda",
-          "path": "franka_emika_panda.xml",
+          "path": "scene/mujoco_menagerie/franka_emika_panda/scene.xml",
           "policies": []
         },
         {
           "name": "Franka FR3",
-          "path": "franka_fr3.xml",
+          "path": "scene/mujoco_menagerie/franka_fr3/scene.xml",
           "policies": []
         },
         {
           "name": "Google Barkour v0",
-          "path": "google_barkour_v0.xml",
+          "path": "scene/mujoco_menagerie/google_barkour_v0/scene.xml",
           "policies": []
         },
         {
           "name": "Google Barkour vB",
-          "path": "google_barkour_vb.xml",
+          "path": "scene/mujoco_menagerie/google_barkour_vb/scene.xml",
           "policies": []
         },
         {
           "name": "Google Robot",
-          "path": "google_robot.xml",
+          "path": "scene/mujoco_menagerie/google_robot/scene.xml",
           "policies": []
         },
         {
           "name": "Hello Robot Stretch",
-          "path": "hello_robot_stretch.xml",
+          "path": "scene/mujoco_menagerie/hello_robot_stretch/scene.xml",
           "policies": []
         },
         {
           "name": "Hello Robot Stretch 3",
-          "path": "hello_robot_stretch_3.xml",
+          "path": "scene/mujoco_menagerie/hello_robot_stretch_3/scene.xml",
           "policies": []
         },
         {
           "name": "i2RT YAM",
-          "path": "i2rt_yam.xml",
+          "path": "scene/mujoco_menagerie/i2rt_yam/scene.xml",
           "policies": []
         },
         {
           "name": "IIT SoftFoot",
-          "path": "iit_softfoot.xml",
+          "path": "scene/mujoco_menagerie/iit_softfoot/scene.xml",
           "policies": []
         },
         {
           "name": "Kinova Gen3",
-          "path": "kinova_gen3.xml",
+          "path": "scene/mujoco_menagerie/kinova_gen3/scene.xml",
           "policies": []
         },
         {
           "name": "KUKA iiwa 14",
-          "path": "kuka_iiwa_14.xml",
+          "path": "scene/mujoco_menagerie/kuka_iiwa_14/scene.xml",
           "policies": []
         },
         {
           "name": "LEAP Hand Left",
-          "path": "leap_hand_left.xml",
+          "path": "scene/mujoco_menagerie/leap_hand/scene_left.xml",
           "policies": []
         },
         {
           "name": "LEAP Hand Right",
-          "path": "leap_hand_right.xml",
+          "path": "scene/mujoco_menagerie/leap_hand/scene_right.xml",
           "policies": []
         },
         {
           "name": "Low Cost Robot Arm",
-          "path": "low_cost_robot_arm.xml",
+          "path": "scene/mujoco_menagerie/low_cost_robot_arm/scene.xml",
           "policies": []
         },
         {
           "name": "PAL Talos (Motor Control)",
-          "path": "pal_talos_(motor_control).xml",
+          "path": "scene/mujoco_menagerie/pal_talos/scene_motor.xml",
           "policies": []
         },
         {
           "name": "PAL Talos (Position Control)",
-          "path": "pal_talos_(position_control).xml",
+          "path": "scene/mujoco_menagerie/pal_talos/scene_position.xml",
           "policies": []
         },
         {
           "name": "PAL TIAGo (Motor Control)",
-          "path": "pal_tiago_(motor_control).xml",
+          "path": "scene/mujoco_menagerie/pal_tiago/scene_motor.xml",
           "policies": []
         },
         {
           "name": "PAL TIAGo (Position Control)",
-          "path": "pal_tiago_(position_control).xml",
+          "path": "scene/mujoco_menagerie/pal_tiago/scene_position.xml",
           "policies": []
         },
         {
           "name": "PAL TIAGo (Velocity Control)",
-          "path": "pal_tiago_(velocity_control).xml",
+          "path": "scene/mujoco_menagerie/pal_tiago/scene_velocity.xml",
           "policies": []
         },
         {
           "name": "PAL TIAGo Dual (Motor Control)",
-          "path": "pal_tiago_dual_(motor_control).xml",
+          "path": "scene/mujoco_menagerie/pal_tiago_dual/scene_motor.xml",
           "policies": []
         },
         {
           "name": "PAL TIAGo Dual (Position Control)",
-          "path": "pal_tiago_dual_(position_control).xml",
+          "path": "scene/mujoco_menagerie/pal_tiago_dual/scene_position.xml",
           "policies": []
         },
         {
           "name": "PAL TIAGo Dual (Velocity Control)",
-          "path": "pal_tiago_dual_(velocity_control).xml",
+          "path": "scene/mujoco_menagerie/pal_tiago_dual/scene_velocity.xml",
           "policies": []
         },
         {
           "name": "PNDBiotics Adam Lite",
-          "path": "pndbiotics_adam_lite.xml",
+          "path": "scene/mujoco_menagerie/pndbotics_adam_lite/scene.xml",
           "policies": []
         },
         {
           "name": "Rethink Robotics Sawyer",
-          "path": "rethink_robotics_sawyer.xml",
+          "path": "scene/mujoco_menagerie/rethink_robotics_sawyer/scene.xml",
           "policies": []
         },
         {
           "name": "Robot Soccer Kit",
-          "path": "robot_soccer_kit.xml",
+          "path": "scene/mujoco_menagerie/robot_soccer_kit/scene.xml",
           "policies": []
         },
         {
           "name": "Robotiq 2F85",
-          "path": "robotiq_2f85.xml",
+          "path": "scene/mujoco_menagerie/robotiq_2f85/scene.xml",
           "policies": []
         },
         {
           "name": "Robotiq 2F85 v4",
-          "path": "robotiq_2f85_v4.xml",
+          "path": "scene/mujoco_menagerie/robotiq_2f85_v4/scene.xml",
           "policies": []
         },
         {
           "name": "Robotis OP3",
-          "path": "robotis_op3.xml",
+          "path": "scene/mujoco_menagerie/robotis_op3/scene.xml",
           "policies": []
         },
         {
           "name": "Shadow DEXEE",
-          "path": "shadow_dexee.xml",
+          "path": "scene/mujoco_menagerie/shadow_dexee/scene.xml",
           "policies": []
         },
         {
           "name": "Shadow Hand Left",
-          "path": "shadow_hand_left.xml",
+          "path": "scene/mujoco_menagerie/shadow_hand/scene_left.xml",
           "policies": []
         },
         {
           "name": "Shadow Hand Right",
-          "path": "shadow_hand_right.xml",
+          "path": "scene/mujoco_menagerie/shadow_hand/scene_right.xml",
           "policies": []
         },
         {
           "name": "Skydio X2",
-          "path": "skydio_x2.xml",
+          "path": "scene/mujoco_menagerie/skydio_x2/scene.xml",
           "policies": []
         },
         {
           "name": "Stanford TidyBot",
-          "path": "stanford_tidybot.xml",
+          "path": "scene/mujoco_menagerie/stanford_tidybot/scene.xml",
           "policies": []
         },
         {
           "name": "TetherIA Aero Hand Open",
-          "path": "tetheria_aero_hand_open.xml",
+          "path": "scene/mujoco_menagerie/tetheria_aero_hand_open/scene_right.xml",
           "policies": []
         },
         {
           "name": "Trossen VX300S",
-          "path": "trossen_vx300s.xml",
+          "path": "scene/mujoco_menagerie/trossen_vx300s/scene.xml",
           "policies": []
         },
         {
           "name": "Trossen WX250S",
-          "path": "trossen_wx250s.xml",
+          "path": "scene/mujoco_menagerie/trossen_wx250s/scene.xml",
           "policies": []
         },
         {
           "name": "TRS SO-ARM100",
-          "path": "trs_so_arm100.xml",
+          "path": "scene/mujoco_menagerie/trs_so_arm100/scene.xml",
           "policies": []
         },
         {
           "name": "UFactory Lite6",
-          "path": "ufactory_lite6.xml",
+          "path": "scene/mujoco_menagerie/ufactory_lite6/scene.xml",
           "policies": []
         },
         {
           "name": "UFactory xArm7",
-          "path": "ufactory_xarm7.xml",
+          "path": "scene/mujoco_menagerie/ufactory_xarm7/scene.xml",
           "policies": []
         },
         {
           "name": "UMI Gripper",
-          "path": "umi_gripper.xml",
+          "path": "scene/mujoco_menagerie/umi_gripper/scene.xml",
           "policies": []
         },
         {
           "name": "Unitree A1",
-          "path": "unitree_a1.xml",
+          "path": "scene/mujoco_menagerie/unitree_a1/scene.xml",
           "policies": []
         },
         {
           "name": "Unitree G1",
-          "path": "unitree_g1.xml",
+          "path": "scene/mujoco_menagerie/unitree_g1/scene.xml",
           "policies": []
         },
         {
           "name": "Unitree Go1",
-          "path": "unitree_go1.xml",
+          "path": "scene/mujoco_menagerie/unitree_go1/scene.xml",
           "policies": []
         },
         {
           "name": "Unitree Go2",
-          "path": "unitree_go2.xml",
+          "path": "scene/mujoco_menagerie/unitree_go2/scene.xml",
           "policies": []
         },
         {
           "name": "Unitree H1",
-          "path": "unitree_h1.xml",
+          "path": "scene/mujoco_menagerie/unitree_h1/scene.xml",
           "policies": []
         },
         {
           "name": "Unitree Z1",
-          "path": "unitree_z1.xml",
+          "path": "scene/mujoco_menagerie/unitree_z1/scene.xml",
           "policies": []
         },
         {
           "name": "Universal Robots UR5e",
-          "path": "universal_robots_ur5e.xml",
+          "path": "scene/mujoco_menagerie/universal_robots_ur5e/scene.xml",
           "policies": []
         },
         {
           "name": "Universal Robots UR10e",
-          "path": "universal_robots_ur10e.xml",
+          "path": "scene/mujoco_menagerie/universal_robots_ur10e/scene.xml",
           "policies": []
         },
         {
           "name": "Wonik Allegro Left",
-          "path": "wonik_allegro_left.xml",
+          "path": "scene/mujoco_menagerie/wonik_allegro/scene_left.xml",
           "policies": []
         },
         {
           "name": "Wonik Allegro Right",
-          "path": "wonik_allegro_right.xml",
+          "path": "scene/mujoco_menagerie/wonik_allegro/scene_right.xml",
           "policies": []
         }
       ]
@@ -378,197 +378,197 @@
       "scenes": [
         {
           "name": "DMC Acrobot",
-          "path": "dmc_acrobot.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/dm_control_suite/xmls/acrobot.xml",
           "policies": []
         },
         {
           "name": "DMC Ball In Cup",
-          "path": "dmc_ball_in_cup.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/dm_control_suite/xmls/ball_in_cup.xml",
           "policies": []
         },
         {
           "name": "DMC Cartpole",
-          "path": "dmc_cartpole.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/dm_control_suite/xmls/cartpole.xml",
           "policies": []
         },
         {
           "name": "DMC Cheetah",
-          "path": "dmc_cheetah.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/dm_control_suite/xmls/cheetah.xml",
           "policies": []
         },
         {
           "name": "DMC Finger",
-          "path": "dmc_finger.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/dm_control_suite/xmls/finger.xml",
           "policies": []
         },
         {
           "name": "DMC Fish",
-          "path": "dmc_fish.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/dm_control_suite/xmls/fish.xml",
           "policies": []
         },
         {
           "name": "DMC Hopper",
-          "path": "dmc_hopper.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/dm_control_suite/xmls/hopper.xml",
           "policies": []
         },
         {
           "name": "DMC Humanoid",
-          "path": "dmc_humanoid.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/dm_control_suite/xmls/humanoid.xml",
           "policies": []
         },
         {
           "name": "DMC Manipulator",
-          "path": "dmc_manipulator.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/dm_control_suite/xmls/manipulator.xml",
           "policies": []
         },
         {
           "name": "DMC Pendulum",
-          "path": "dmc_pendulum.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/dm_control_suite/xmls/pendulum.xml",
           "policies": []
         },
         {
           "name": "DMC Point Mass",
-          "path": "dmc_point_mass.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/dm_control_suite/xmls/point_mass.xml",
           "policies": []
         },
         {
           "name": "DMC Reacher",
-          "path": "dmc_reacher.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/dm_control_suite/xmls/reacher.xml",
           "policies": []
         },
         {
           "name": "DMC Swimmer",
-          "path": "dmc_swimmer.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/dm_control_suite/xmls/swimmer.xml",
           "policies": []
         },
         {
           "name": "DMC Walker",
-          "path": "dmc_walker.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/dm_control_suite/xmls/walker.xml",
           "policies": []
         },
         {
           "name": "LEAP Hand Cube",
-          "path": "leap_hand_cube.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/manipulation/leap_hand/xmls/scene_mjx_cube.xml",
           "policies": []
         },
         {
           "name": "Panda Single Cube",
-          "path": "panda_single_cube.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/manipulation/franka_emika_panda/xmls/mjx_single_cube.xml",
           "policies": []
         },
         {
           "name": "Panda Single Cube (Camera)",
-          "path": "panda_single_cube_(camera).xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/manipulation/franka_emika_panda/xmls/mjx_single_cube_camera.xml",
           "policies": []
         },
         {
           "name": "Panda Cabinet",
-          "path": "panda_cabinet.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/manipulation/franka_emika_panda/xmls/mjx_cabinet.xml",
           "policies": []
         },
         {
           "name": "ALOHA Hand Over",
-          "path": "aloha_hand_over.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/manipulation/aloha/xmls/mjx_hand_over.xml",
           "policies": []
         },
         {
           "name": "ALOHA Single Peg Insertion",
-          "path": "aloha_single_peg_insertion.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/manipulation/aloha/xmls/mjx_single_peg_insertion.xml",
           "policies": []
         },
         {
           "name": "Panda Robotiq Cube",
-          "path": "panda_robotiq_cube.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/manipulation/franka_emika_panda_robotiq/xmls/scene_panda_robotiq_cube.xml",
           "policies": []
         },
         {
           "name": "Go1 Flat Terrain",
-          "path": "go1_flat_terrain.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/go1/xmls/scene_mjx_flat_terrain.xml",
           "policies": []
         },
         {
           "name": "Go1 FeetOnly Flat",
-          "path": "go1_feetonly_flat.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/go1/xmls/scene_mjx_feetonly_flat_terrain.xml",
           "policies": []
         },
         {
           "name": "Go1 FeetOnly Bowl",
-          "path": "go1_feetonly_bowl.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/go1/xmls/scene_mjx_feetonly_bowl.xml",
           "policies": []
         },
         {
           "name": "Go1 FeetOnly Rough",
-          "path": "go1_feetonly_rough.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/go1/xmls/scene_mjx_feetonly_rough_terrain.xml",
           "policies": []
         },
         {
           "name": "Go1 FeetOnly Stairs",
-          "path": "go1_feetonly_stairs.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/go1/xmls/scene_mjx_feetonly_stairs.xml",
           "policies": []
         },
         {
           "name": "Go1 FullCollisions Flat",
-          "path": "go1_fullcollisions_flat.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/go1/xmls/scene_mjx_fullcollisions_flat_terrain.xml",
           "policies": []
         },
         {
           "name": "G1 FeetOnly",
-          "path": "g1_feetonly.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/g1/xmls/scene_mjx_feetonly.xml",
           "policies": []
         },
         {
           "name": "G1 FeetOnly Flat",
-          "path": "g1_feetonly_flat.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/g1/xmls/scene_mjx_feetonly_flat_terrain.xml",
           "policies": []
         },
         {
           "name": "G1 FeetOnly Rough",
-          "path": "g1_feetonly_rough.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/g1/xmls/scene_mjx_feetonly_rough_terrain.xml",
           "policies": []
         },
         {
           "name": "H1 FeetOnly",
-          "path": "h1_feetonly.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/h1/xmls/scene_mjx_feetonly.xml",
           "policies": []
         },
         {
           "name": "T1 FeetOnly Flat",
-          "path": "t1_feetonly_flat.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/t1/xmls/scene_mjx_feetonly_flat_terrain.xml",
           "policies": []
         },
         {
           "name": "T1 FeetOnly Rough",
-          "path": "t1_feetonly_rough.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/t1/xmls/scene_mjx_feetonly_rough_terrain.xml",
           "policies": []
         },
         {
           "name": "Spot Flat Terrain",
-          "path": "spot_flat_terrain.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/spot/xmls/scene_mjx_flat_terrain.xml",
           "policies": []
         },
         {
           "name": "Spot FeetOnly Flat",
-          "path": "spot_feetonly_flat.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/spot/xmls/scene_mjx_feetonly_flat_terrain.xml",
           "policies": []
         },
         {
           "name": "Apollo FeetOnly Flat",
-          "path": "apollo_feetonly_flat.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/apollo/xmls/scene_mjx_feetonly_flat_terrain.xml",
           "policies": []
         },
         {
           "name": "OP3 FeetOnly",
-          "path": "op3_feetonly.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/op3/xmls/scene_mjx_feetonly.xml",
           "policies": []
         },
         {
           "name": "Berkeley Humanoid Flat",
-          "path": "berkeley_humanoid_flat.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/berkeley_humanoid/xmls/scene_mjx_feetonly_flat_terrain.xml",
           "policies": []
         },
         {
           "name": "Berkeley Humanoid Rough",
-          "path": "berkeley_humanoid_rough.xml",
+          "path": "scene/mujoco_playground/mujoco_playground/_src/locomotion/berkeley_humanoid/xmls/scene_mjx_feetonly_rough_terrain.xml",
           "policies": []
         }
       ]
@@ -579,57 +579,57 @@
       "scenes": [
         {
           "name": "Hand",
-          "path": "hand.xml",
+          "path": "scene/myosuite/myosuite/simhive/myo_sim/hand/myohand.xml",
           "policies": []
         },
         {
           "name": "Arm",
-          "path": "arm.xml",
+          "path": "scene/myosuite/myosuite/simhive/myo_sim/arm/myoarm.xml",
           "policies": []
         },
         {
           "name": "Elbow",
-          "path": "elbow.xml",
+          "path": "scene/myosuite/myosuite/simhive/myo_sim/elbow/myoelbow_2dof6muscles.xml",
           "policies": []
         },
         {
           "name": "Legs",
-          "path": "legs.xml",
+          "path": "scene/myosuite/myosuite/simhive/myo_sim/leg/myolegs.xml",
           "policies": []
         },
         {
           "name": "Finger",
-          "path": "finger.xml",
+          "path": "scene/myosuite/myosuite/simhive/myo_sim/finger/myofinger_v0.xml",
           "policies": []
         },
         {
           "name": "mc23_Relocate",
-          "path": "mc23_relocate.xml",
+          "path": "scene/myosuite/myosuite/envs/myo/assets/arm/myoarm_relocate.xml",
           "policies": []
         },
         {
           "name": "mc23_ChaseTag",
-          "path": "mc23_chasetag.xml",
+          "path": "scene/myosuite/myosuite/envs/myo/assets/leg/myolegs_chasetag.xml",
           "policies": []
         },
         {
           "name": "mc24_Bimanual",
-          "path": "mc24_bimanual.xml",
+          "path": "scene/myosuite/myosuite/envs/myo/assets/arm/myoarm_bionic_bimanual.xml",
           "policies": []
         },
         {
           "name": "mc24_RunTrack",
-          "path": "mc24_runtrack.xml",
+          "path": "scene/myosuite/myosuite/envs/myo/assets/leg/myoosl_runtrack.xml",
           "policies": []
         },
         {
           "name": "mc25_TableTennis",
-          "path": "mc25_tabletennis.xml",
+          "path": "scene/myosuite/myosuite/envs/myo/assets/arm/myoarm_tabletennis.xml",
           "policies": []
         },
         {
           "name": "mc25_Soccer",
-          "path": "mc25_soccer.xml",
+          "path": "scene/myosuite/myosuite/envs/myo/assets/leg_soccer/myolegs_soccer.xml",
           "policies": []
         }
       ]

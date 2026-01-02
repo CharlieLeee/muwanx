@@ -102,12 +102,18 @@ export async function loadSceneFromURL(mujoco: any, filename: string, parent: an
 
   let newModel: MjModel | null = null;
   try {
-    newModel = mujoco.MjModel.loadFromXML(modelPath);
+    // Check if the model is in binary format (.mjb)
+    if (modelPath.toLowerCase().endsWith('.mjb')) {
+      newModel = mujoco.MjModel.loadFromBinary(modelPath);
+    } else {
+      newModel = mujoco.MjModel.loadFromXML(modelPath);
+    }
   } catch (error: any) {
     throw new Error(`Failed to load MjModel from ${modelPath}: ${error?.message || error}`);
   }
   if (!newModel) {
-    throw new Error(`MjModel.loadFromXML returned null for ${modelPath}`);
+    const method = modelPath.toLowerCase().endsWith('.mjb') ? 'loadFromBinary' : 'loadFromXML';
+    throw new Error(`MjModel.${method} returned null for ${modelPath}`);
   }
 
   let newData: MjData | null = null;
