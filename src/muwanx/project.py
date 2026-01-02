@@ -31,9 +31,6 @@ class ProjectConfig:
     scenes: list[SceneConfig] = field(default_factory=list)
     """List of scenes in the project."""
 
-    metadata: dict[str, Any] = field(default_factory=dict)
-    """Additional metadata for the project."""
-
 
 class ProjectHandle:
     """Handle for adding scenes and configuring a project.
@@ -90,19 +87,6 @@ class ProjectHandle:
         )
         self._config.scenes.append(scene_config)
         return SceneHandle(scene_config, self)
-
-    def set_metadata(self, key: str, value: Any) -> ProjectHandle:
-        """Set metadata for this project.
-
-        Args:
-            key: Metadata key.
-            value: Metadata value.
-
-        Returns:
-            Self for method chaining.
-        """
-        self._config.metadata[key] = value
-        return self
 
 
 __all__ = ["ProjectConfig", "ProjectHandle"]

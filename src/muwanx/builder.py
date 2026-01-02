@@ -11,7 +11,6 @@ import json
 import shutil
 import warnings
 from pathlib import Path
-from typing import Any
 
 import mujoco
 import onnx
@@ -21,6 +20,7 @@ from ._build_client import ClientBuilder
 from .app import MuwanxApp
 from .project import ProjectConfig, ProjectHandle
 from .scene import SceneConfig
+from .utils import name2id
 
 
 class Builder:
@@ -28,32 +28,6 @@ class Builder:
 
     The Builder class provides a fluent API for programmatically constructing
     interactive MuJoCo simulations with ONNX policies. It handles projects, scenes, and policies hierarchically.
-
-    Example:
-        >>> import muwanx as mwx
-        >>> import mujoco
-        >>> import onnx
-        >>>
-        >>> builder = mwx.Builder()
-        >>>
-        >>> # Create a project
-        >>> project = builder.add_project(name="My Robot")
-        >>>
-        >>> # Add a scene to the project
-        >>> scene = project.add_scene(
-        ...     model=mujoco.MjModel.from_xml_path("robot.xml"),
-        ...     name="Walking"
-        ... )
-        >>>
-        >>> # Add policies to the scene
-        >>> scene.add_policy(
-        ...     policy=onnx.load("walk.onnx"),
-        ...     name="Walk Forward"
-        ... )
-        >>>
-        >>> # Build and save
-        >>> app = builder.build("my_app")
-        >>> app.launch()
     """
 
     def __init__(self, base_path: str = "/") -> None:
@@ -66,38 +40,25 @@ class Builder:
         self._projects: list[ProjectConfig] = []
         self._base_path = base_path
 
-    def add_project(
-        self,
-        name: str,
-        *,
-        id: str | None = None,
-        metadata: dict[str, Any] | None = None,
-    ) -> ProjectHandle:
+    def add_project(self, name: str, *, id: str | None = None) -> ProjectHandle:
         """Add a new project to the builder.
-
-        Projects serve as top-level containers for organizing related scenes.
-        Each project can contain multiple scenes, and scenes can contain
-        multiple policies.
 
         Args:
             name: Name for the project (displayed in the UI).
-            id: Optional ID for URL routing (e.g., 'menagerie' creates /#/menagerie/).
-                If not provided, the project is part of the main route.
-            metadata: Optional metadata dictionary for the project.
+            id: Optional ID for URL routing. If not provided, defaults to sanitized name.
 
         Returns:
             ProjectHandle for adding scenes and further configuration.
-
-        Example:
-            >>> builder = mwx.Builder()
-            >>> demo = builder.add_project(name="Demo Robots")
         """
-        if metadata is None:
-            metadata = {}
+        # First project becomes the main project with id=None
+        if not self._projects:
+            project_id = None
+        else:
+            project_id = name2id(name) if id is None else id
 
-        project_config = ProjectConfig(name=name, id=id, metadata=metadata)
-        self._projects.append(project_config)
-        return ProjectHandle(project_config, self)
+        project = ProjectConfig(name=name, id=project_id)
+        self._projects.append(project)
+        return ProjectHandle(project, self)
 
     def build(self, output_dir: str | Path | None = None) -> MuwanxApp:
         """Build the application from the configured projects.
@@ -113,13 +74,6 @@ class Builder:
 
         Returns:
             MuwanxApp instance ready to be launched.
-
-        Example:
-            >>> builder = mwx.Builder()
-            >>> project = builder.add_project("My Project")
-            >>> # ... configure scenes and policies ...
-            >>> app = builder.build() # Saves to ./dist
-            >>> app.launch()
         """
         if not self._projects:
             raise ValueError(
@@ -147,21 +101,7 @@ class Builder:
             # Resolve relative paths against the caller's directory
             output_path = base_dir / Path(output_dir)
 
-        # Build TypeScript/JavaScript client
-        template_dir = Path(__file__).parent / "template"
-        package_json = template_dir / "package.json"
-        if package_json.exists():
-            print("Building the client...")
-            try:
-                builder = ClientBuilder(template_dir)
-                builder.build(base_path=self._base_path)
-            except Exception as e:
-                warnings.warn(
-                    f"Client build failed: {e}. Continuing with template files.",
-                    category=RuntimeWarning,
-                    stacklevel=2,
-                )
-
+        # TODO: Build with separate function (and then save the web app with _save_web). And set scene.path and policy.path after building.
         self._save_web(output_path)
 
         return MuwanxApp(output_path)
@@ -172,7 +112,7 @@ class Builder:
         Creates root assets/config.json with project metadata and structure information.
         Individual project assets (scenes/policies) are saved under project-id/assets/.
         """
-        # Create root config with project structure info
+        # Create root config with project metadata and structure info
         root_config = {
             "version": __version__,
             "projects": [
@@ -182,6 +122,7 @@ class Builder:
                     "scenes": [
                         {
                             "name": scene.name,
+                            # "path": scene.path,
                             "path": self._get_scene_web_path(scene),
                             "policies": [
                                 (
@@ -214,9 +155,6 @@ class Builder:
     def _save_web(self, output_path: Path) -> None:
         """Save as a complete web application with hybrid structure.
 
-        Args:
-            output_path: Directory to save the web application. (default: <script_dir>/dist)
-
         Structure:
             dist/
             ├── index.html
@@ -225,11 +163,15 @@ class Builder:
             ├── robots.txt
             ├── assets/
             │   ├── config.json
-            │   └── (compiled JS/CSS files)
-            └── project-id/ (or 'main')
+            │   └── (compiled js/css files)
+            └── <project-id>/ (or 'main')
+                ├── index.html
                 └── assets/
                     ├── scene/
+                    │   └── <scene-id>/
                     └── policy/
+                        └── <policy-id>/
+
         """
         if output_path.exists():
             shutil.rmtree(output_path)
@@ -238,61 +180,76 @@ class Builder:
 
         # Copy template directory
         template_dir = Path(__file__).parent / "template"
-        if not template_dir.exists():
+        if template_dir.exists():
+            # Build TypeScript/JavaScript client first
+            package_json = template_dir / "package.json"
+            if package_json.exists():
+                print("Building TypeScript/JavaScript client...")
+                try:
+                    builder = ClientBuilder(template_dir)
+                    builder.build(base_path=self._base_path)
+                except Exception as e:
+                    warnings.warn(
+                        f"Client build failed: {e}. Continuing with template files.",
+                        category=RuntimeWarning,
+                        stacklevel=2,
+                    )
+
+            # Copy all files from template to output_path
+            shutil.copytree(
+                template_dir,
+                output_path,
+                dirs_exist_ok=True,
+                ignore=shutil.ignore_patterns(
+                    ".nodeenv", "__pycache__", "*.pyc", ".md"
+                ),
+            )
+
+            # Move built files from nested dist/ to output_path root
+            built_dist = output_path / "dist"
+            if built_dist.exists() and built_dist.is_dir():
+                # Move all files from dist/ to output_path
+                for item in built_dist.iterdir():
+                    dest = output_path / item.name
+                    if dest.exists():
+                        if dest.is_dir():
+                            shutil.rmtree(dest)
+                        else:
+                            dest.unlink()
+                    shutil.move(str(item), str(output_path))
+                # Remove the now-empty dist directory
+                built_dist.rmdir()
+
+                # Clean up development files that shouldn't be in production
+                dev_files = [
+                    "src",
+                    "node_modules",
+                    ".nodeenv",
+                    "package.json",
+                    "package-lock.json",
+                    "tsconfig.json",
+                    "vite.config.ts",
+                    "eslint.config.cjs",
+                    ".browserslistrc",
+                    ".gitignore",
+                ]
+                for dev_file in dev_files:
+                    dev_path = output_path / dev_file
+                    if dev_path.exists():
+                        if dev_path.is_dir():
+                            shutil.rmtree(dev_path)
+                        else:
+                            dev_path.unlink()
+
+                # Remove public directory after build
+                public_dir = output_path / "public"
+                if public_dir.exists():
+                    shutil.rmtree(public_dir)
+        else:
             warnings.warn(
                 f"Template directory not found at {template_dir}.",
                 category=RuntimeWarning,
             )
-            return
-
-        # Copy all files from template to output_path
-        shutil.copytree(
-            template_dir,
-            output_path,
-            dirs_exist_ok=True,
-            ignore=shutil.ignore_patterns(".nodeenv", "node_modules", "dist"),
-        )
-
-        # Move built files from nested dist/ to output_path root
-        built_dist = output_path / "dist"
-        if built_dist.exists() and built_dist.is_dir():
-            # Move all files from dist/ to output_path
-            for item in built_dist.iterdir():
-                dest = output_path / item.name
-                if dest.exists():
-                    if dest.is_dir():
-                        shutil.rmtree(dest)
-                    else:
-                        dest.unlink()
-                shutil.move(str(item), str(output_path))
-            # Remove the now-empty dist directory
-            built_dist.rmdir()
-
-            # Clean up development files that shouldn't be in production
-            dev_files = [
-                "src",
-                "node_modules",
-                ".nodeenv",
-                "package.json",
-                "package-lock.json",
-                "tsconfig.json",
-                "vite.config.ts",
-                "eslint.config.cjs",
-                ".browserslistrc",
-                ".gitignore",
-            ]
-            for dev_file in dev_files:
-                dev_path = output_path / dev_file
-                if dev_path.exists():
-                    if dev_path.is_dir():
-                        shutil.rmtree(dev_path)
-                    else:
-                        dev_path.unlink()
-
-            # Remove public directory after build
-            public_dir = output_path / "public"
-            if public_dir.exists():
-                shutil.rmtree(public_dir)
 
         # Create root assets directory for shared config
         assets_dir = output_path / "assets"
@@ -308,11 +265,13 @@ class Builder:
             project_dir_name = project.id if project.id else "main"
             project_dir = output_path / project_dir_name
             project_assets_dir = project_dir / "assets"
+            scene_dir = project_assets_dir / "scene"
             policy_dir = project_assets_dir / "policy"
             copied_scene_roots: set[Path] = set()
 
             # Create directories
             project_assets_dir.mkdir(parents=True, exist_ok=True)
+
             policy_dir.mkdir(exist_ok=True)
 
             # Copy root config into project assets for standalone hosting.
@@ -334,8 +293,15 @@ class Builder:
 
             # Save scenes and policies
             for scene in project.scenes:
-                scene_name = self._sanitize_name(scene.name)
+                scene_name = name2id(scene.name)
+                scene_path = scene_dir / scene_name
+                scene_path.mkdir(parents=True, exist_ok=True)
 
+                # Save model as binary .mjb file
+                # scene_binary_path = scene_dir / f"{scene_name}.mjb"
+                # mujoco.mj_saveModel(scene.model, str(scene_binary_path))
+
+                # Copy all scene assets
                 scene_source = self._resolve_scene_source(scene)
                 if scene_source:
                     source_path, rel_scene_path, copy_root, copy_target = scene_source
@@ -357,22 +323,18 @@ class Builder:
                         ):
                             shutil.copy(str(source_path), str(target_path))
                 else:
-                    scene_xml_path = str(project_assets_dir / f"{scene_name}.xml")
+                    scene_xml_path = str(scene_path / "scene.xml")
                     mujoco.mj_saveLastXML(scene_xml_path, scene.model)
 
                 # Save policies
                 for policy in scene.policies:
-                    policy_name = self._sanitize_name(policy.name)
+                    policy_name = name2id(policy.name)
                     policy_path = policy_dir / scene_name
                     policy_path.mkdir(parents=True, exist_ok=True)
 
                     onnx.save(policy.model, str(policy_path / f"{policy_name}.onnx"))
 
         print(f"✓ Saved muwanx application to: {output_path}")
-
-    def _sanitize_name(self, name: str) -> str:
-        """Sanitize a name for use as a filename."""
-        return name.lower().replace(" ", "_").replace("-", "_")
 
     def _resolve_scene_source(
         self, scene: SceneConfig
@@ -404,7 +366,7 @@ class Builder:
                 copy_target = Path("scene") / rel_under.parts[0]
                 return source_path, rel_scene_path, library_root, copy_target
 
-        rel_scene_path = Path(f"{self._sanitize_name(scene.name)}.xml")
+        rel_scene_path = Path("scene") / name2id(scene.name) / "scene.xml"
         return source_path, rel_scene_path, source_path.parent, rel_scene_path.parent
 
     def _get_scene_web_path(self, scene: SceneConfig) -> str:
@@ -413,8 +375,8 @@ class Builder:
             _, rel_scene_path, _, _ = resolved
             if rel_scene_path:
                 return rel_scene_path.as_posix()
-        scene_name = self._sanitize_name(scene.name)
-        return f"{scene_name}.xml"
+        scene_name = name2id(scene.name)
+        return f"scene/{scene_name}/scene.xml"
 
     def get_projects(self) -> list[ProjectConfig]:
         """Get a copy of all project configurations.
