@@ -4,7 +4,8 @@ import path from 'path';
 
 export default defineConfig({
     plugins: [react()],
-    base: process.env.VITE_BASE_PATH || '/',
+    // Use relative paths for all assets - allows deployment to any subdirectory
+    base: './',
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
