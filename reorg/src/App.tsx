@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { MantineProvider } from '@mantine/core';
 import MuwanxViewer from './components/MuwanxViewer';
+import ControlPanel from './ControlPanel';
 
 interface PolicyConfig {
   name: string;
@@ -155,10 +157,32 @@ function pickScene(project: ProjectConfig, sceneQuery: string | null): SceneConf
   );
 }
 
+function updateUrlParams(projectId: string | null, sceneName: string | null, policyName: string | null) {
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '/');
+  const normalizedBase = base.replace(/^\//g, '').replace(/\/+$/g, '');
+
+  let pathname = normalizedBase ? `/${normalizedBase}/` : '/';
+  if (projectId && projectId !== 'main') {
+    pathname += `${projectId}/`;
+  }
+
+  const params = new URLSearchParams();
+  if (sceneName) {
+    params.set('scene', sceneName);
+  }
+  if (policyName) {
+    params.set('policy', policyName);
+  }
+
+  const newUrl = pathname + (params.toString() ? '?' + params.toString() : '');
+  window.history.replaceState({}, '', newUrl);
+}
+
 function App() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [currentProject, setCurrentProject] = useState<ProjectConfig | null>(null);
   const [currentScene, setCurrentScene] = useState<SceneConfig | null>(null);
+  const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
   const [viewerStatus, setViewerStatus] = useState<string>('Loading configuration...');
   const [error, setError] = useState<string | null>(null);
 
@@ -184,6 +208,7 @@ function App() {
         setCurrentProject(project);
         const selectedScene = pickScene(project, sceneQuery);
         setCurrentScene(selectedScene);
+        setSelectedMenu(selectedScene?.policies?.[0]?.name ?? null);
         if (selectedScene && sceneQuery) {
           const normalizedQuery = sceneQuery.trim().toLowerCase();
           const matched =
@@ -214,84 +239,132 @@ function App() {
       : `scene/${sanitizeName(currentScene.name)}/scene.xml`;
     return `${projectDir}/assets/${sceneRelPath}`.replace(/\/+/g, '/');
   }, [currentProject, currentScene]);
+  const projectOptions = useMemo(() => {
+    if (!config) {
+      return [] as { value: string; label: string }[];
+    }
+    return config.projects.map(project => ({
+      value: project.id ?? 'main',
+      label: project.name || (project.id ?? 'Main'),
+    }));
+  }, [config]);
 
+  const sceneOptions = useMemo(() => {
+    if (!currentProject) {
+      return [] as { value: string; label: string }[];
+    }
+    return currentProject.scenes.map(scene => ({ value: scene.name, label: scene.name }));
+  }, [currentProject]);
+
+  const menuOptions = useMemo(() => {
+    if (!currentScene || !currentScene.policies) {
+      return [] as { value: string; label: string }[];
+    }
+    return currentScene.policies.map(policy => ({ value: policy.name, label: policy.name }));
+  }, [currentScene]);
+
+  const projectValue = currentProject ? currentProject.id ?? 'main' : null;
+  const sceneValue = currentScene?.name ?? null;
   const handleViewerError = useCallback((err: Error) => {
     setError(err.message);
   }, []);
 
+  const handleProjectChange = useCallback(
+    (value: string | null) => {
+      if (!config || !value) {
+        return;
+      }
+      const normalized = value === 'main' ? null : value;
+      const project = config.projects.find(p => (p.id ?? 'main') === (normalized ?? 'main'));
+      if (!project) {
+        return;
+      }
+      setCurrentProject(project);
+      const nextScene = pickScene(project, null);
+      setCurrentScene(nextScene);
+      const nextPolicy = nextScene?.policies?.[0]?.name ?? null;
+      setSelectedMenu(nextPolicy);
+      updateUrlParams(project.id, nextScene?.name ?? null, nextPolicy);
+      setViewerStatus('Preparing scene...');
+    },
+    [config]
+  );
+
+  const handleSceneChange = useCallback(
+    (value: string | null) => {
+      if (!currentProject || !value) {
+        return;
+      }
+      const scene = currentProject.scenes.find(s => s.name === value);
+      if (!scene) {
+        return;
+      }
+      setCurrentScene(scene);
+      const nextPolicy = scene.policies?.[0]?.name ?? null;
+      setSelectedMenu(nextPolicy);
+      updateUrlParams(currentProject.id, value, nextPolicy);
+      setViewerStatus('Preparing scene...');
+    },
+    [currentProject]
+  );
+
+  const handleMenuChange = useCallback(
+    (value: string | null) => {
+      setSelectedMenu(value);
+      updateUrlParams(currentProject?.id ?? null, currentScene?.name ?? null, value);
+    },
+    [currentProject, currentScene]
+  );
+
+
   if (error) {
     return (
-      <div className="app">
-        <div className="hud hud-error">
-          <h1 className="hud-title">Muwanx</h1>
-          <p className="hud-message">{error}</p>
+      <MantineProvider>
+        <div className="app">
+          <div className="hud hud-error">
+            <h1 className="hud-title">Muwanx</h1>
+            <p className="hud-message">{error}</p>
+          </div>
         </div>
-      </div>
+      </MantineProvider>
     );
   }
 
   if (!currentProject || !currentScene || !scenePath) {
     return (
-      <div className="app">
-        <div className="hud">
-          <h1 className="hud-title">Muwanx</h1>
-          <p className="hud-message">{viewerStatus}</p>
+      <MantineProvider>
+        <div className="app">
+          <div className="hud">
+            <h1 className="hud-title">Muwanx</h1>
+            <p className="hud-message">{viewerStatus}</p>
+          </div>
         </div>
-      </div>
+      </MantineProvider>
     );
   }
 
-  const projectLabel = currentProject.id ? currentProject.id : '(main)';
-  const sceneLabel = currentScene.name;
-
   return (
-    <div className="app">
-      <MuwanxViewer
-        scenePath={scenePath}
-        baseUrl={import.meta.env.BASE_URL || '/'}
-        onStatusChange={setViewerStatus}
-        onError={handleViewerError}
-      />
-      <div className="hud">
-        <div className="hud-row">
-          <span className="hud-kicker">Project</span>
-          <span className="hud-value">{currentProject.name}</span>
-          <span className="hud-tag">{projectLabel}</span>
-        </div>
-        <div className="hud-row">
-          <span className="hud-kicker">Scene</span>
-          <span className="hud-value">{sceneLabel}</span>
-          {sceneQuery && (
-            <span className="hud-tag">scene={sceneQuery}</span>
-          )}
-        </div>
-        <div className="hud-row hud-muted">
-          <span className="hud-kicker">Status</span>
-          <span className="hud-value">{viewerStatus}</span>
-        </div>
-        {config && config.projects.length > 1 && (
-          <div className="hud-row hud-links">
-            {config.projects.map(project => {
-              const href = `${import.meta.env.BASE_URL}${project.id ? `${project.id}/` : ''}`.replace(/\/+/g, '/');
-              const isActive = project.id === currentProject.id;
-              return (
-                <a
-                  key={project.id || 'main'}
-                  className={isActive ? 'hud-link active' : 'hud-link'}
-                  href={href}
-                >
-                  {project.name}
-                </a>
-              );
-            })}
-          </div>
-        )}
-        <div className="hud-row hud-muted">
-          <span className="hud-kicker">Hint</span>
-          <span className="hud-value">Use ?scene=SceneName in the URL.</span>
-        </div>
+    <MantineProvider>
+      <div className="app">
+        <ControlPanel
+          projects={projectOptions}
+          projectValue={projectValue}
+          onProjectChange={handleProjectChange}
+          scenes={sceneOptions}
+          sceneValue={sceneValue}
+          onSceneChange={handleSceneChange}
+          menus={menuOptions}
+          menuValue={selectedMenu}
+          onMenuChange={handleMenuChange}
+        />
+        <MuwanxViewer
+          scenePath={scenePath}
+          baseUrl={import.meta.env.BASE_URL || '/'}
+          onStatusChange={setViewerStatus}
+          onError={handleViewerError}
+        />
       </div>
-    </div>
+    </MantineProvider>
   );
 }
 
