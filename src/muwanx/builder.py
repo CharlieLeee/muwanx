@@ -191,15 +191,8 @@ class Builder:
             package_json = template_dir / "package.json"
             if package_json.exists():
                 print("Building TypeScript/JavaScript client...")
-                try:
-                    builder = ClientBuilder(template_dir)
-                    builder.build(base_path=self._base_path)
-                except Exception as e:
-                    warnings.warn(
-                        f"Client build failed: {e}. Continuing with template files.",
-                        category=RuntimeWarning,
-                        stacklevel=2,
-                    )
+                builder = ClientBuilder(template_dir)
+                builder.build(base_path=self._base_path)
 
             # Copy all files from template to output_path
             shutil.copytree(
