@@ -105,6 +105,12 @@ class ClientBuilder:
                 subprocess.check_call([str(npm_bin), "install"], cwd=self.project_dir)
         except subprocess.CalledProcessError:
             print("npm ci failed, falling back to npm install...")
+            # Remove node_modules and package-lock.json before retrying
+            node_modules = self.project_dir / "node_modules"
+            if node_modules.exists():
+                shutil.rmtree(node_modules)
+            if package_lock.exists():
+                package_lock.unlink()
             subprocess.check_call([str(npm_bin), "install"], cwd=self.project_dir)
 
     def run_build_script(
