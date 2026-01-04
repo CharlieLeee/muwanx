@@ -14,28 +14,28 @@ function expandChannelsToRGBA(src: Uint8Array, dest: Uint8Array, nchannel: numbe
     case 1:
       for (let p = 0; p < pixelCount; p++) {
         const l = src[p];
-        dest[(p * 4) + 0] = l;
-        dest[(p * 4) + 1] = l;
-        dest[(p * 4) + 2] = l;
-        dest[(p * 4) + 3] = 255;
+        dest[p * 4 + 0] = l;
+        dest[p * 4 + 1] = l;
+        dest[p * 4 + 2] = l;
+        dest[p * 4 + 3] = 255;
       }
       break;
     case 2:
       for (let p = 0; p < pixelCount; p++) {
-        const l = src[(p * 2) + 0];
-        const a = src[(p * 2) + 1];
-        dest[(p * 4) + 0] = l;
-        dest[(p * 4) + 1] = l;
-        dest[(p * 4) + 2] = l;
-        dest[(p * 4) + 3] = a;
+        const l = src[p * 2 + 0];
+        const a = src[p * 2 + 1];
+        dest[p * 4 + 0] = l;
+        dest[p * 4 + 1] = l;
+        dest[p * 4 + 2] = l;
+        dest[p * 4 + 3] = a;
       }
       break;
     case 3:
       for (let p = 0; p < pixelCount; p++) {
-        dest[(p * 4) + 0] = src[(p * 3) + 0];
-        dest[(p * 4) + 1] = src[(p * 3) + 1];
-        dest[(p * 4) + 2] = src[(p * 3) + 2];
-        dest[(p * 4) + 3] = 255;
+        dest[p * 4 + 0] = src[p * 3 + 0];
+        dest[p * 4 + 1] = src[p * 3 + 1];
+        dest[p * 4 + 2] = src[p * 3 + 2];
+        dest[p * 4 + 3] = 255;
       }
       break;
     case 4:
@@ -44,10 +44,10 @@ function expandChannelsToRGBA(src: Uint8Array, dest: Uint8Array, nchannel: numbe
     default:
       for (let p = 0; p < pixelCount; p++) {
         const l = p < src.length ? src[p] : 0;
-        dest[(p * 4) + 0] = l;
-        dest[(p * 4) + 1] = l;
-        dest[(p * 4) + 2] = l;
-        dest[(p * 4) + 3] = 255;
+        dest[p * 4 + 0] = l;
+        dest[p * 4 + 1] = l;
+        dest[p * 4 + 2] = l;
+        dest[p * 4 + 3] = 255;
       }
   }
 }
@@ -79,7 +79,13 @@ function create2DTexture(mjModel: MjModel, texId: number): THREE.DataTexture | n
   const textureData = new Uint8Array(pixelCount * 4);
   expandChannelsToRGBA(src, textureData, nchannel);
 
-  const texture = new THREE.DataTexture(textureData, width, height, THREE.RGBAFormat, THREE.UnsignedByteType);
+  const texture = new THREE.DataTexture(
+    textureData,
+    width,
+    height,
+    THREE.RGBAFormat,
+    THREE.UnsignedByteType
+  );
   texture.needsUpdate = true;
   texture.flipY = false;
   texture.anisotropy = 4;
@@ -140,14 +146,7 @@ function createCubeTexture(mjModel: MjModel, texId: number): THREE.CubeTexture |
     faces.push(faceData);
   }
 
-  const reorderedFaces = [
-    faces[3],
-    faces[2],
-    faces[0],
-    faces[1],
-    faces[4],
-    faces[5],
-  ];
+  const reorderedFaces = [faces[3], faces[2], faces[0], faces[1], faces[4], faces[5]];
 
   const cubeTexture = new THREE.CubeTexture();
 
@@ -176,7 +175,7 @@ function createCubeTexture(mjModel: MjModel, texId: number): THREE.CubeTexture |
 
   cubeTexture.image = images as any;
 
-  if (cubeTexture.image.some(img => img === null)) {
+  if (cubeTexture.image.some((img) => img === null)) {
     console.warn(`Failed to create canvas for one or more faces in texId ${texId}`);
     return null;
   }
@@ -191,7 +190,11 @@ function createCubeTexture(mjModel: MjModel, texId: number): THREE.CubeTexture |
   return cubeTexture;
 }
 
-export function createTexture({ mujoco, mjModel, texId }: CreateTextureParams): THREE.Texture | null {
+export function createTexture({
+  mujoco,
+  mjModel,
+  texId,
+}: CreateTextureParams): THREE.Texture | null {
   if (!mjModel || texId < 0) {
     return null;
   }

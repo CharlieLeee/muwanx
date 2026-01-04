@@ -52,7 +52,7 @@ const MuwanxViewer: React.FC<MuwanxViewerProps> = ({
       notify('Running simulation');
     };
 
-    init().catch(error => {
+    init().catch((error) => {
       if (!cancelled) {
         console.error('Failed to initialize MuJoCo viewer:', error);
         onError?.(error instanceof Error ? error : new Error(String(error)));

@@ -11,7 +11,7 @@ const sceneDownloadPromises = new Map<string, Promise<void>>();
 
 function isBinaryAsset(path: string): boolean {
   const lower = path.toLowerCase();
-  return BINARY_EXTENSIONS.some(ext => lower.endsWith(ext));
+  return BINARY_EXTENSIONS.some((ext) => lower.endsWith(ext));
 }
 
 function isInlineXML(input: string): boolean {
@@ -77,10 +77,12 @@ export async function loadSceneFromURL(mujoco: any, filename: string, parent: an
   let modelPath: string;
 
   if (isInlineXML(filename)) {
-    const xmlHash = Math.abs(filename.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0));
+    const xmlHash = Math.abs(
+      filename.split('').reduce((a, b) => {
+        a = (a << 5) - a + b.charCodeAt(0);
+        return a & a;
+      }, 0)
+    );
     const virtualPath = `inline_model_${xmlHash}.xml`;
     modelPath = `/working/${virtualPath}`;
   } else {
@@ -162,9 +164,9 @@ export async function loadSceneFromURL(mujoco: any, filename: string, parent: an
     const b = mjModel.geom_bodyid[g];
     const type = mjModel.geom_type[g];
     const size = [
-      mjModel.geom_size[(g * 3) + 0],
-      mjModel.geom_size[(g * 3) + 1],
-      mjModel.geom_size[(g * 3) + 2],
+      mjModel.geom_size[g * 3 + 0],
+      mjModel.geom_size[g * 3 + 1],
+      mjModel.geom_size[g * 3 + 2],
     ];
 
     if (!(b in bodies)) {
@@ -277,28 +279,25 @@ export async function loadSceneFromURL(mujoco: any, filename: string, parent: an
           const faceCount = faceToVertexBuffer.length / 3;
           for (let t = 0; t < faceCount; t++) {
             for (let c = 0; c < 3; c++) {
-              const vi = faceToVertexBuffer[(t * 3) + c];
-              const nvi = faceToNormalBuffer[(t * 3) + c];
-              const uvi = faceToUvBuffer[(t * 3) + c];
+              const vi = faceToVertexBuffer[t * 3 + c];
+              const nvi = faceToNormalBuffer[t * 3 + c];
+              const uvi = faceToUvBuffer[t * 3 + c];
               const key = `${vi}_${nvi}_${uvi}`;
               let outIndex = tupleToIndex.get(key);
               if (outIndex === undefined) {
                 outIndex = positions.length / 3;
                 tupleToIndex.set(key, outIndex);
                 positions.push(
-                  vertexBuffer[(vi * 3) + 0],
-                  vertexBuffer[(vi * 3) + 1],
-                  vertexBuffer[(vi * 3) + 2]
+                  vertexBuffer[vi * 3 + 0],
+                  vertexBuffer[vi * 3 + 1],
+                  vertexBuffer[vi * 3 + 2]
                 );
                 normals.push(
-                  normalBuffer[(nvi * 3) + 0],
-                  normalBuffer[(nvi * 3) + 1],
-                  normalBuffer[(nvi * 3) + 2]
+                  normalBuffer[nvi * 3 + 0],
+                  normalBuffer[nvi * 3 + 1],
+                  normalBuffer[nvi * 3 + 2]
                 );
-                uvs.push(
-                  uvBuffer[(uvi * 2) + 0],
-                  uvBuffer[(uvi * 2) + 1]
-                );
+                uvs.push(uvBuffer[uvi * 2 + 0], uvBuffer[uvi * 2 + 1]);
               }
               indices.push(outIndex);
             }
@@ -319,19 +318,19 @@ export async function loadSceneFromURL(mujoco: any, filename: string, parent: an
     }
 
     let color = [
-      mjModel.geom_rgba[(g * 4) + 0],
-      mjModel.geom_rgba[(g * 4) + 1],
-      mjModel.geom_rgba[(g * 4) + 2],
-      mjModel.geom_rgba[(g * 4) + 3],
+      mjModel.geom_rgba[g * 4 + 0],
+      mjModel.geom_rgba[g * 4 + 1],
+      mjModel.geom_rgba[g * 4 + 2],
+      mjModel.geom_rgba[g * 4 + 3],
     ];
     let texture: THREE.Texture | null = null;
     if (mjModel.geom_matid[g] !== -1) {
       const matId = mjModel.geom_matid[g];
       color = [
-        mjModel.mat_rgba[(matId * 4) + 0],
-        mjModel.mat_rgba[(matId * 4) + 1],
-        mjModel.mat_rgba[(matId * 4) + 2],
-        mjModel.mat_rgba[(matId * 4) + 3],
+        mjModel.mat_rgba[matId * 4 + 0],
+        mjModel.mat_rgba[matId * 4 + 1],
+        mjModel.mat_rgba[matId * 4 + 2],
+        mjModel.mat_rgba[matId * 4 + 3],
       ];
 
       const role = mujoco.mjtTextureRole.mjTEXROLE_RGB.value;
@@ -348,15 +347,24 @@ export async function loadSceneFromURL(mujoco: any, filename: string, parent: an
       }
     }
 
-    let currentMaterial: THREE.MeshPhysicalMaterial | THREE.MeshPhysicalMaterial[] = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color(color[0], color[1], color[2]),
-      transparent: color[3] < 1.0,
-      opacity: color[3],
-      specularIntensity: mjModel.geom_matid[g] !== -1 ? mjModel.mat_specular?.[mjModel.geom_matid[g]] : undefined,
-      reflectivity: mjModel.geom_matid[g] !== -1 ? mjModel.mat_reflectance?.[mjModel.geom_matid[g]] : undefined,
-      roughness: mjModel.geom_matid[g] !== -1 && mjModel.mat_shininess ? 1.0 - mjModel.mat_shininess[mjModel.geom_matid[g]] : undefined,
-      metalness: mjModel.geom_matid[g] !== -1 ? mjModel.mat_specular?.[mjModel.geom_matid[g]] : 0.1,
-    });
+    let currentMaterial: THREE.MeshPhysicalMaterial | THREE.MeshPhysicalMaterial[] =
+      new THREE.MeshPhysicalMaterial({
+        color: new THREE.Color(color[0], color[1], color[2]),
+        transparent: color[3] < 1.0,
+        opacity: color[3],
+        specularIntensity:
+          mjModel.geom_matid[g] !== -1 ? mjModel.mat_specular?.[mjModel.geom_matid[g]] : undefined,
+        reflectivity:
+          mjModel.geom_matid[g] !== -1
+            ? mjModel.mat_reflectance?.[mjModel.geom_matid[g]]
+            : undefined,
+        roughness:
+          mjModel.geom_matid[g] !== -1 && mjModel.mat_shininess
+            ? 1.0 - mjModel.mat_shininess[mjModel.geom_matid[g]]
+            : undefined,
+        metalness:
+          mjModel.geom_matid[g] !== -1 ? mjModel.mat_specular?.[mjModel.geom_matid[g]] : 0.1,
+      });
 
     if (texture) {
       if (!(texture instanceof THREE.CubeTexture)) {
@@ -383,10 +391,22 @@ export async function loadSceneFromURL(mujoco: any, filename: string, parent: an
                 color: new THREE.Color(color[0], color[1], color[2]),
                 transparent: color[3] < 1.0,
                 opacity: color[3],
-                specularIntensity: mjModel.geom_matid[g] !== -1 ? mjModel.mat_specular?.[mjModel.geom_matid[g]] : undefined,
-                reflectivity: mjModel.geom_matid[g] !== -1 ? mjModel.mat_reflectance?.[mjModel.geom_matid[g]] : undefined,
-                roughness: mjModel.geom_matid[g] !== -1 && mjModel.mat_shininess ? 1.0 - mjModel.mat_shininess[mjModel.geom_matid[g]] : undefined,
-                metalness: mjModel.geom_matid[g] !== -1 ? mjModel.mat_specular?.[mjModel.geom_matid[g]] : 0.1,
+                specularIntensity:
+                  mjModel.geom_matid[g] !== -1
+                    ? mjModel.mat_specular?.[mjModel.geom_matid[g]]
+                    : undefined,
+                reflectivity:
+                  mjModel.geom_matid[g] !== -1
+                    ? mjModel.mat_reflectance?.[mjModel.geom_matid[g]]
+                    : undefined,
+                roughness:
+                  mjModel.geom_matid[g] !== -1 && mjModel.mat_shininess
+                    ? 1.0 - mjModel.mat_shininess[mjModel.geom_matid[g]]
+                    : undefined,
+                metalness:
+                  mjModel.geom_matid[g] !== -1
+                    ? mjModel.mat_specular?.[mjModel.geom_matid[g]]
+                    : 0.1,
                 map: faceTex,
               });
               materials.push(m);
@@ -395,12 +415,16 @@ export async function loadSceneFromURL(mujoco: any, filename: string, parent: an
           } else {
             (currentMaterial as THREE.MeshPhysicalMaterial).envMap = texture;
             (currentMaterial as THREE.MeshPhysicalMaterial).envMapIntensity =
-              mjModel.geom_matid[g] !== -1 ? mjModel.mat_reflectance?.[mjModel.geom_matid[g]] || 0.5 : 0.5;
+              mjModel.geom_matid[g] !== -1
+                ? mjModel.mat_reflectance?.[mjModel.geom_matid[g]] || 0.5
+                : 0.5;
           }
         } else {
           (currentMaterial as THREE.MeshPhysicalMaterial).envMap = texture;
           (currentMaterial as THREE.MeshPhysicalMaterial).envMapIntensity =
-            mjModel.geom_matid[g] !== -1 ? mjModel.mat_reflectance?.[mjModel.geom_matid[g]] || 0.5 : 0.5;
+            mjModel.geom_matid[g] !== -1
+              ? mjModel.mat_reflectance?.[mjModel.geom_matid[g]] || 0.5
+              : 0.5;
         }
       }
     }
@@ -455,35 +479,37 @@ export async function loadSceneFromURL(mujoco: any, filename: string, parent: an
   return [mjModel, mjData, bodies, lights];
 }
 
-export function getPosition(buffer: Float32Array, index: number, target: THREE.Vector3, swizzle = true): THREE.Vector3 {
+export function getPosition(
+  buffer: Float32Array,
+  index: number,
+  target: THREE.Vector3,
+  swizzle = true
+): THREE.Vector3 {
   if (swizzle) {
-    return target.set(
-      buffer[(index * 3) + 0],
-      buffer[(index * 3) + 2],
-      -buffer[(index * 3) + 1]
-    );
+    return target.set(buffer[index * 3 + 0], buffer[index * 3 + 2], -buffer[index * 3 + 1]);
   }
-  return target.set(
-    buffer[(index * 3) + 0],
-    buffer[(index * 3) + 1],
-    buffer[(index * 3) + 2]
-  );
+  return target.set(buffer[index * 3 + 0], buffer[index * 3 + 1], buffer[index * 3 + 2]);
 }
 
-export function getQuaternion(buffer: Float32Array, index: number, target: THREE.Quaternion, swizzle = true): THREE.Quaternion {
+export function getQuaternion(
+  buffer: Float32Array,
+  index: number,
+  target: THREE.Quaternion,
+  swizzle = true
+): THREE.Quaternion {
   if (swizzle) {
     return target.set(
-      -buffer[(index * 4) + 1],
-      -buffer[(index * 4) + 3],
-      buffer[(index * 4) + 2],
-      -buffer[(index * 4) + 0]
+      -buffer[index * 4 + 1],
+      -buffer[index * 4 + 3],
+      buffer[index * 4 + 2],
+      -buffer[index * 4 + 0]
     );
   }
   return target.set(
-    buffer[(index * 4) + 0],
-    buffer[(index * 4) + 1],
-    buffer[(index * 4) + 2],
-    buffer[(index * 4) + 3]
+    buffer[index * 4 + 0],
+    buffer[index * 4 + 1],
+    buffer[index * 4 + 2],
+    buffer[index * 4 + 3]
   );
 }
 
@@ -503,10 +529,12 @@ export async function downloadExampleScenesFolder(
   const basePrefix = baseUrl ? baseUrl.replace(/\/+$/, '') : '';
 
   if (isInlineXML(scenePath)) {
-    const xmlHash = Math.abs(scenePath.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0));
+    const xmlHash = Math.abs(
+      scenePath.split('').reduce((a, b) => {
+        a = (a << 5) - a + b.charCodeAt(0);
+        return a & a;
+      }, 0)
+    );
     const virtualPath = `inline_model_${xmlHash}.xml`;
     const fullPath = `/working/${virtualPath}`;
 
@@ -538,7 +566,9 @@ export async function downloadExampleScenesFolder(
       manifest = await mujocoAssetCollector.analyzeScene(normalizedPath, basePrefix || '/');
 
       if (!Array.isArray(manifest)) {
-        throw new Error(`Asset collector returned invalid result (not an array): ${typeof manifest}`);
+        throw new Error(
+          `Asset collector returned invalid result (not an array): ${typeof manifest}`
+        );
       }
 
       if (manifest.length === 0) {
@@ -546,32 +576,42 @@ export async function downloadExampleScenesFolder(
       }
     } catch (error: any) {
       try {
-        const manifestResponse = await fetch(`${basePrefix}/${xmlDirectory}/index.json`.replace(/\/+/g, '/'));
+        const manifestResponse = await fetch(
+          `${basePrefix}/${xmlDirectory}/index.json`.replace(/\/+/g, '/')
+        );
         if (!manifestResponse.ok) {
-          throw new Error(`Failed to load scene manifest for ${xmlDirectory}: ${manifestResponse.status}`);
+          throw new Error(
+            `Failed to load scene manifest for ${xmlDirectory}: ${manifestResponse.status}`
+          );
         }
         manifest = await manifestResponse.json();
         if (!Array.isArray(manifest)) {
           throw new Error(`Invalid scene manifest for ${xmlDirectory}`);
         }
       } catch (fallbackError: any) {
-        throw new Error(`Both asset analysis and index.json fallback failed: ${fallbackError.message}`);
+        throw new Error(
+          `Both asset analysis and index.json fallback failed: ${fallbackError.message}`
+        );
       }
     }
 
     const localAssets = manifest
-      .filter(asset =>
-        typeof asset === 'string' &&
-        !asset.startsWith('http://') &&
-        !asset.startsWith('https://')
+      .filter(
+        (asset) =>
+          typeof asset === 'string' && !asset.startsWith('http://') && !asset.startsWith('https://')
       )
-      .map(assetPath => {
-        let assetNormalized = assetPath.trim().replace(/^(\.\/)+/, '').replace(/^public\//, '');
+      .map((assetPath) => {
+        let assetNormalized = assetPath
+          .trim()
+          .replace(/^(\.\/)+/, '')
+          .replace(/^public\//, '');
         if (assetNormalized.startsWith('/')) {
           assetNormalized = assetNormalized.slice(1);
         }
         if (!assetNormalized) {
-          console.warn(`[downloadExampleScenesFolder] Skipping asset with empty path: ${assetPath}`);
+          console.warn(
+            `[downloadExampleScenesFolder] Skipping asset with empty path: ${assetPath}`
+          );
           return null;
         }
         return { originalPath: assetPath, normalizedPath: assetNormalized };
@@ -600,7 +640,9 @@ export async function downloadExampleScenesFolder(
       const { originalPath, normalizedPath } = uniqueAssets[i];
 
       if (!response.ok) {
-        console.warn(`[downloadExampleScenesFolder] Failed to fetch scene asset ${originalPath}: ${response.status}`);
+        console.warn(
+          `[downloadExampleScenesFolder] Failed to fetch scene asset ${originalPath}: ${response.status}`
+        );
         continue;
       }
 

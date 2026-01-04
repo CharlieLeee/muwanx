@@ -9,7 +9,12 @@ interface CreateLightsParams {
   bodies: Record<number, THREE.Group>;
 }
 
-export function createLights({ mujoco, mjModel, mujocoRoot, bodies }: CreateLightsParams): THREE.Light[] {
+export function createLights({
+  mujoco,
+  mjModel,
+  mujocoRoot,
+  bodies,
+}: CreateLightsParams): THREE.Light[] {
   const lights: THREE.Light[] = [];
   const ambientSum = new THREE.Color(0, 0, 0);
 
@@ -45,8 +50,12 @@ export function createLights({ mujoco, mjModel, mujocoRoot, bodies }: CreateLigh
       light.userData.mjIndex = l;
       light.userData.mjType = lightType;
 
-      const diffuseColor = new THREE.Color().fromArray(mjModel.light_diffuse.slice(l * 3, l * 3 + 3));
-      const specularColor = new THREE.Color().fromArray(mjModel.light_specular.slice(l * 3, l * 3 + 3));
+      const diffuseColor = new THREE.Color().fromArray(
+        mjModel.light_diffuse.slice(l * 3, l * 3 + 3)
+      );
+      const specularColor = new THREE.Color().fromArray(
+        mjModel.light_specular.slice(l * 3, l * 3 + 3)
+      );
       const combinedColor = diffuseColor.clone().add(specularColor);
       const luminance = Math.max(combinedColor.r, combinedColor.g, combinedColor.b);
 
@@ -59,7 +68,9 @@ export function createLights({ mujoco, mjModel, mujocoRoot, bodies }: CreateLigh
       const intensityMultiplier = mjModel.light_intensity[l] || 0.5;
       (light as any).intensity = luminance * intensityMultiplier * Math.PI;
 
-      const ambientColor = new THREE.Color().fromArray(mjModel.light_ambient.slice(l * 3, l * 3 + 3));
+      const ambientColor = new THREE.Color().fromArray(
+        mjModel.light_ambient.slice(l * 3, l * 3 + 3)
+      );
       ambientSum.add(ambientColor);
 
       light.castShadow = mjModel.light_castshadow[l];
@@ -88,7 +99,7 @@ export function createLights({ mujoco, mjModel, mujocoRoot, bodies }: CreateLigh
       }
 
       if (lightType === mujoco.mjtLightType.mjLIGHT_SPOT.value) {
-        (light as THREE.SpotLight).angle = mjModel.light_cutoff[l] * Math.PI / 180;
+        (light as THREE.SpotLight).angle = (mjModel.light_cutoff[l] * Math.PI) / 180;
         const exponent = mjModel.light_exponent[l];
         (light as THREE.SpotLight).penumbra = 1 / (1 + exponent);
       }
@@ -161,11 +172,7 @@ export function createLights({ mujoco, mjModel, mujocoRoot, bodies }: CreateLigh
   return lights;
 }
 
-export function updateLightsFromData(
-  mujoco: any,
-  mjData: MjData,
-  lights: THREE.Light[],
-): void {
+export function updateLightsFromData(mujoco: any, mjData: MjData, lights: THREE.Light[]): void {
   if (!mjData || !mjData.light_xpos || !mjData.light_xdir) {
     return;
   }

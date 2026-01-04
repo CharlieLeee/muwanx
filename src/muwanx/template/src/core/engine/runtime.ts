@@ -1,7 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { MjData, MjModel } from 'mujoco-js';
-import { downloadExampleScenesFolder, getPosition, getQuaternion, loadSceneFromURL } from '../scene/scene';
+import {
+  downloadExampleScenesFolder,
+  getPosition,
+  getQuaternion,
+  loadSceneFromURL,
+} from '../scene/scene';
 import { createTendonState, updateTendonGeometry, updateTendonRendering } from '../scene/tendons';
 import { updateHeadlightFromCamera, updateLightsFromData } from '../scene/lights';
 
@@ -133,8 +138,11 @@ export class MuwanxRuntime {
         this.scene.remove(existingRoot);
       }
 
-      [this.mjModel, this.mjData, this.bodies, this.lights] =
-        await loadSceneFromURL(this.mujoco, scenePath, this);
+      [this.mjModel, this.mjData, this.bodies, this.lights] = await loadSceneFromURL(
+        this.mujoco,
+        scenePath,
+        this
+      );
 
       if (!this.mjModel || !this.mjData) {
         throw new Error('Failed to load MuJoCo model.');
@@ -186,7 +194,7 @@ export class MuwanxRuntime {
       const target = this.timestep * this.decimation;
       const sleepTime = Math.max(0, target - elapsed);
       if (sleepTime > 0) {
-        await new Promise(resolve => setTimeout(resolve, sleepTime * 1000));
+        await new Promise((resolve) => setTimeout(resolve, sleepTime * 1000));
       }
     }
     this.loopPromise = null;
@@ -315,13 +323,13 @@ export class MuwanxRuntime {
       return;
     }
 
-    this.scene.traverse(object => {
+    this.scene.traverse((object) => {
       if ('geometry' in object && object.geometry) {
         (object.geometry as THREE.BufferGeometry).dispose();
       }
       if ('material' in object && object.material) {
         if (Array.isArray(object.material)) {
-          object.material.forEach(material => this.disposeMaterial(material));
+          object.material.forEach((material) => this.disposeMaterial(material));
         } else {
           this.disposeMaterial(object.material as THREE.Material);
         }

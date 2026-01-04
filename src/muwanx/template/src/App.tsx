@@ -126,13 +126,19 @@ async function loadConfig(baseUrl: string, projectId: string | null): Promise<Ap
       const text = await response.text();
       const trimmed = text.trim();
       const contentType = response.headers.get('content-type') || '';
-      if (contentType.includes('text/html') || trimmed.startsWith('<!doctype') || trimmed.startsWith('<html')) {
+      if (
+        contentType.includes('text/html') ||
+        trimmed.startsWith('<!doctype') ||
+        trimmed.startsWith('<html')
+      ) {
         throw new Error(`Received HTML from ${url}`);
       }
       try {
         return JSON.parse(text) as AppConfig;
       } catch (error) {
-        throw new Error(`Invalid JSON from ${url}: ${error instanceof Error ? error.message : String(error)}`);
+        throw new Error(
+          `Invalid JSON from ${url}: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
@@ -151,13 +157,17 @@ function pickScene(project: ProjectConfig, sceneQuery: string | null): SceneConf
   }
   const normalized = sceneQuery.trim().toLowerCase();
   return (
-    project.scenes.find(scene => scene.name.toLowerCase() === normalized) ||
-    project.scenes.find(scene => sanitizeName(scene.name) === normalized) ||
+    project.scenes.find((scene) => scene.name.toLowerCase() === normalized) ||
+    project.scenes.find((scene) => sanitizeName(scene.name) === normalized) ||
     project.scenes[0]
   );
 }
 
-function updateUrlParams(projectId: string | null, sceneName: string | null, policyName: string | null) {
+function updateUrlParams(
+  projectId: string | null,
+  sceneName: string | null,
+  policyName: string | null
+) {
   const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '/');
   const normalizedBase = base.replace(/^\//g, '').replace(/\/+$/g, '');
 
@@ -196,7 +206,7 @@ function App() {
     loadConfig(import.meta.env.BASE_URL || '/', projectId)
       .then((data: AppConfig) => {
         setConfig(data);
-        const project = data.projects.find(p => {
+        const project = data.projects.find((p) => {
           if (projectId === null) {
             return p.id === null;
           }
@@ -223,7 +233,7 @@ function App() {
           setViewerStatus('Preparing scene...');
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Failed to load config:', err);
         setError(err.message || 'Failed to load config.');
       });
@@ -243,7 +253,7 @@ function App() {
     if (!config) {
       return [] as { value: string; label: string }[];
     }
-    return config.projects.map(project => ({
+    return config.projects.map((project) => ({
       value: project.id ?? 'main',
       label: project.name || (project.id ?? 'Main'),
     }));
@@ -253,17 +263,17 @@ function App() {
     if (!currentProject) {
       return [] as { value: string; label: string }[];
     }
-    return currentProject.scenes.map(scene => ({ value: scene.name, label: scene.name }));
+    return currentProject.scenes.map((scene) => ({ value: scene.name, label: scene.name }));
   }, [currentProject]);
 
   const menuOptions = useMemo(() => {
     if (!currentScene || !currentScene.policies) {
       return [] as { value: string; label: string }[];
     }
-    return currentScene.policies.map(policy => ({ value: policy.name, label: policy.name }));
+    return currentScene.policies.map((policy) => ({ value: policy.name, label: policy.name }));
   }, [currentScene]);
 
-  const projectValue = currentProject ? currentProject.id ?? 'main' : null;
+  const projectValue = currentProject ? (currentProject.id ?? 'main') : null;
   const sceneValue = currentScene?.name ?? null;
   const handleViewerError = useCallback((err: Error) => {
     setError(err.message);
@@ -275,7 +285,7 @@ function App() {
         return;
       }
       const normalized = value === 'main' ? null : value;
-      const project = config.projects.find(p => (p.id ?? 'main') === (normalized ?? 'main'));
+      const project = config.projects.find((p) => (p.id ?? 'main') === (normalized ?? 'main'));
       if (!project) {
         return;
       }
@@ -295,7 +305,7 @@ function App() {
       if (!currentProject || !value) {
         return;
       }
-      const scene = currentProject.scenes.find(s => s.name === value);
+      const scene = currentProject.scenes.find((s) => s.name === value);
       if (!scene) {
         return;
       }
@@ -315,7 +325,6 @@ function App() {
     },
     [currentProject, currentScene]
   );
-
 
   if (error) {
     return (

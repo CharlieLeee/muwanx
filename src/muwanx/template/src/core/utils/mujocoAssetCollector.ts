@@ -7,9 +7,15 @@ export class MuJoCoAssetCollector {
 
   constructor(options: { debug?: boolean } = {}) {
     this.REFERENCE_ATTRS = new Set([
-      'file', 'href', 'src',
-      'fileup', 'fileback', 'filedown',
-      'filefront', 'fileleft', 'fileright',
+      'file',
+      'href',
+      'src',
+      'fileup',
+      'fileback',
+      'filedown',
+      'filefront',
+      'fileleft',
+      'fileright',
     ]);
 
     this.TAG_DIRECTORY_HINTS = {
@@ -76,7 +82,9 @@ export class MuJoCoAssetCollector {
       try {
         const response = await fetch(fullFilePath);
         if (!response.ok) {
-          console.warn(`[MuJoCoAssetCollector] Failed to fetch ${fullFilePath}: ${response.status}`);
+          console.warn(
+            `[MuJoCoAssetCollector] Failed to fetch ${fullFilePath}: ${response.status}`
+          );
           return;
         }
         xmlContent = await response.text();
@@ -147,7 +155,9 @@ export class MuJoCoAssetCollector {
     }
 
     if (this.debug) {
-      console.log(`[MuJoCoAssetCollector] Successfully analyzed ${rootPath}: found ${result.length} assets`);
+      console.log(
+        `[MuJoCoAssetCollector] Successfully analyzed ${rootPath}: found ${result.length} assets`
+      );
     }
     return result;
   }
@@ -215,9 +225,7 @@ export class MuJoCoAssetCollector {
     }
 
     const hintDir = directoryHints[tagName];
-    const resolved = this._normalizePath(
-      this._joinPath(hintDir ?? baseDir, cleanedAttr)
-    );
+    const resolved = this._normalizePath(this._joinPath(hintDir ?? baseDir, cleanedAttr));
 
     if (!resolved) {
       return null;
@@ -285,7 +293,7 @@ export class MuJoCoAssetCollector {
 
   private _isBinary(path: string): boolean {
     const lower = path.toLowerCase();
-    return this.BINARY_EXTENSIONS.some(ext => lower.endsWith(ext));
+    return this.BINARY_EXTENSIONS.some((ext) => lower.endsWith(ext));
   }
 
   private _getDirectoryPath(path: string): string {
@@ -297,7 +305,7 @@ export class MuJoCoAssetCollector {
   }
 
   private _joinPath(...parts: (string | undefined)[]): string {
-    const filtered = parts.filter(part => part !== null && part !== undefined && part !== '.');
+    const filtered = parts.filter((part) => part !== null && part !== undefined && part !== '.');
     if (filtered.length === 0) {
       return '';
     }
