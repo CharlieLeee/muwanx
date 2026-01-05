@@ -18,7 +18,7 @@ jobs:
         uses: astral-sh/setup-uv@v4
 
       - name: Run pytest
-        run: uv run --python 3.12 pytest
+        run: uv run --extra dev --python 3.12 pytest
 
       - name: Strip unsupported tags in README
         run: |
