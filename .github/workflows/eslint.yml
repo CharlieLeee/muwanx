@@ -16,6 +16,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20
+      - name: Install dependencies
+        run: |
+          cd src/muwanx/template
+          npm install
       - name: Run eslint
         run: |
           cd src/muwanx/template
