@@ -22,12 +22,22 @@ jobs:
         run: |
           sed -i '/<!-- pypi-strip -->/,/<!-- \/pypi-strip -->/d' README.md
 
-      - name: Only bundle client build for PyPI release
+      - name: Setup Node.js for template build
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build web template
+        working-directory: src/muwanx/template
         run: |
-          mv src/muwanx/template/build ./__built_client
-          rm -rf src/muwanx/template/*
-          git checkout src/muwanx/template
-          mv ./__built_client src/muwanx/template/build
+          npm install
+          npm run build
+
+      - name: Remove artifacts from pypi package
+        working-directory: src/muwanx/template
+        run: |
+          rm -rf node_modules
+          rm -rf .nodeenv
 
       - name: Build and publish
         env:
