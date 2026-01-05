@@ -34,7 +34,7 @@ class Builder:
         """Initialize a new Builder instance.
 
         Args:
-            base_path: Base path for the application (e.g., '/muwanx/reorg/').
+            base_path: Base path for the application (e.g., '/muwanx/').
                       This is used for deployment to subdirectories.
         """
         self._projects: list[ProjectConfig] = []
