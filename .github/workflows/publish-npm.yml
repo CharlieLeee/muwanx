@@ -14,31 +14,23 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup Node.js
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Run pytest
+        run: uv run --python 3.12 pytest # This will sync the version with python package
+
+      - name: Setup Node.js for template build
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Extract version from release tag
-        id: get_version
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Publishing version $VERSION"
-
-      - name: Update package.json version
+      - name: Build web template
         working-directory: src/muwanx/template
         run: |
-          npm version ${{ steps.get_version.outputs.VERSION }} --no-git-tag-version
-
-      - name: Install dependencies
-        working-directory: src/muwanx/template
-        run: npm install
-
-      - name: Build library
-        working-directory: src/muwanx/template
-        run: npm run build
+          npm install
+          npm run build
 
       - name: Publish to npm
         working-directory: src/muwanx/template

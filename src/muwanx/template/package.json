@@ -1,7 +1,6 @@
 {
   "name": "muwanx",
-  "version": "0.0.2",
-  "private": true,
+  "version": "0.0.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/ttktjmt/muwanx.git"

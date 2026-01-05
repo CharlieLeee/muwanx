@@ -110,6 +110,26 @@ class ClientBuilder:
         print("Installing npm dependencies (npm install)...")
         subprocess.check_call([str(npm_bin), "install"], cwd=self.project_dir)
 
+    def sync_version_from_python(self) -> None:
+        """Sync package.json version with Python package __version__."""
+        from muwanx import __version__
+
+        package_json = self.project_dir / "package.json"
+        with open(package_json, "r") as f:
+            package_data = json.load(f)
+
+        current_version = package_data.get("version", "0.0.0")
+        if current_version != __version__:
+            print(f"Updating package.json version: {current_version} → {__version__}")
+            package_data["version"] = __version__
+            # Remove private field if it exists
+            package_data.pop("private", None)
+            with open(package_json, "w") as f:
+                json.dump(package_data, f, indent=2)
+                f.write("\n")
+        else:
+            print(f"✓ package.json version already up to date: {__version__}")
+
     def run_build_script(
         self, script_name: str = "build", env: dict[str, str] | None = None
     ) -> None:
@@ -135,6 +155,7 @@ class ClientBuilder:
     def build(self, clean: bool = False, base_path: str = "/") -> None:
         try:
             self.create_env(clean=clean)
+            self.sync_version_from_python()
             self.install_dependencies()
             env = {"MUWANX_BASE_PATH": base_path}
             self.run_build_script("build", env=env)
