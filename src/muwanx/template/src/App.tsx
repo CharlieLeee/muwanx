@@ -193,7 +193,7 @@ function App() {
   const [currentProject, setCurrentProject] = useState<ProjectConfig | null>(null);
   const [currentScene, setCurrentScene] = useState<SceneConfig | null>(null);
   const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
-  const [viewerStatus, setViewerStatus] = useState<string>('Loading configuration...');
+  const [viewerStatus, setViewerStatus] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
   const projectId = useMemo(() => getProjectIdFromLocation(), []);
@@ -219,19 +219,6 @@ function App() {
         const selectedScene = pickScene(project, sceneQuery);
         setCurrentScene(selectedScene);
         setSelectedMenu(selectedScene?.policies?.[0]?.name ?? null);
-        if (selectedScene && sceneQuery) {
-          const normalizedQuery = sceneQuery.trim().toLowerCase();
-          const matched =
-            selectedScene.name.toLowerCase() === normalizedQuery ||
-            sanitizeName(selectedScene.name) === normalizedQuery;
-          setViewerStatus(
-            matched
-              ? 'Preparing scene...'
-              : `Scene "${sceneQuery}" not found. Loading "${selectedScene.name}".`
-          );
-        } else {
-          setViewerStatus('Preparing scene...');
-        }
       })
       .catch((err) => {
         console.error('Failed to load config:', err);
@@ -295,7 +282,6 @@ function App() {
       const nextPolicy = nextScene?.policies?.[0]?.name ?? null;
       setSelectedMenu(nextPolicy);
       updateUrlParams(project.id, nextScene?.name ?? null, nextPolicy);
-      setViewerStatus('Preparing scene...');
     },
     [config]
   );
@@ -313,7 +299,6 @@ function App() {
       const nextPolicy = scene.policies?.[0]?.name ?? null;
       setSelectedMenu(nextPolicy);
       updateUrlParams(currentProject.id, value, nextPolicy);
-      setViewerStatus('Preparing scene...');
     },
     [currentProject]
   );
@@ -340,16 +325,7 @@ function App() {
   }
 
   if (!currentProject || !currentScene || !scenePath) {
-    return (
-      <MantineProvider>
-        <div className="app">
-          <div className="hud">
-            <h1 className="hud-title">Muwanx</h1>
-            <p className="hud-message">{viewerStatus}</p>
-          </div>
-        </div>
-      </MantineProvider>
-    );
+    return null;
   }
 
   return (
