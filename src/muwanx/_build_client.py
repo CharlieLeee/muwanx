@@ -99,12 +99,10 @@ class ClientBuilder:
         node_modules = self.project_dir / "node_modules"
 
         # In CI environments or cross-platform builds, npm ci can fail with optional dependencies
-        # Remove lock file and node_modules to ensure clean install
+        # Update lock file and node_modules to ensure clean install
         if package_lock.exists():
-            print("Removing package-lock.json for clean install...")
             package_lock.unlink()
         if node_modules.exists():
-            print("Removing node_modules for clean install...")
             shutil.rmtree(node_modules)
 
         print("Installing npm dependencies (npm install)...")
@@ -127,8 +125,6 @@ class ClientBuilder:
             with open(package_json, "w") as f:
                 json.dump(package_data, f, indent=2)
                 f.write("\n")
-        else:
-            print(f"✓ package.json version already up to date: {__version__}")
 
     def run_build_script(
         self, script_name: str = "build", env: dict[str, str] | None = None
@@ -159,7 +155,7 @@ class ClientBuilder:
             self.install_dependencies()
             env = {"MUWANX_BASE_PATH": base_path}
             self.run_build_script("build", env=env)
-            print("✓ Client build completed successfully")
+            print("✓ Build completed successfully")
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Build failed with exit code {e.returncode}") from e
         except Exception as e:

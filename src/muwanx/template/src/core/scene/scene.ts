@@ -531,10 +531,6 @@ export function getQuaternion(
   );
 }
 
-export function toMujocoPos(target: THREE.Vector3): THREE.Vector3 {
-  return target.set(target.x, -target.z, target.y);
-}
-
 export async function downloadExampleScenesFolder(
   mujoco: Mujoco,
   scenePath: string,

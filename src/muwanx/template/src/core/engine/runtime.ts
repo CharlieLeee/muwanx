@@ -7,11 +7,11 @@ import {
   getPosition,
   getQuaternion,
   loadSceneFromURL,
-  toMujocoPos,
 } from '../scene/scene';
 import { DragStateManager } from '../utils/dragStateManager';
 import { createTendonState, updateTendonGeometry, updateTendonRendering } from '../scene/tendons';
 import { updateHeadlightFromCamera, updateLightsFromData } from '../scene/lights';
+import { threeToMjcCoordinate } from '../scene/coordinate';
 
 type RuntimeOptions = {
   baseUrl?: string;
@@ -270,12 +270,11 @@ export class MuwanxRuntime {
     const forceThree = this.dragStateManager.offset
       .clone()
       .multiplyScalar(this.dragForceScale);
-    const force = toMujocoPos(forceThree);
+    const force = threeToMjcCoordinate(forceThree);
 
     // Point where force is applied (world coordinates)
     const pointThree = this.dragStateManager.worldHit.clone();
-    const point = toMujocoPos(pointThree);
-
+    const point = threeToMjcCoordinate(pointThree);
     // Body position
     const bodyPos = new THREE.Vector3(
       this.mjData.xpos[bodyId * 3 + 0],

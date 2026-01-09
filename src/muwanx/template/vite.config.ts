@@ -10,6 +10,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  optimizeDeps: {
+    exclude: ['mujoco-js'],
+  },
   server: {
     port: 8000,
     host: true,
@@ -18,8 +21,14 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: true,
+    chunkSizeWarningLimit: 11000,
     rollupOptions: {
       input: path.resolve(__dirname, 'index.html'),
+      output: {
+        manualChunks: {
+          'mujoco': ['mujoco-js'],
+        },
+      },
     },
   },
   worker: {

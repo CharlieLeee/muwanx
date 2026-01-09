@@ -20,6 +20,7 @@ repos:
       - id: ruff-format
         exclude: '^typings/'
 
+  # You can disable this block if you don't edit JS/TS files.
   - repo: local
     hooks:
       - id: eslint

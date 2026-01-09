@@ -1,5 +1,6 @@
 {
   "name": "muwanx",
+  "type": "module",
   "version": "0.0.4",
   "repository": {
     "type": "git",

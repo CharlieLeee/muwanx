@@ -187,10 +187,10 @@ class Builder:
         # Copy template directory
         template_dir = Path(__file__).parent / "template"
         if template_dir.exists():
-            # Build TypeScript/JavaScript client first
+            # Build client first
             package_json = template_dir / "package.json"
             if package_json.exists():
-                print("Building TypeScript/JavaScript client...")
+                print("Building the muwanx application...")
                 builder = ClientBuilder(template_dir)
                 builder.build(base_path=self._base_path)
 
