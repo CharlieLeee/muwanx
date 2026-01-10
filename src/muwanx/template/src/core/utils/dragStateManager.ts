@@ -116,9 +116,12 @@ export class DragStateManager {
                 this.localHit.copy(obj.worldToLocal(hit.clone()));
                 this.worldHit.copy(hit);
                 this.currentWorld.copy(hit);
+                // Reset offset
+                this.offset.set(0, 0, 0);
 
                 this.arrow.position.copy(hit);
-                this.arrow.visible = true;
+                // Don't show arrow yet until drag actually starts
+                this.arrow.visible = false;
 
                 this.active = true;
                 this.controls.enabled = false; // Disable OrbitControls
@@ -160,6 +163,9 @@ export class DragStateManager {
         this.arrow.position.copy(this.worldHit);
         const length = this.offset.length();
         if (length > 0.001) {
+            // Show arrow only when there's actual drag movement
+            this.arrow.visible = true;
+
             // Set direction by making the arrow point toward the offset
             const direction = this.offset.clone().normalize();
             this.arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
@@ -172,6 +178,9 @@ export class DragStateManager {
 
             // Position head so its base aligns with shaft end (cone is centered, so offset by half height)
             this.arrowHead.position.y = shaftLength + headHeight / 2;
+        } else {
+            // Hide arrow when offset is too small
+            this.arrow.visible = false;
         }
     }
 
