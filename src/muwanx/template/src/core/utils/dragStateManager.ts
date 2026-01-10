@@ -31,7 +31,9 @@ export class DragStateManager {
     offset: THREE.Vector3;
 
     // Debug arrow for force visualization
-    private arrow: THREE.ArrowHelper;
+    private arrow: THREE.Group;
+    private arrowShaft: THREE.Mesh;
+    private arrowHead: THREE.Mesh;
 
     constructor(options: DragStateManagerOptions) {
         this.scene = options.scene;
@@ -54,24 +56,30 @@ export class DragStateManager {
         this.currentWorld = new THREE.Vector3();
         this.offset = new THREE.Vector3();
 
-        // Force vector visualization for debugging
-        this.arrow = new THREE.ArrowHelper(
-            new THREE.Vector3(0, 1, 0),
-            new THREE.Vector3(0, 0, 0),
-            1,
-            0x666666
-        );
-        this.arrow.setLength(1, 0.2, 0.1);
-        const lineMaterial = Array.isArray(this.arrow.line.material)
-            ? this.arrow.line.material[0]
-            : this.arrow.line.material;
-        const coneMaterial = Array.isArray(this.arrow.cone.material)
-            ? this.arrow.cone.material[0]
-            : this.arrow.cone.material;
-        lineMaterial.transparent = true;
-        coneMaterial.transparent = true;
-        lineMaterial.opacity = 0.5;
-        coneMaterial.opacity = 0.5;
+        // Force vector visualization - custom thick 3D arrow
+        this.arrow = new THREE.Group();
+
+        // Create thick cylinder shaft (radius, height, radialSegments)
+        const shaftGeometry = new THREE.CylinderGeometry(0.008, 0.008, 1);
+        const arrowMaterial = new THREE.MeshStandardMaterial({
+            color: 0xff6347,
+            transparent: true,
+            opacity: 0.5,
+            metalness: 0,
+            roughness: 0.2
+        });
+        this.arrowShaft = new THREE.Mesh(shaftGeometry, arrowMaterial);
+        // Cylinder is centered, so translate it up by half its height
+        this.arrowShaft.position.y = 0.5;
+
+        // Create cone head (radius, height, radialSegments)
+        const headGeometry = new THREE.ConeGeometry(0.03, 0.10);
+        this.arrowHead = new THREE.Mesh(headGeometry, arrowMaterial);
+        // Position cone at the top of the shaft
+        this.arrowHead.position.y = 1;
+
+        this.arrow.add(this.arrowShaft);
+        this.arrow.add(this.arrowHead);
         this.arrow.visible = false;
         this.scene.add(this.arrow);
 
@@ -150,9 +158,20 @@ export class DragStateManager {
 
         // Update debug arrow
         this.arrow.position.copy(this.worldHit);
-        if (this.offset.length() > 0.001) {
-            this.arrow.setDirection(this.offset.clone().normalize());
-            this.arrow.setLength(this.offset.length());
+        const length = this.offset.length();
+        if (length > 0.001) {
+            // Set direction by making the arrow point toward the offset
+            const direction = this.offset.clone().normalize();
+            this.arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
+
+            // Scale shaft to match length (subtract head height)
+            const headHeight = 0.10; // Must match cone geometry height
+            const shaftLength = Math.max(0.01, length - headHeight);
+            this.arrowShaft.scale.y = shaftLength;
+            this.arrowShaft.position.y = shaftLength / 2;
+
+            // Position head so its base aligns with shaft end (cone is centered, so offset by half height)
+            this.arrowHead.position.y = shaftLength + headHeight / 2;
         }
     }
 
@@ -183,6 +202,11 @@ export class DragStateManager {
         if (this.arrow.parent) {
             this.scene.remove(this.arrow);
         }
-        this.arrow.dispose?.();
+        // Dispose geometries and materials
+        this.arrowShaft.geometry.dispose();
+        this.arrowHead.geometry.dispose();
+        if (this.arrowShaft.material) {
+            (this.arrowShaft.material as THREE.Material).dispose();
+        }
     }
 }
