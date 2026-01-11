@@ -91,33 +91,87 @@ export class SceneResourceTracker {
     totalBytes += this.estimateMuJoCoMemory(resources.mjModel);
     totalBytes += this.estimateMjDataMemory(resources.mjData);
 
-    // Estimate geometries
+    // Track unique instances to avoid double-counting shared resources
+    const countedGeometries = new Set<THREE.BufferGeometry>();
+    const countedMaterials = new Set<THREE.Material>();
+    const countedTextures = new Set<THREE.Texture>();
+
+    // Estimate geometries from meshes
     for (const geometry of Object.values(resources.meshes)) {
-      totalBytes += this.estimateGeometryMemory(geometry);
+      if (!countedGeometries.has(geometry)) {
+        totalBytes += this.estimateGeometryMemory(geometry);
+        countedGeometries.add(geometry);
+      }
     }
 
-    // Estimate all geometries in the scene
+    // Traverse scene to count all geometries, materials, and textures
     resources.mujocoRoot.traverse((object) => {
+      // Count geometry
       if ('geometry' in object && object.geometry) {
         const geom = object.geometry as THREE.BufferGeometry;
-        // Only count if not already counted in meshes
-        if (!Object.values(resources.meshes).includes(geom)) {
+        if (!countedGeometries.has(geom)) {
           totalBytes += this.estimateGeometryMemory(geom);
+          countedGeometries.add(geom);
         }
       }
 
+      // Count materials and their textures
       if ('material' in object && object.material) {
-        if (Array.isArray(object.material)) {
-          object.material.forEach((mat) => {
-            totalBytes += this.estimateMaterialMemory(mat);
-          });
-        } else {
-          totalBytes += this.estimateMaterialMemory(object.material as THREE.Material);
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+
+        for (const mat of materials) {
+          if (!countedMaterials.has(mat)) {
+            // Count material base overhead
+            totalBytes += 1024;
+            countedMaterials.add(mat);
+
+            // Count unique textures in this material
+            this.collectMaterialTextures(mat as THREE.Material).forEach((texture) => {
+              if (!countedTextures.has(texture)) {
+                totalBytes += this.estimateTextureMemory(texture);
+                countedTextures.add(texture);
+              }
+            });
+          }
         }
       }
     });
 
     return totalBytes;
+  }
+
+  /**
+   * Collect all textures from a material
+   */
+  private collectMaterialTextures(material: THREE.Material): THREE.Texture[] {
+    const textures: THREE.Texture[] = [];
+    const anyMaterial = material as THREE.MeshStandardMaterial & {
+      map?: THREE.Texture;
+      aoMap?: THREE.Texture;
+      emissiveMap?: THREE.Texture;
+      metalnessMap?: THREE.Texture;
+      normalMap?: THREE.Texture;
+      roughnessMap?: THREE.Texture;
+      envMap?: THREE.Texture;
+      alphaMap?: THREE.Texture;
+      lightMap?: THREE.Texture;
+      displacementMap?: THREE.Texture;
+      bumpMap?: THREE.Texture;
+    };
+
+    if (anyMaterial.map) textures.push(anyMaterial.map);
+    if (anyMaterial.aoMap) textures.push(anyMaterial.aoMap);
+    if (anyMaterial.emissiveMap) textures.push(anyMaterial.emissiveMap);
+    if (anyMaterial.metalnessMap) textures.push(anyMaterial.metalnessMap);
+    if (anyMaterial.normalMap) textures.push(anyMaterial.normalMap);
+    if (anyMaterial.roughnessMap) textures.push(anyMaterial.roughnessMap);
+    if (anyMaterial.envMap) textures.push(anyMaterial.envMap);
+    if (anyMaterial.alphaMap) textures.push(anyMaterial.alphaMap);
+    if (anyMaterial.lightMap) textures.push(anyMaterial.lightMap);
+    if (anyMaterial.displacementMap) textures.push(anyMaterial.displacementMap);
+    if (anyMaterial.bumpMap) textures.push(anyMaterial.bumpMap);
+
+    return textures;
   }
 
   /**
@@ -233,39 +287,4 @@ export class SceneResourceTracker {
     return 1024; // Default estimate
   }
 
-  /**
-   * Estimate material memory
-   */
-  private estimateMaterialMemory(material: THREE.Material): number {
-    let bytes = 1024; // Base material overhead
-
-    const anyMaterial = material as THREE.MeshStandardMaterial & {
-      map?: THREE.Texture;
-      aoMap?: THREE.Texture;
-      emissiveMap?: THREE.Texture;
-      metalnessMap?: THREE.Texture;
-      normalMap?: THREE.Texture;
-      roughnessMap?: THREE.Texture;
-      envMap?: THREE.Texture;
-      alphaMap?: THREE.Texture;
-      lightMap?: THREE.Texture;
-      displacementMap?: THREE.Texture;
-      bumpMap?: THREE.Texture;
-    };
-
-    // Estimate textures
-    if (anyMaterial.map) bytes += this.estimateTextureMemory(anyMaterial.map);
-    if (anyMaterial.aoMap) bytes += this.estimateTextureMemory(anyMaterial.aoMap);
-    if (anyMaterial.emissiveMap) bytes += this.estimateTextureMemory(anyMaterial.emissiveMap);
-    if (anyMaterial.metalnessMap) bytes += this.estimateTextureMemory(anyMaterial.metalnessMap);
-    if (anyMaterial.normalMap) bytes += this.estimateTextureMemory(anyMaterial.normalMap);
-    if (anyMaterial.roughnessMap) bytes += this.estimateTextureMemory(anyMaterial.roughnessMap);
-    if (anyMaterial.envMap) bytes += this.estimateTextureMemory(anyMaterial.envMap);
-    if (anyMaterial.alphaMap) bytes += this.estimateTextureMemory(anyMaterial.alphaMap);
-    if (anyMaterial.lightMap) bytes += this.estimateTextureMemory(anyMaterial.lightMap);
-    if (anyMaterial.displacementMap) bytes += this.estimateTextureMemory(anyMaterial.displacementMap);
-    if (anyMaterial.bumpMap) bytes += this.estimateTextureMemory(anyMaterial.bumpMap);
-
-    return bytes;
-  }
 }
