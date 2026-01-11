@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { MjData, MjModel } from 'mujoco-js';
 import type { Mujoco } from '../../types/mujoco';
 import { mujocoAssetCollector } from '../utils/mujocoAssetCollector';
+import { normalizeScenePath } from '../utils/pathUtils';
 import { createLights } from './lights';
 import { createTexture } from './textures';
 import { createTendonMeshes } from './tendons';
@@ -15,7 +16,7 @@ const sceneDownloadPromises = new Map<string, Promise<void>>();
  * This is used by the cache manager when evicting scenes
  */
 export function clearSceneDownloadCache(scenePath: string): void {
-  const normalizedPath = scenePath.replace(/^[./]+/, '');
+  const normalizedPath = normalizeScenePath(scenePath);
   sceneDownloadPromises.delete(normalizedPath);
 }
 
@@ -570,7 +571,7 @@ export async function downloadExampleScenesFolder(
     return;
   }
 
-  const normalizedPath = scenePath.replace(/^[./]+/, '');
+  const normalizedPath = normalizeScenePath(scenePath);
   const pathParts = normalizedPath.split('/');
 
   const xmlDirectory = pathParts.slice(0, -1).join('/');

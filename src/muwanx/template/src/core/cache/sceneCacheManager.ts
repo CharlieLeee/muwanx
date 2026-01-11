@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { MjData, MjModel } from 'mujoco-js';
 import type { Mujoco } from '../../types/mujoco';
 import { clearSceneDownloadCache } from '../scene/scene';
+import { normalizeScenePath } from '../utils/pathUtils';
 
 /**
  * Resources associated with a cached scene
@@ -100,13 +101,7 @@ export class SceneCacheManager {
     if (!scenePath) {
       return '';
     }
-    const normalized = scenePath
-      .trim()
-      .replace(/^(\.\/)+/, '')
-      .replace(/\/+/g, '/');
-    // Note: Removed .toLowerCase() to preserve case sensitivity
-    // Many file systems are case-sensitive, and MuJoCo paths should match exactly
-    return normalized;
+    return normalizeScenePath(scenePath);
   }
 
   /**
@@ -200,7 +195,7 @@ export class SceneCacheManager {
    */
   private findLRUScene(): string | null {
     let oldestKey: string | null = null;
-    let oldestTime = Date.now();
+    let oldestTime = Infinity;
 
     for (const [key, resources] of this.cache.entries()) {
       if (resources.lastAccessed < oldestTime) {
