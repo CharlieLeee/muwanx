@@ -22,6 +22,8 @@
 
 <p align="center">
   <em>Check out the demo ― <a href="https://ttktjmt.github.io/muwanx/">ttktjmt.github.io/muwanx</a></em>
+  <br>
+  <em>Demo from python ― <a href="https://ttktjmt.github.io/muwanx/python">ttktjmt.github.io/muwanx/python</a></em>
 </p>
 
 <p align="center">
