@@ -3,6 +3,7 @@ import { MantineProvider } from '@mantine/core';
 import MuwanxViewer from './components/MuwanxViewer';
 import ControlPanel from './ControlPanel';
 import { theme } from './AppTheme';
+import './App.css';
 
 interface PolicyConfig {
   name: string;
