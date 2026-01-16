@@ -1,4 +1,7 @@
-import { Paper, Select, Stack, Text } from '@mantine/core';
+import { Box, Select } from '@mantine/core';
+import { IconRobot } from '@tabler/icons-react';
+import FloatingPanel from './FloatingPanel';
+import { LabeledInput } from './LabeledInput';
 
 export interface SelectOption {
   value: string;
@@ -36,82 +39,85 @@ function ControlPanel(props: ControlPanelProps) {
   }
 
   return (
-    <Paper
-      withBorder
-      radius="xs"
-      shadow="0 0 1em 0 rgba(0,0,0,0.1)"
-      style={{
-        position: 'absolute',
-        top: '1em',
-        right: '1em',
-        width: '20em',
-        zIndex: 10,
-        padding: '0.5em 0.75em',
-      }}
-    >
-      <Stack gap="xs">
-        <Text size="xs" fw={500} style={{ opacity: 0.8 }}>
-          Configuration
-        </Text>
+    <FloatingPanel width="20em">
+      <FloatingPanel.Handle>
+        <div style={{ width: "1.1em" }} />
+        <IconRobot
+          color="#228be6"
+          style={{
+            position: "absolute",
+            width: "1.25em",
+            height: "1.25em",
+          }}
+        />
+        <Box px="xs" style={{ flexGrow: 1, letterSpacing: "-0.5px" }} pt="0.1em">
+          Muwanx
+        </Box>
+      </FloatingPanel.Handle>
+      <FloatingPanel.Contents>
+        <Box pt="0.375em">
+          {projects.length > 1 && (
+            <LabeledInput id="project-select" label="Project">
+              <Select
+                id="project-select"
+                placeholder="Select project"
+                data={projects}
+                value={projectValue}
+                onChange={onProjectChange}
+                size="xs"
+                radius="xs"
+                searchable
+                clearable={false}
+                styles={{
+                  input: { minHeight: '1.625rem', height: '1.625rem', padding: '0.5em' },
+                }}
+                comboboxProps={{ zIndex: 1000 }}
+              />
+            </LabeledInput>
+          )}
 
-        {projects.length > 1 && (
-          <Select
-            label="Project"
-            placeholder="Select project"
-            data={projects}
-            value={projectValue}
-            onChange={onProjectChange}
-            size="xs"
-            radius="xs"
-            searchable
-            clearable={false}
-            styles={{
-              label: { fontSize: '0.75rem', fontWeight: 500, marginBottom: '0.25rem' },
-              input: { minHeight: '1.625rem', height: '1.625rem', padding: '0.5em' },
-            }}
-            comboboxProps={{ zIndex: 1000 }}
-          />
-        )}
+          {scenes.length > 0 && (
+            <LabeledInput id="scene-select" label="Scene">
+              <Select
+                id="scene-select"
+                placeholder="Select scene"
+                data={scenes}
+                value={sceneValue}
+                onChange={onSceneChange}
+                size="xs"
+                radius="xs"
+                searchable
+                clearable={false}
+                styles={{
+                  input: { minHeight: '1.625rem', height: '1.625rem', padding: '0.5em' },
+                }}
+                comboboxProps={{ zIndex: 1000 }}
+              />
+            </LabeledInput>
+          )}
 
-        {scenes.length > 0 && (
-          <Select
-            label="Scene"
-            placeholder="Select scene"
-            data={scenes}
-            value={sceneValue}
-            onChange={onSceneChange}
-            size="xs"
-            radius="xs"
-            searchable
-            clearable={false}
-            styles={{
-              label: { fontSize: '0.75rem', fontWeight: 500, marginBottom: '0.25rem' },
-              input: { minHeight: '1.625rem', height: '1.625rem', padding: '0.5em' },
-            }}
-            comboboxProps={{ zIndex: 1000 }}
-          />
-        )}
-
-        {menus.length > 0 && (
-          <Select
-            label="Policy"
-            placeholder="Select policy"
-            data={menus}
-            value={menuValue}
-            onChange={onMenuChange}
-            size="xs"
-            radius="xs"
-            searchable
-            clearable
-            styles={{
-              label: { fontSize: '0.75rem', fontWeight: 500, marginBottom: '0.25rem' },
-              input: { minHeight: '1.625rem', height: '1.625rem', padding: '0.5em' },
-            }}
-            comboboxProps={{ zIndex: 1000 }}
-          />
-        )}
-      </Stack>
-    </Paper>
+          {menus.length > 0 && (
+            <LabeledInput id="policy-select" label="Policy">
+              <Select
+                id="policy-select"
+                placeholder="Select policy"
+                data={menus}
+                value={menuValue}
+                onChange={onMenuChange}
+                size="xs"
+                radius="xs"
+                searchable
+                clearable
+                styles={{
+                  input: { minHeight: '1.625rem', height: '1.625rem', padding: '0.5em' },
+                }}
+                comboboxProps={{ zIndex: 1000 }}
+              />
+            </LabeledInput>
+          )}
+        </Box>
+      </FloatingPanel.Contents>
+    </FloatingPanel>
   );
 }
 

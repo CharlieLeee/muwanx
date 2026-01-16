@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { MantineProvider } from '@mantine/core';
 import MuwanxViewer from './components/MuwanxViewer';
 import ControlPanel from './ControlPanel';
+import { theme } from './AppTheme';
 
 interface PolicyConfig {
   name: string;
@@ -312,7 +313,7 @@ function App() {
 
   if (error) {
     return (
-      <MantineProvider>
+      <MantineProvider theme={theme} defaultColorScheme="dark">
         <div className="app">
           <div className="hud hud-error">
             <h1 className="hud-title">Muwanx</h1>
@@ -328,7 +329,7 @@ function App() {
   }
 
   return (
-    <MantineProvider>
+    <MantineProvider theme={theme} defaultColorScheme="dark">
       <div className="app">
         <ControlPanel
           projects={projectOptions}
