@@ -11,6 +11,9 @@ copyright: '&copy;2026 Muwanx Contributors'
 
 theme:
   name: material
+  icon:
+    logo: simple/readthedocs
+    favicon: simple/readthedocs
   language: en
   features:
   - search.suggest
