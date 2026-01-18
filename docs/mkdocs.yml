@@ -2,8 +2,6 @@ site_name: Muwanx
 site_description: Documentation for the muwanx project.
 site_url: https://muwanx.readthedocs.io/
 
-docs_dir: source
-
 repo_name: ttktjmt/muwanx
 repo_url: https://github.com/ttktjmt/muwanx
 
@@ -13,11 +11,21 @@ theme:
   name: material
   icon:
     logo: simple/readthedocs
-    favicon: simple/readthedocs
+  # favicon: images/favicon.ico
   language: en
   features:
+  - header.links
   - search.suggest
   - search.highlight
+  - content.tabs.link
+  - content.tooltips
+  - content.code.annotate
+  - content.code.copy
+  - content.code.select
+  - navigation.indexes
+  - navigation.path
+  - navigation.tabs
+  - navigation.top
   palette:
   - media: '(prefers-color-scheme: light)'
     scheme: default
@@ -39,3 +47,40 @@ theme:
 
 plugins:
   - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - User Guide:
+    - Basic Concepts: user-guide/basic-concepts.md
+    - Creating Scenes: user-guide/creating-scenes.md
+    - Adding Policies: user-guide/adding-policies.md
+    - Building Projects: user-guide/building-projects.md
+  - API Reference:
+    - Builder: api-reference/builder.md
+    - MuwanxApp: api-reference/app.md
+    - Project: api-reference/project.md
+    - Scene: api-reference/scene.md
+    - Policy: api-reference/policy.md
+  - Examples:
+    - Hello World: examples/hello-world.md
+    - Custom Models: examples/custom-models.md
+  - Advanced:
+    - Deployment: advanced/deployment.md
+    - VR Support: advanced/vr-support.md
+  - Contributing: contributing.md
