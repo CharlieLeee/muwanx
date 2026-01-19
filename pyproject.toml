@@ -23,14 +23,14 @@ packages = ["src/muwanx"]
 name = "muwanx"
 dynamic = ["version"]
 authors = [
-    {name = "Tatsuki Tsujimoto", email = "tatsuki.tsujimoto@gmail.com"},
+    {name = "Muwanx Developers"},
 ]
 description = "Browser-based MuJoCo simulation with real-time policy control"
 readme = "README.md"
 license = { text="Apache-2.0" }
 requires-python = ">=3.10"
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: Apache Software License",

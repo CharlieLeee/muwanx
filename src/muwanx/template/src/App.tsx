@@ -335,6 +335,7 @@ function App() {
         <ControlPanel
           projects={projectOptions}
           projectValue={projectValue}
+          projectLabel={currentProject?.name ?? 'Muwanx'}
           onProjectChange={handleProjectChange}
           scenes={sceneOptions}
           sceneValue={sceneValue}

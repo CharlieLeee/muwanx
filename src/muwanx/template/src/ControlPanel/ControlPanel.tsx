@@ -1,5 +1,5 @@
-import { Box, Select } from '@mantine/core';
-import { IconRobot } from '@tabler/icons-react';
+import { Box, Menu, Select } from '@mantine/core';
+import { IconChevronDown, IconRobot } from '@tabler/icons-react';
 import FloatingPanel from './FloatingPanel';
 import { LabeledInput } from './LabeledInput';
 
@@ -11,6 +11,7 @@ export interface SelectOption {
 interface ControlPanelProps {
   projects: SelectOption[];
   projectValue: string | null;
+  projectLabel: string;
   onProjectChange: (value: string | null) => void;
   scenes: SelectOption[];
   sceneValue: string | null;
@@ -24,6 +25,7 @@ function ControlPanel(props: ControlPanelProps) {
   const {
     projects,
     projectValue,
+    projectLabel,
     onProjectChange,
     scenes,
     sceneValue,
@@ -50,32 +52,65 @@ function ControlPanel(props: ControlPanelProps) {
             height: "1.25em",
           }}
         />
-        <Box px="xs" style={{ flexGrow: 1, letterSpacing: "-0.5px" }} pt="0.1em">
-          Muwanx
-        </Box>
+        <FloatingPanel.HideWhenCollapsed>
+          <Box
+            px="xs"
+            style={{
+              flexGrow: 1,
+              letterSpacing: "-0.5px",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5em",
+            }}
+            pt="0.1em"
+          >
+            <span style={{ flexGrow: 1 }}>{projectLabel}</span>
+            {projects.length > 1 && (
+              <Menu position="bottom-start" offset={5}>
+                <Menu.Target>
+                  <Box
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <IconChevronDown size={16} />
+                  </Box>
+                </Menu.Target>
+                <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
+                  {projects.map((project) => (
+                    <Menu.Item
+                      key={project.value}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onProjectChange(project.value);
+                      }}
+                      style={{
+                        fontWeight: project.value === projectValue ? 600 : 400,
+                        backgroundColor:
+                          project.value === projectValue
+                            ? "rgba(34, 139, 230, 0.1)"
+                            : undefined,
+                      }}
+                    >
+                      {project.label}
+                    </Menu.Item>
+                  ))}
+                </Menu.Dropdown>
+              </Menu>
+            )}
+          </Box>
+        </FloatingPanel.HideWhenCollapsed>
+        <FloatingPanel.HideWhenExpanded>
+          <Box px="xs" style={{ flexGrow: 1, letterSpacing: "-0.5px" }} pt="0.1em">
+            {projectLabel}
+          </Box>
+        </FloatingPanel.HideWhenExpanded>
       </FloatingPanel.Handle>
       <FloatingPanel.Contents>
         <Box pt="0.375em">
-          {projects.length > 1 && (
-            <LabeledInput id="project-select" label="Project">
-              <Select
-                id="project-select"
-                placeholder="Select project"
-                data={projects}
-                value={projectValue}
-                onChange={onProjectChange}
-                size="xs"
-                radius="xs"
-                searchable
-                clearable={false}
-                styles={{
-                  input: { minHeight: '1.625rem', height: '1.625rem', padding: '0.5em' },
-                }}
-                comboboxProps={{ zIndex: 1000 }}
-              />
-            </LabeledInput>
-          )}
-
           {scenes.length > 0 && (
             <LabeledInput id="scene-select" label="Scene">
               <Select
