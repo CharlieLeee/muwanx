@@ -1,74 +1,17 @@
-# Getting Started
-
-This guide will help you install Muwanx and create your first interactive simulation.
-
-## Installation
-
-Muwanx can be installed using either Python (pip) or JavaScript (npm), depending on your preferred workflow.
-
-### Python Installation
-
-Install Muwanx with pip:
-
-```bash
-pip install muwanx
-```
-
-For development work, you can install with optional dependencies:
-
-```bash
-pip install muwanx[dev]
-```
-
-For running examples:
-
-```bash
-pip install muwanx[examples]
-```
-
-### JavaScript Installation
-
-Install Muwanx with npm:
-
-```bash
-npm install muwanx
-```
-
-Or with yarn:
-
-```bash
-yarn add muwanx
-```
-
-## Requirements
-
-- **Python**: Version 3.10 or higher
-- **Node.js**: Version 20 or higher (for npm installation)
-- **Browser**: Modern browser with WebAssembly and WebGL support
-
-### Python Dependencies
-
-The following are automatically installed with Muwanx:
-
-- `mujoco>=3.4.0` - MuJoCo physics engine
-- `nodeenv>=1.9.1` - Node.js environment management
-- `onnx>=1.20.0` - ONNX model format support
-- `wandb>=0.23.1` - Experiment tracking (optional)
-
-## Quick Start
+# Tutorial
 
 Let's create a simple "Hello World" simulation with a falling box.
 
-### Step 1: Create a Python Script
+## Step 1: Create a Python Script
 
 Create a new file called `hello_world.py`:
 
 ```py
 import mujoco
-import muwanx as mwx
+import muwanx as muwanx
 
 # Create a builder instance
-builder = mwx.Builder()
+builder = muwanx.Builder()
 
 # Add a project
 project = builder.add_project(name="Hello World")
@@ -97,7 +40,7 @@ app = builder.build()
 app.launch()
 ```
 
-### Step 2: Run the Script
+## Step 2: Run the Script
 
 Execute your script:
 
@@ -120,7 +63,7 @@ Let's break down what each part does:
 ### Builder
 
 ```python
-builder = mwx.Builder()
+builder = muwanx.Builder()
 ```
 
 The `Builder` is the main entry point for creating Muwanx applications. It manages projects, scenes, and builds the final application.
@@ -158,15 +101,6 @@ app.launch()
 
 The `build()` method compiles everything into a static web application, and `launch()` starts a local server and opens it in your browser.
 
-## Next Steps
-
-Now that you have a basic simulation running, explore these topics:
-
-- [Basic Concepts](user-guide/basic-concepts.md) - Understand the core architecture
-- [Creating Scenes](user-guide/creating-scenes.md) - Learn more about scene configuration
-- [Adding Policies](user-guide/adding-policies.md) - Add AI policies to control your robots
-- [API Reference](api-reference/builder.md) - Detailed API documentation
-
 ## Troubleshooting
 
 ### Port Already in Use
@@ -192,3 +126,9 @@ app = builder.build(output_dir="./my_app")
 ### WebAssembly Not Supported
 
 Muwanx requires a modern browser with WebAssembly support. Ensure you're using an up-to-date version of Chrome, Firefox, Safari, or Edge.
+
+## Next Steps
+
+Now that you have a basic simulation running, explore:
+
+- [Core Concepts](../core-concepts.md) - Understand the core architecture

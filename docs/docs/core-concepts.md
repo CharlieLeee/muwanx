@@ -1,4 +1,4 @@
-# Basic Concepts
+# Core Concepts
 
 This guide introduces the core concepts and architecture of Muwanx.
 
@@ -15,10 +15,10 @@ Builder
 
 ### Builder
 
-The [`Builder`](../api-reference/builder.md) is the top-level object that orchestrates the entire application. It manages projects and handles the build process.
+The `Builder` is the top-level object that orchestrates the entire application. It manages projects and handles the build process.
 
 ```python
-builder = mwx.Builder(base_path="/")
+builder = muwanx.Builder(base_path="/")
 ```
 
 **Key responsibilities:**
@@ -29,7 +29,7 @@ builder = mwx.Builder(base_path="/")
 
 ### Project
 
-A [`Project`](../api-reference/project.md) is a collection of related scenes. Projects help organize your simulations logically and appear as sections in the web interface.
+A `Project` is a collection of related scenes. Projects help organize your simulations logically and appear as sections in the web interface.
 
 ```python
 project = builder.add_project(name="Robot Experiments", id="robots")
@@ -44,7 +44,7 @@ project = builder.add_project(name="Robot Experiments", id="robots")
 
 ### Scene
 
-A [`Scene`](../api-reference/scene.md) represents a single simulation instance with a MuJoCo model and optional policy.
+A `Scene` represents a single simulation instance with a MuJoCo model and optional policy.
 
 ```python
 scene = project.add_scene(
@@ -63,7 +63,7 @@ scene = project.add_scene(
 
 ### Policy
 
-A [`Policy`](../api-reference/policy.md) is an ONNX neural network that controls the simulation based on observations.
+A `Policy` is an ONNX neural network that controls the simulation based on observations.
 
 ```python
 scene.add_policy(
@@ -127,7 +127,7 @@ Muwanx uses a declarative configuration approach:
 Build applications using Python code:
 
 ```python
-builder = mwx.Builder()
+builder = muwanx.Builder()
 project = builder.add_project(name="Demo")
 project.add_scene(model=model, name="Scene 1")
 app = builder.build()
@@ -163,54 +163,6 @@ Under the hood, configurations are represented as JSON:
 
 This enables advanced use cases like editing configurations directly or generating them from other tools.
 
-## File Structure
-
-A built Muwanx application has this structure:
-
-```
-dist/
-├── index.html              # Main entry point
-├── assets/
-│   ├── models/            # MuJoCo XML models
-│   ├── policies/          # ONNX policy files
-│   └── meshes/            # 3D meshes (if used)
-├── js/                    # JavaScript bundles
-├── css/                   # Stylesheets
-└── config.json            # Application configuration
-```
-
-All files are static, making deployment to services like GitHub Pages, Netlify, or Vercel straightforward.
-
-## Deployment Modes
-
-### Local Development
-
-Use `app.launch()` for local testing:
-
-```python
-app = builder.build()
-app.launch(port=8080, open_browser=True)
-```
-
-### Static Deployment
-
-Build to a directory and deploy:
-
-```python
-app = builder.build(output_dir="./deploy")
-# Then upload the ./deploy directory to your hosting service
-```
-
-### GitHub Pages
-
-Configure the builder with the correct base path:
-
-```python
-builder = mwx.Builder(base_path="/my-repo/")
-```
-
-This ensures assets load correctly when deployed to `https://username.github.io/my-repo/`.
-
 ## Best Practices
 
 ### Project Organization
@@ -236,9 +188,3 @@ This ensures assets load correctly when deployed to `https://username.github.io/
 - Optimize MuJoCo models (reduce unnecessary contacts, simplify meshes)
 - Use appropriate rendering quality settings
 - Consider mobile device constraints
-
-## Next Steps
-
-- [Creating Scenes](creating-scenes.md) - Learn scene configuration in detail
-- [Adding Policies](adding-policies.md) - Add AI control to your simulations
-- [Building Projects](building-projects.md) - Advanced build configuration

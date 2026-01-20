@@ -23,8 +23,9 @@ theme:
   - content.code.copy
   - content.code.select
   - navigation.indexes
+  - navigation.sections
+  - navigation.expand
   - navigation.path
-  - navigation.tabs
   - navigation.top
   palette:
   - media: '(prefers-color-scheme: light)'
@@ -65,22 +66,12 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting Started: getting-started.md
-  - User Guide:
-    - Basic Concepts: user-guide/basic-concepts.md
-    - Creating Scenes: user-guide/creating-scenes.md
-    - Adding Policies: user-guide/adding-policies.md
-    - Building Projects: user-guide/building-projects.md
-  - API Reference:
-    - Builder: api-reference/builder.md
-    - MuwanxApp: api-reference/app.md
-    - Project: api-reference/project.md
-    - Scene: api-reference/scene.md
-    - Policy: api-reference/policy.md
-  - Examples:
-    - Hello World: examples/hello-world.md
-    - Custom Models: examples/custom-models.md
-  - Advanced:
-    - Deployment: advanced/deployment.md
-    - VR Support: advanced/vr-support.md
-  - Contributing: contributing.md
+  - Getting Started:
+    - getting-started/index.md
+    - Installation: getting-started/installation.md
+    - Tutorial: getting-started/tutorial.md
+    - Migrating from mjlab: getting-started/migrating.md
+  - Core Concepts:
+    - core-concepts.md
+  - Projects:
+    - related-projects.md

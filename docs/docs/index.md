@@ -22,10 +22,10 @@ Muwanx is a powerful framework for creating interactive MuJoCo simulations with 
 
 ```python
 import mujoco
-import muwanx as mwx
+import muwanx as muwanx
 
 # Create a builder
-builder = mwx.Builder()
+builder = muwanx.Builder()
 
 # Add a project
 project = builder.add_project(name="My Robot")
