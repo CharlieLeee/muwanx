@@ -10,7 +10,7 @@ from pathlib import Path
 import mujoco
 import onnx
 
-import muwanx as mwx
+import muwanx
 
 # Flag to control model loading method
 USE_MJMODEL = False
@@ -27,7 +27,7 @@ def load_model(path: str):
     return path
 
 
-def setup_builder() -> mwx.Builder:
+def setup_builder() -> muwanx.Builder:
     """Set up and return the builder with all demo projects configured.
 
     This function creates the builder and adds all projects, scenes, and policies
@@ -39,7 +39,7 @@ def setup_builder() -> mwx.Builder:
     # Ensure asset-relative paths resolve regardless of current working directory.
     os.chdir(Path(__file__).resolve().parent)
     base_path = os.getenv("MUWANX_BASE_PATH", "/")
-    builder = mwx.Builder(base_path=base_path)
+    builder = muwanx.Builder(base_path=base_path)
 
     # =======================
     # 1. Muwanx Demo Project

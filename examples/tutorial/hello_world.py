@@ -6,11 +6,11 @@ using the MuWanX viewer. It sets up a scene with a plane and a box above it, and
 
 import mujoco
 
-import muwanx as mwx
+import muwanx
 
 
 def main():
-    builder = mwx.Builder()
+    builder = muwanx.Builder()
     hello_world_project = builder.add_project(name="Hello World")
     model = mujoco.MjModel.from_xml_string("""
     <mujoco>

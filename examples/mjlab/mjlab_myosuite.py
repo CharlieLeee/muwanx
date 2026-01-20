@@ -7,11 +7,11 @@ This example demonstrates how to build muwanx projects using mjlab_myosuite setu
 
 import os
 
-import muwanx as mwx
+import muwanx
 
 
 def main():
-    builder = mwx.Builder()
+    builder = muwanx.Builder()
     mjlab_myosuite_project = builder.add_project(  # noqa: F841
         name="MJLab Integration Example with mjlab_myosuite"
     )
