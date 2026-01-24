@@ -2,29 +2,29 @@
 
 import pytest
 
-import muwanx as mwx
+import muwanx
 
 
 def test_builder_creation():
     """Test that a Builder instance can be created."""
-    builder = mwx.Builder()
+    builder = muwanx.Builder()
     assert builder is not None
-    assert isinstance(builder, mwx.Builder)
+    assert isinstance(builder, muwanx.Builder)
 
 
 def test_add_project():
     """Test adding a project to the builder."""
-    builder = mwx.Builder()
+    builder = muwanx.Builder()
     project = builder.add_project(name="Test Project")
 
     assert project is not None
-    assert isinstance(project, mwx.ProjectHandle)
+    assert isinstance(project, muwanx.ProjectHandle)
     assert project.name == "Test Project"
 
 
 def test_get_projects():
     """Test retrieving projects from the builder."""
-    builder = mwx.Builder()
+    builder = muwanx.Builder()
 
     # Initially should be empty
     assert len(builder.get_projects()) == 0
@@ -39,7 +39,7 @@ def test_get_projects():
 
 def test_multiple_projects():
     """Test adding multiple projects."""
-    builder = mwx.Builder()
+    builder = muwanx.Builder()
 
     builder.add_project(name="Project 1")
     builder.add_project(name="Project 2")
@@ -54,20 +54,20 @@ def test_build_app():
     """Test building an application."""
     import tempfile
 
-    builder = mwx.Builder()
+    builder = muwanx.Builder()
     builder.add_project(name="Test Project")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         app = builder.build(tmpdir)
         assert app is not None
-        assert isinstance(app, mwx.MuwanxApp)
+        assert isinstance(app, muwanx.MuwanxApp)
 
 
 def test_build_empty_app_warning():
     """Test that building an empty app raises a ValueError."""
     import tempfile
 
-    builder = mwx.Builder()
+    builder = muwanx.Builder()
 
     with tempfile.TemporaryDirectory() as tmpdir:
         with pytest.raises(
@@ -79,7 +79,7 @@ def test_build_empty_app_warning():
 
 def test_project_with_id():
     """Test creating a project with an ID for URL routing."""
-    builder = mwx.Builder()
+    builder = muwanx.Builder()
     project = builder.add_project(name="MuJoCo Menagerie", id="menagerie")
 
     assert project.name == "MuJoCo Menagerie"
@@ -91,7 +91,7 @@ def test_project_with_id():
 
 def test_project_without_id():
     """Test creating a project without an ID (main route)."""
-    builder = mwx.Builder()
+    builder = muwanx.Builder()
     project = builder.add_project(name="Main Demo")
 
     assert project.name == "Main Demo"
@@ -103,7 +103,7 @@ def test_project_without_id():
 
 def test_multiple_projects_with_different_ids():
     """Test creating multiple projects with different IDs."""
-    builder = mwx.Builder()
+    builder = muwanx.Builder()
 
     builder.add_project(name="Main Demo")
     builder.add_project(name="MuJoCo Menagerie", id="menagerie")
@@ -124,7 +124,7 @@ def test_app_save_includes_project_id():
     import tempfile
     from pathlib import Path
 
-    builder = mwx.Builder()
+    builder = muwanx.Builder()
     builder.add_project(name="Main Demo")
     builder.add_project(name="MuJoCo Menagerie", id="menagerie")
 

@@ -7,6 +7,7 @@ type MuwanxViewerProps = {
   baseUrl: string;
   onStatusChange?: (status: string) => void;
   onError?: (error: Error) => void;
+  onReady?: () => void;
 };
 
 const MuwanxViewer: React.FC<MuwanxViewerProps> = ({
@@ -14,6 +15,7 @@ const MuwanxViewer: React.FC<MuwanxViewerProps> = ({
   baseUrl,
   onStatusChange,
   onError,
+  onReady,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const runtimeRef = useRef<MuwanxRuntime | null>(null);
@@ -56,6 +58,7 @@ const MuwanxViewer: React.FC<MuwanxViewerProps> = ({
         return;
       }
       notify('Running simulation');
+      onReady?.();
     };
 
     init().catch((error) => {
@@ -71,7 +74,7 @@ const MuwanxViewer: React.FC<MuwanxViewerProps> = ({
       runtimeRef.current?.dispose();
       runtimeRef.current = null;
     };
-  }, [scenePath, baseUrl, onStatusChange, onError]);
+  }, [scenePath, baseUrl, onStatusChange, onError, onReady]);
 
   return <div ref={containerRef} className="viewer" />;
 };

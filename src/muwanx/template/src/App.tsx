@@ -2,6 +2,10 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { MantineProvider } from '@mantine/core';
 import MuwanxViewer from './components/MuwanxViewer';
 import ControlPanel from './ControlPanel';
+import { theme } from './AppTheme';
+import { LoadingProvider, useLoading } from './contexts/LoadingContext';
+import { Loader } from './components/Loader';
+import './App.css';
 
 interface PolicyConfig {
   name: string;
@@ -188,12 +192,13 @@ function updateUrlParams(
   window.history.replaceState({}, '', newUrl);
 }
 
-function App() {
+function AppContent() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [currentProject, setCurrentProject] = useState<ProjectConfig | null>(null);
   const [currentScene, setCurrentScene] = useState<SceneConfig | null>(null);
   const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { showLoading, hideLoading } = useLoading();
 
   const projectId = useMemo(() => getProjectIdFromLocation(), []);
   const sceneQuery = useMemo(() => {
@@ -202,6 +207,7 @@ function App() {
   }, []);
 
   useEffect(() => {
+    showLoading();
     loadConfig(import.meta.env.BASE_URL || '/', projectId)
       .then((data: AppConfig) => {
         setConfig(data);
@@ -222,8 +228,9 @@ function App() {
       .catch((err) => {
         console.error('Failed to load config:', err);
         setError(err.message || 'Failed to load config.');
+        hideLoading();
       });
-  }, [projectId, sceneQuery]);
+  }, [projectId, sceneQuery, showLoading, hideLoading]);
 
   const scenePath = useMemo(() => {
     if (!currentProject || !currentScene) {
@@ -263,7 +270,12 @@ function App() {
   const sceneValue = currentScene?.name ?? null;
   const handleViewerError = useCallback((err: Error) => {
     setError(err.message);
-  }, []);
+    hideLoading();
+  }, [hideLoading]);
+
+  const handleViewerReady = useCallback(() => {
+    hideLoading();
+  }, [hideLoading]);
 
   const handleProjectChange = useCallback(
     (value: string | null) => {
@@ -275,6 +287,7 @@ function App() {
       if (!project) {
         return;
       }
+      showLoading();
       setCurrentProject(project);
       const nextScene = pickScene(project, null);
       setCurrentScene(nextScene);
@@ -282,7 +295,7 @@ function App() {
       setSelectedMenu(nextPolicy);
       updateUrlParams(project.id, nextScene?.name ?? null, nextPolicy);
     },
-    [config]
+    [config, showLoading]
   );
 
   const handleSceneChange = useCallback(
@@ -294,12 +307,13 @@ function App() {
       if (!scene) {
         return;
       }
+      showLoading();
       setCurrentScene(scene);
       const nextPolicy = scene.policies?.[0]?.name ?? null;
       setSelectedMenu(nextPolicy);
       updateUrlParams(currentProject.id, value, nextPolicy);
     },
-    [currentProject]
+    [currentProject, showLoading]
   );
 
   const handleMenuChange = useCallback(
@@ -312,7 +326,7 @@ function App() {
 
   if (error) {
     return (
-      <MantineProvider>
+      <MantineProvider theme={theme} defaultColorScheme="dark">
         <div className="app">
           <div className="hud hud-error">
             <h1 className="hud-title">Muwanx</h1>
@@ -328,11 +342,13 @@ function App() {
   }
 
   return (
-    <MantineProvider>
+    <MantineProvider theme={theme} defaultColorScheme="dark">
       <div className="app">
+        <Loader />
         <ControlPanel
           projects={projectOptions}
           projectValue={projectValue}
+          projectLabel={currentProject?.name ?? 'Muwanx'}
           onProjectChange={handleProjectChange}
           scenes={sceneOptions}
           sceneValue={sceneValue}
@@ -345,9 +361,18 @@ function App() {
           scenePath={scenePath}
           baseUrl={import.meta.env.BASE_URL || '/'}
           onError={handleViewerError}
+          onReady={handleViewerReady}
         />
       </div>
     </MantineProvider>
+  );
+}
+
+function App() {
+  return (
+    <LoadingProvider>
+      <AppContent />
+    </LoadingProvider>
   );
 }
 
