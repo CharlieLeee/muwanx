@@ -70,7 +70,7 @@ Let's break down what each part does:
 builder = muwanx.Builder()
 ```
 
-The `Builder` is the main entry point for creating Muwanx applications. It manages projects, scenes, and builds the final application.
+The `Builder` is the main entry point for creating muwanx applications. It manages projects, scenes, and builds the final application.
 
 ### Project
 
@@ -109,7 +109,7 @@ The `build()` method compiles everything into a static web application, and `lau
 
 ### Port Already in Use
 
-If port 8080 is already in use, Muwanx will automatically find an available port. You can also specify a custom port:
+If port 8080 is already in use, muwanx will automatically find an available port. You can also specify a custom port:
 
 ```python
 app.launch(port=8888)
@@ -129,4 +129,4 @@ app = builder.build(output_dir="./my_app")
 
 ### WebAssembly Not Supported
 
-Muwanx requires a modern browser with WebAssembly support. Ensure you're using an up-to-date version of Chrome, Firefox, Safari, or Edge.
+muwanx requires a modern browser with WebAssembly support. Ensure you're using an up-to-date version of Chrome, Firefox, Safari, or Edge.

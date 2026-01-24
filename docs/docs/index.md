@@ -5,14 +5,14 @@ icon: octicons/home-16
 # Welcome to muwanx!
 
 <p align="center">
-  <img src="https://github.com/ttktjmt/muwanx/raw/main/assets/banner.png" alt="Muwanx Header" style="width: 80%;">
+  <img src="https://github.com/ttktjmt/muwanx/raw/main/assets/banner.png" alt="muwanx Header" style="width: 80%;">
   <br/>
   <strong><em>Real-time Interactive AI Robot Simulation in Your Browser</em></strong>
 </p>
 
-## What is Muwanx?
+## What is muwanx?
 
-Muwanx is a powerful framework for creating interactive MuJoCo simulations with real-time policy control, running entirely in the browser. Built on top of [**MU**joco **WA**sm](https://github.com/google-deepmind/mujoco/tree/main/wasm), [on**NX** runtime](https://github.com/microsoft/onnxruntime), and [three.js](https://github.com/mrdoob/three.js/), it enables easy sharing of AI robot simulation demos as static sites, perfect for GitHub Pages hosting.
+muwanx is a powerful framework for creating interactive MuJoCo simulations with real-time policy control, running entirely in the browser. Built on top of [**MU**joco **WA**sm](https://github.com/google-deepmind/mujoco/tree/main/wasm), [on**NX** runtime](https://github.com/microsoft/onnxruntime), and [three.js](https://github.com/mrdoob/three.js/), it enables easy sharing of AI robot simulation demos as static sites, perfect for GitHub Pages hosting.
 
 ## Key Features
 
@@ -58,7 +58,7 @@ Muwanx is a powerful framework for creating interactive MuJoCo simulations with 
 
 ## Use Cases
 
-Muwanx is perfect for:
+muwanx is perfect for:
 
 - **Research Demos**: Share your robot learning research with interactive visualizations
 - **Education**: Create interactive physics and robotics tutorials
@@ -67,7 +67,7 @@ Muwanx is perfect for:
 
 ## Live Demos
 
-Explore what's possible with Muwanx:
+Explore what's possible with muwanx:
 
 - [Main Demo](https://ttktjmt.github.io/muwanx/python) - Python-generated demos
 - [MyoSuite](https://ttktjmt.github.io/muwanx/python/myosuite) - Musculoskeletal models
@@ -118,4 +118,4 @@ app.launch()
 
 ## License
 
-Muwanx is licensed under the [Apache-2.0 License](https://github.com/ttktjmt/muwanx/blob/main/LICENSE).
+muwanx is licensed under the [Apache-2.0 License](https://github.com/ttktjmt/muwanx/blob/main/LICENSE).

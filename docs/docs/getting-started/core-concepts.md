@@ -4,11 +4,11 @@ icon: octicons/light-bulb-16
 
 # Core Concepts
 
-This guide introduces the core concepts and architecture of Muwanx.
+This guide introduces the core concepts and architecture of muwanx.
 
 ## Architecture Overview
 
-Muwanx follows a hierarchical structure:
+muwanx follows a hierarchical structure:
 
 ```
 Builder
@@ -86,7 +86,7 @@ scene.add_policy(
 
 ## Data Flow
 
-Understanding how data flows through a Muwanx application:
+Understanding how data flows through a muwanx application:
 
 ```
 MuJoCo Simulation → Observations → ONNX Policy → Actions → MuJoCo Simulation
@@ -100,7 +100,7 @@ MuJoCo Simulation → Observations → ONNX Policy → Actions → MuJoCo Simula
 
 ## Browser Execution
 
-One of Muwanx's key features is that everything runs in the browser:
+One of muwanx's key features is that everything runs in the browser:
 
 ### WebAssembly
 
@@ -124,7 +124,7 @@ Visualization is powered by Three.js, providing:
 
 ## Configuration Philosophy
 
-Muwanx uses a declarative configuration approach:
+muwanx uses a declarative configuration approach:
 
 ### Python API (Programmatic)
 

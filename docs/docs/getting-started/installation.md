@@ -4,11 +4,11 @@ icon: octicons/download-16
 
 # Installation
 
-Muwanx can be installed using either Python (pip) or JavaScript (npm), depending on your preferred workflow.
+muwanx can be installed using either Python (pip) or JavaScript (npm), depending on your preferred workflow.
 
 ## Python Installation
 
-Install Muwanx with pip:
+Install muwanx with pip:
 
 ```bash
 pip install muwanx
@@ -28,7 +28,7 @@ pip install muwanx[examples]
 
 ## JavaScript Installation
 
-Install Muwanx with npm:
+Install muwanx with npm:
 
 ```bash
 npm install muwanx
@@ -48,7 +48,7 @@ yarn add muwanx
 
 ### Python Dependencies
 
-The following are automatically installed with Muwanx:
+The following are automatically installed with muwanx:
 
 - `mujoco>=3.4.0` - MuJoCo physics engine
 - `nodeenv>=1.9.1` - Node.js environment management
@@ -57,7 +57,7 @@ The following are automatically installed with Muwanx:
 
 ## Verify Installation
 
-After installation, you can verify that Muwanx is installed correctly:
+After installation, you can verify that muwanx is installed correctly:
 
 ```python
 import muwanx
