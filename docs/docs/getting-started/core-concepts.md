@@ -1,3 +1,7 @@
+---
+icon: octicons/light-bulb-16
+---
+
 # Core Concepts
 
 This guide introduces the core concepts and architecture of Muwanx.

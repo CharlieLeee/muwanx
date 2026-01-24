@@ -1,3 +1,7 @@
+---
+icon: octicons/download-16
+---
+
 # Installation
 
 Muwanx can be installed using either Python (pip) or JavaScript (npm), depending on your preferred workflow.
@@ -56,10 +60,6 @@ The following are automatically installed with Muwanx:
 After installation, you can verify that Muwanx is installed correctly:
 
 ```python
-import muwanx as muwanx
+import muwanx
 print(muwanx.__version__)
 ```
-
-## Next Steps
-
-Once installed, proceed to the [Tutorial](tutorial.md) to create your first simulation.

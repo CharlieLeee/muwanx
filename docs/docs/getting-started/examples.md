@@ -1,4 +1,8 @@
-# Tutorial
+---
+icon: octicons/code-16
+---
+
+# Examples
 
 Let's create a simple "Hello World" simulation with a falling box.
 
@@ -8,7 +12,7 @@ Create a new file called `hello_world.py`:
 
 ```py
 import mujoco
-import muwanx as muwanx
+import muwanx
 
 # Create a builder instance
 builder = muwanx.Builder()
@@ -126,9 +130,3 @@ app = builder.build(output_dir="./my_app")
 ### WebAssembly Not Supported
 
 Muwanx requires a modern browser with WebAssembly support. Ensure you're using an up-to-date version of Chrome, Firefox, Safari, or Edge.
-
-## Next Steps
-
-Now that you have a basic simulation running, explore:
-
-- [Core Concepts](../core-concepts.md) - Understand the core architecture

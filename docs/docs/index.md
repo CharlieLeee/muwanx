@@ -1,8 +1,14 @@
+---
+icon: octicons/home-16
+---
+
 # Welcome to muwanx!
 
-<div align="center">
+<p align="center">
+  <img src="https://github.com/ttktjmt/muwanx/raw/main/assets/banner.png" alt="Muwanx Header" style="width: 80%;">
+  <br/>
   <strong><em>Real-time Interactive AI Robot Simulation in Your Browser</em></strong>
-</div>
+</p>
 
 ## What is Muwanx?
 
@@ -10,19 +16,69 @@ Muwanx is a powerful framework for creating interactive MuJoCo simulations with 
 
 ## Key Features
 
-- **Real-time Simulation**: Run MuJoCo simulations and policy control in real time
-- **Interactive**: Change the state of objects by applying forces with intuitive controls
-- **Cross-platform**: Works seamlessly on desktop and mobile devices
-- **VR Support**: Native VR viewer support with WebXR API
-- **Client-only**: All computation runs in the browser - no server required for simulation
-- **Easy Sharing**: Host as a static site for effortless demo distribution (e.g., GitHub Pages)
-- **Customizable**: Visualize your MuJoCo models and ONNX policies quickly
+<div class="grid cards" markdown>
+
+-   :material-clock-fast:{ .lg .middle } __Real-time Simulation__
+
+    ---
+
+    Run MuJoCo simulations and policy control in real time
+
+-   :material-cursor-default-click:{ .lg .middle } __Interactive__
+
+    ---
+
+    Change the state of objects by applying forces with intuitive controls
+
+-   :material-server-off:{ .lg .middle } __Client-only__
+
+    ---
+
+    All computation runs in the browser - no server required for simulation
+
+-   :material-share-variant:{ .lg .middle } __Easy Sharing__
+
+    ---
+
+    Host as a static site for effortless demo distribution (e.g., GitHub Pages)
+
+-   :material-devices:{ .lg .middle } __Cross-platform__
+
+    ---
+
+    Works seamlessly on desktop and mobile devices
+
+-   :material-virtual-reality:{ .lg .middle } __VR Support__
+
+    ---
+
+    Native VR viewer support with WebXR API
+
+</div>
+
+## Use Cases
+
+Muwanx is perfect for:
+
+- **Research Demos**: Share your robot learning research with interactive visualizations
+- **Education**: Create interactive physics and robotics tutorials
+- **Prototyping**: Quickly test and visualize different MuJoCo models and policies
+- **Portfolio**: Showcase your robotics projects in an accessible way
+
+## Live Demos
+
+Explore what's possible with Muwanx:
+
+- [Main Demo](https://ttktjmt.github.io/muwanx/python) - Python-generated demos
+- [MyoSuite](https://ttktjmt.github.io/muwanx/python/myosuite) - Musculoskeletal models
+- [MuJoCo Menagerie](https://ttktjmt.github.io/muwanx/python/menagerie) - Various robot models
+- [MuJoCo Playground](https://ttktjmt.github.io/muwanx/python/playground) - Interactive environments
 
 ## Quick Example
 
-```python
+```py
 import mujoco
-import muwanx as muwanx
+import muwanx
 
 # Create a builder
 builder = muwanx.Builder()
@@ -52,37 +108,11 @@ app = builder.build()
 app.launch()
 ```
 
-## Getting Started
-
-Get up and running with Muwanx in minutes:
-
-- [Installation](getting-started.md#installation) - Install Muwanx with pip or npm
-- [Quick Start](getting-started.md#quick-start) - Create your first simulation
-- [Basic Concepts](user-guide/basic-concepts.md) - Understand the core concepts
-
-## Use Cases
-
-Muwanx is perfect for:
-
-- **Research Demos**: Share your robot learning research with interactive visualizations
-- **Education**: Create interactive physics and robotics tutorials
-- **Prototyping**: Quickly test and visualize different MuJoCo models and policies
-- **Portfolio**: Showcase your robotics projects in an accessible way
-
-## Live Demos
-
-Explore what's possible with Muwanx:
-
-- [Main Demo](https://ttktjmt.github.io/muwanx/) - Interactive examples
-- [Python Demo](https://ttktjmt.github.io/muwanx/python) - Python-generated demos
-- [MyoSuite Demo](https://ttktjmt.github.io/muwanx/#/myosuite) - Musculoskeletal models
-- [MuJoCo Menagerie](https://ttktjmt.github.io/muwanx/#/menagerie) - Various robot models
-- [MuJoCo Playground](https://ttktjmt.github.io/muwanx/#/playground) - Interactive environments
+➔ Check out more examples in the [Examples](getting-started/examples.md) section!
 
 ## Community
 
 - [GitHub Repository](https://github.com/ttktjmt/muwanx)
-- [Issue Tracker](https://github.com/ttktjmt/muwanx/issues)
 - [PyPI Package](https://pypi.org/project/muwanx)
 - [npm Package](https://www.npmjs.com/package/muwanx)
 
