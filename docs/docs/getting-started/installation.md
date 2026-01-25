@@ -6,6 +6,38 @@ icon: octicons/download-16
 
 muwanx can be installed using either Python (pip) or JavaScript (npm), depending on your preferred workflow.
 
+<div class="grid cards" markdown>
+
+-   [:simple-python: &nbsp; __Python package__](#python-installation){ style="text-decoration: none; color: inherit;" }
+
+    ---
+
+    Install via pip to quickly build and share interactive MuJoCo simulations
+
+-   [:simple-javascript: &nbsp; __JavaScript package__](#javascript-installation){ style="text-decoration: none; color: inherit;" }
+
+    ---
+
+    Install via npm for custom web applications with TypeScript support
+
+-   [:simple-github: &nbsp; __GitHub Source__](#github-source){ style="text-decoration: none; color: inherit;" }
+
+    ---
+
+    Clone the repository for development and contributing to the project
+
+>   :simple-docker: &nbsp; __Docker / Cluster__
+>   ---
+>   Not supported yet.
+
+</div>
+
+## Requirements
+
+- **Python**: Version 3.10 or higher
+- **Node.js**: Version 20 or higher (for npm installation)
+- **Browser**: Modern browser with WebAssembly and WebGL support
+
 ## Python Installation
 
 Install muwanx with pip:
@@ -40,26 +72,17 @@ Or with yarn:
 yarn add muwanx
 ```
 
-## Requirements
+## GitHub Source
 
-- **Python**: Version 3.10 or higher
-- **Node.js**: Version 20 or higher (for npm installation)
-- **Browser**: Modern browser with WebAssembly and WebGL support
+Clone the repository:
 
-### Python Dependencies
+```bash
+git clone https://github.com/ttktjmt/muwanx.git
+cd muwanx
+```
 
-The following are automatically installed with muwanx:
+Install dependencies:
 
-- `mujoco>=3.4.0` - MuJoCo physics engine
-- `nodeenv>=1.9.1` - Node.js environment management
-- `onnx>=1.20.0` - ONNX model format support
-- `wandb>=0.23.1` - Experiment tracking (optional)
-
-## Verify Installation
-
-After installation, you can verify that muwanx is installed correctly:
-
-```python
-import muwanx
-print(muwanx.__version__)
+```bash
+uv sync --all-extras
 ```

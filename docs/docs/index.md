@@ -67,11 +67,9 @@ muwanx is perfect for:
 
 ## Live Demos
 
-Explore what's possible with muwanx:
-
-- [Main Demo](https://ttktjmt.github.io/muwanx/python) - Python-generated demos
+- [Main Demo](https://ttktjmt.github.io/muwanx/python) - Main muwanx demos
 - [MyoSuite](https://ttktjmt.github.io/muwanx/python/myosuite) - Musculoskeletal models
-- [MuJoCo Menagerie](https://ttktjmt.github.io/muwanx/python/menagerie) - Various robot models
+- [MuJoCo Menagerie](https://ttktjmt.github.io/muwanx/python/menagerie) - Various high-quality robot models
 - [MuJoCo Playground](https://ttktjmt.github.io/muwanx/python/playground) - Interactive environments
 
 ## Quick Example
