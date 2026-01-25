@@ -59,3 +59,6 @@ muwanx-*.tgz
 
 # Claude
 .claude
+
+# Docs
+docs/site

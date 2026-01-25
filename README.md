@@ -50,7 +50,7 @@
 
 ## Quick Start
 
-Muwanx can be installed with `pip`:
+muwanx can be installed with `pip`:
 ``` sh
 pip install muwanx
 ```
@@ -60,12 +60,12 @@ or with `npm`:
 npm install muwanx
 ```
 
-For detailed installation instructions, visit the documentation.
+For detailed installation instructions, visit the [documentation](https://muwanx.readthedocs.io).
 
 
 ## Third-Party Assets
 
-Muwanx incorporates mujoco models from the external sources in its demo. See the respective submodule for full details, including individual model licenses and copyrights. All models are used under their respective licenses. Please review and comply with those terms for any use or redistribution.
+muwanx incorporates mujoco models from the external sources in its demo. See the respective submodule for full details, including individual model licenses and copyrights. All models are used under their respective licenses. Please review and comply with those terms for any use or redistribution.
 
 [MyoSuite License](https://github.com/MyoHub/myosuite/blob/main/LICENSE) ･ [MuJoCo Menagerie License](https://github.com/google-deepmind/mujoco_menagerie/blob/main/LICENSE) ･ [MuJoCo Playground License](https://github.com/google-deepmind/mujoco_playground/blob/main/LICENSE)
 
