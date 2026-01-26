@@ -60,6 +60,8 @@ dev = [
     "nodeenv>=1.9.0",
 ]
 examples = [
+    "mjlab",
+    "mjlab_myosuite",
     "torch>=2.9.1",
 ]
 
@@ -113,6 +115,9 @@ required-environments = [
     "sys_platform == 'darwin' and platform_machine == 'arm64'",
     "sys_platform == 'linux' and platform_machine == 'x86_64'",
 ]
+override-dependencies = [
+    "mujoco>=3.4.0",
+]
 
 [[tool.uv.index]]
 name = "mujoco"
@@ -120,6 +125,8 @@ url = "https://py.mujoco.org"
 explicit = true
 
 [tool.uv.sources]
+mjlab = { git = "https://github.com/mujocolab/mjlab" }
+mjlab_myosuite = { git = "https://github.com/ttktjmt/mjlab_myosuite", branch = "die-reorientation" }
 warp-lang = { index = "nvidia", marker = "sys_platform != 'darwin'" }
 mujoco = { index = "mujoco" }
 
