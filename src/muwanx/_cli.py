@@ -35,8 +35,3 @@ def simple() -> None:
 def mjlab() -> None:
     """Run examples/mjlab/mjlab_integration.py"""
     _run_script("examples/mjlab/mjlab_integration.py")
-
-
-def hello_world() -> None:
-    """Run examples/tutorial/hello_world.py"""
-    _run_script("examples/tutorial/hello_world.py")

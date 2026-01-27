@@ -48,7 +48,22 @@ def setup_builder() -> muwanx.Builder:
         name="Muwanx Demo",
     )
 
-    # 1.A. Unitree Go2
+    # 1.A. Unitree G1
+    g1_scene = demo_project.add_scene(
+        model=load_model("assets/scene/muwanx/unitree_g1/scene.xml"),
+        name="G1",
+    )
+    g1_scene.add_policy(
+        policy=onnx.load("assets/policy/unitree_g1/g1_velocity.onnx"),
+        name="Velocity",
+        config_path="assets/policy/unitree_g1/g1_velocity.json",
+    )
+    g1_scene.add_policy(
+        policy=onnx.load("assets/policy/unitree_g1/balance.onnx"),
+        name="Balance",
+    )
+
+    # 1.B. Unitree Go2
     go2_scene = demo_project.add_scene(
         model=load_model("assets/scene/muwanx/unitree_go2/scene.xml"),
         name="Go2",
@@ -66,7 +81,7 @@ def setup_builder() -> muwanx.Builder:
         name="Robust",
     )
 
-    # 1.B. Unitree Go1
+    # 1.C. Unitree Go1
     go1_scene = demo_project.add_scene(
         model=load_model("assets/scene/muwanx/unitree_go1/go1.xml"),
         name="Go1",
@@ -78,20 +93,6 @@ def setup_builder() -> muwanx.Builder:
     go1_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_go1/decap.onnx"),
         name="Decap",
-    )
-
-    # 1.C. Unitree G1
-    g1_scene = demo_project.add_scene(
-        model=load_model("assets/scene/muwanx/unitree_g1/scene.xml"),
-        name="G1",
-    )
-    g1_scene.add_policy(
-        policy=onnx.load("assets/policy/unitree_g1/locomotion.onnx"),
-        name="Locomotion",
-    )
-    g1_scene.add_policy(
-        policy=onnx.load("assets/policy/unitree_g1/balance.onnx"),
-        name="Balance",
     )
 
     # ============================

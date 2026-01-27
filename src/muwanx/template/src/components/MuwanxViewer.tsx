@@ -5,6 +5,7 @@ import type { Mujoco } from '../types/mujoco';
 type MuwanxViewerProps = {
   scenePath: string;
   baseUrl: string;
+  policyConfigPath?: string | null;
   onStatusChange?: (status: string) => void;
   onError?: (error: Error) => void;
   onReady?: () => void;
@@ -13,6 +14,7 @@ type MuwanxViewerProps = {
 const MuwanxViewer: React.FC<MuwanxViewerProps> = ({
   scenePath,
   baseUrl,
+  policyConfigPath,
   onStatusChange,
   onError,
   onReady,
@@ -53,7 +55,7 @@ const MuwanxViewer: React.FC<MuwanxViewerProps> = ({
       }
 
       notify('Loading scene assets...');
-      await runtimeRef.current.loadEnvironment(scenePath);
+      await runtimeRef.current.loadEnvironment(scenePath, policyConfigPath ?? null);
       if (cancelled) {
         return;
       }
@@ -74,7 +76,7 @@ const MuwanxViewer: React.FC<MuwanxViewerProps> = ({
       runtimeRef.current?.dispose();
       runtimeRef.current = null;
     };
-  }, [scenePath, baseUrl, onStatusChange, onError, onReady]);
+  }, [scenePath, baseUrl, policyConfigPath, onStatusChange, onError, onReady]);
 
   return <div ref={containerRef} className="viewer" />;
 };

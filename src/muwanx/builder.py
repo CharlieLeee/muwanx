@@ -135,6 +135,14 @@ class Builder:
                                     {
                                         "name": policy.name,
                                         **(
+                                            {
+                                                "config": f"policy/{name2id(scene.name)}/"
+                                                f"{self._policy_filename(policy.name)}.json"
+                                            }
+                                            if getattr(policy, "config_path", None)
+                                            else {}
+                                        ),
+                                        **(
                                             {"source": policy.source_path}
                                             if getattr(policy, "source_path", None)
                                             else {}
@@ -157,6 +165,15 @@ class Builder:
         root_config_file = assets_dir / "config.json"
         with open(root_config_file, "w") as f:
             json.dump(root_config, f, indent=2)
+
+    def _policy_filename(self, name: str) -> str:
+        if not name or name.strip() == "":
+            raise ValueError("Policy name must be a non-empty string.")
+        if "/" in name or "\\" in name:
+            raise ValueError(
+                "Policy name cannot contain path separators ('/' or '\\')."
+            )
+        return name
 
     def _save_web(self, output_path: Path) -> None:
         """Save as a complete web application with hybrid structure.
@@ -327,11 +344,36 @@ class Builder:
 
                 # Save policies
                 for policy in scene.policies:
-                    policy_name = name2id(policy.name)
+                    policy_name = self._policy_filename(policy.name)
                     policy_path = policy_dir / scene_name
                     policy_path.mkdir(parents=True, exist_ok=True)
 
                     onnx.save(policy.model, str(policy_path / f"{policy_name}.onnx"))
+
+                    if getattr(policy, "config_path", None):
+                        config_src = Path(policy.config_path).expanduser()
+                        if not config_src.is_absolute():
+                            config_src = (Path.cwd() / config_src).resolve()
+                        if config_src.exists():
+                            target = policy_path / f"{policy_name}.json"
+                            try:
+                                with open(config_src, "r") as f:
+                                    data = json.load(f)
+                                data.setdefault("onnx", {})
+                                if isinstance(data["onnx"], dict):
+                                    data["onnx"]["path"] = (
+                                        f"policy/{scene_name}/{policy_name}.onnx"
+                                    )
+                                with open(target, "w") as f:
+                                    json.dump(data, f, indent=2)
+                            except Exception:
+                                shutil.copy(str(config_src), str(target))
+                        else:
+                            warnings.warn(
+                                f"Policy config path not found: {config_src}",
+                                category=RuntimeWarning,
+                                stacklevel=2,
+                            )
 
         print(f"✓ Saved muwanx application to: {output_path}")
 

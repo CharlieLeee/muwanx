@@ -72,7 +72,6 @@ examples = [
 demo = "muwanx._cli:demo"
 simple = "muwanx._cli:simple"
 mjlab = "muwanx._cli:mjlab"
-hello-world = "muwanx._cli:hello_world"
 
 [tool.pyright]
 extraPaths = []
