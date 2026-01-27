@@ -19,6 +19,23 @@ function getTrackingContext(runner: PolicyRunner): TrackingHelper | null {
   return tracking ?? null;
 }
 
+function normalizeScale(scale: unknown, size: number, fallback = 1.0): Float32Array | null {
+  if (typeof scale === 'number') {
+    const values = new Float32Array(size);
+    values.fill(scale);
+    return values;
+  }
+  if (Array.isArray(scale)) {
+    const values = new Float32Array(size);
+    for (let i = 0; i < size; i++) {
+      const value = scale[i];
+      values[i] = typeof value === 'number' ? value : fallback;
+    }
+    return values;
+  }
+  return null;
+}
+
 export class BootIndicator extends ObservationBase {
   get size(): number {
     return 1;
@@ -42,18 +59,50 @@ export class RootAngVelB extends ObservationBase {
 
 export class ProjectedGravityB extends ObservationBase {
   private gravity: THREE.Vector3;
+  private historySteps: number;
+  private history: Float32Array[];
 
   constructor(runner: PolicyRunner, config: ObservationConfig) {
     super(runner, config);
-    this.gravity = new THREE.Vector3(0, 0, -1);
+    const gravity = Array.isArray(config.gravity) ? config.gravity : [0, 0, -1];
+    this.gravity = new THREE.Vector3(gravity[0] ?? 0, gravity[1] ?? 0, gravity[2] ?? -1);
+    this.historySteps = Math.max(1, Math.floor((config.history_steps as number | undefined) ?? 1));
+    this.history = Array.from({ length: this.historySteps }, () => new Float32Array(3));
   }
 
   get size(): number {
-    return 3;
+    return 3 * this.historySteps;
   }
 
-  compute(state: PolicyState): Float32Array {
-    const quat = state.rootQuat ?? new Float32Array([1, 0, 0, 0]);
+  reset(state?: PolicyState): void {
+    const value = this.computeCurrent(state);
+    for (const buffer of this.history) {
+      buffer.set(value);
+    }
+  }
+
+  update(state: PolicyState): void {
+    for (let i = this.history.length - 1; i > 0; i--) {
+      this.history[i].set(this.history[i - 1]);
+    }
+    this.history[0].set(this.computeCurrent(state));
+  }
+
+  compute(): Float32Array {
+    if (this.historySteps === 1) {
+      return new Float32Array(this.history[0]);
+    }
+    const output = new Float32Array(this.size);
+    let offset = 0;
+    for (const buffer of this.history) {
+      output.set(buffer, offset);
+      offset += buffer.length;
+    }
+    return output;
+  }
+
+  private computeCurrent(state?: PolicyState): Float32Array {
+    const quat = state?.rootQuat ?? new Float32Array([1, 0, 0, 0]);
     const quatObj = new THREE.Quaternion(quat[1], quat[2], quat[3], quat[0]);
     const gravityLocal = this.gravity.clone().applyQuaternion(quatObj.clone().invert());
     return new Float32Array([gravityLocal.x, gravityLocal.y, gravityLocal.z]);
@@ -71,9 +120,15 @@ export class JointPos extends ObservationBase {
 
   constructor(runner: PolicyRunner, config: ObservationConfig) {
     super(runner, config);
-    const posSteps = Array.isArray(config.pos_steps)
-      ? config.pos_steps.map((value: number) => Math.max(0, Math.floor(value)))
-      : [0, 1, 2, 3, 4, 8];
+    let posSteps: number[];
+    if (Array.isArray(config.pos_steps)) {
+      posSteps = config.pos_steps.map((value: number) => Math.max(0, Math.floor(value)));
+    } else if (typeof config.history_steps === 'number') {
+      const steps = Math.max(1, Math.floor(config.history_steps));
+      posSteps = Array.from({ length: steps }, (_, idx) => idx);
+    } else {
+      posSteps = [0, 1, 2, 3, 4, 8];
+    }
     this.posSteps = posSteps;
     this.numJoints = runner.getNumActions();
     this.maxStep = Math.max(...this.posSteps);
@@ -292,6 +347,7 @@ export class PrevActions extends ObservationBase {
   private steps: number;
   private numActions: number;
   private actionBuffer: Float32Array[];
+  private transpose: boolean;
 
   constructor(runner: PolicyRunner, config: ObservationConfig) {
     super(runner, config);
@@ -299,6 +355,7 @@ export class PrevActions extends ObservationBase {
     this.steps = Math.max(1, Math.floor(history));
     this.numActions = runner.getNumActions();
     this.actionBuffer = Array.from({ length: this.steps }, () => new Float32Array(this.numActions));
+    this.transpose = Boolean(config.transpose);
   }
 
   get size(): number {
@@ -321,9 +378,17 @@ export class PrevActions extends ObservationBase {
 
   compute(): Float32Array {
     const flattened = new Float32Array(this.steps * this.numActions);
-    for (let i = 0; i < this.steps; i++) {
+    if (this.transpose) {
       for (let j = 0; j < this.numActions; j++) {
-        flattened[i * this.numActions + j] = this.actionBuffer[i][j];
+        for (let i = 0; i < this.steps; i++) {
+          flattened[j * this.steps + i] = this.actionBuffer[i][j];
+        }
+      }
+    } else {
+      for (let i = 0; i < this.steps; i++) {
+        for (let j = 0; j < this.numActions; j++) {
+          flattened[i * this.numActions + j] = this.actionBuffer[i][j];
+        }
       }
     }
     return flattened;
@@ -331,61 +396,277 @@ export class PrevActions extends ObservationBase {
 }
 
 export class BaseLinearVelocity extends ObservationBase {
-  get size(): number {
-    return 3;
+  private historySteps: number;
+  private history: Float32Array[];
+  private scale: Float32Array | null;
+
+  constructor(runner: PolicyRunner, config: ObservationConfig) {
+    super(runner, config);
+    this.historySteps = Math.max(1, Math.floor((config.history_steps as number | undefined) ?? 1));
+    this.history = Array.from({ length: this.historySteps }, () => new Float32Array(3));
+    this.scale = normalizeScale(config.scale, 3, 1.0);
   }
 
-  compute(state: PolicyState): Float32Array {
-    const value = state.rootLinVel ?? new Float32Array(3);
-    return new Float32Array(value);
+  get size(): number {
+    return 3 * this.historySteps;
+  }
+
+  reset(state?: PolicyState): void {
+    const value = this.computeCurrent(state);
+    for (const buffer of this.history) {
+      buffer.set(value);
+    }
+  }
+
+  update(state: PolicyState): void {
+    for (let i = this.history.length - 1; i > 0; i--) {
+      this.history[i].set(this.history[i - 1]);
+    }
+    this.history[0].set(this.computeCurrent(state));
+  }
+
+  compute(): Float32Array {
+    if (this.historySteps === 1) {
+      return new Float32Array(this.history[0]);
+    }
+    const output = new Float32Array(this.size);
+    let offset = 0;
+    for (const buffer of this.history) {
+      output.set(buffer, offset);
+      offset += buffer.length;
+    }
+    return output;
+  }
+
+  private computeCurrent(state?: PolicyState): Float32Array {
+    const value = state?.rootLinVel ?? new Float32Array(3);
+    const out = new Float32Array(value);
+    if (this.scale) {
+      for (let i = 0; i < out.length; i++) {
+        out[i] *= this.scale[i] ?? 1.0;
+      }
+    }
+    return out;
   }
 }
 
 export class BaseAngularVelocity extends ObservationBase {
-  get size(): number {
-    return 3;
+  private historySteps: number;
+  private history: Float32Array[];
+  private scale: Float32Array | null;
+  private worldFrame: boolean;
+
+  constructor(runner: PolicyRunner, config: ObservationConfig) {
+    super(runner, config);
+    this.historySteps = Math.max(1, Math.floor((config.history_steps as number | undefined) ?? 1));
+    this.history = Array.from({ length: this.historySteps }, () => new Float32Array(3));
+    this.scale = normalizeScale(config.scale, 3, 1.0);
+    this.worldFrame = Boolean(config.world_frame);
   }
 
-  compute(state: PolicyState): Float32Array {
-    const value = state.rootAngVel ?? new Float32Array(3);
-    return new Float32Array(value);
+  get size(): number {
+    return 3 * this.historySteps;
+  }
+
+  reset(state?: PolicyState): void {
+    const value = this.computeCurrent(state);
+    for (const buffer of this.history) {
+      buffer.set(value);
+    }
+  }
+
+  update(state: PolicyState): void {
+    for (let i = this.history.length - 1; i > 0; i--) {
+      this.history[i].set(this.history[i - 1]);
+    }
+    this.history[0].set(this.computeCurrent(state));
+  }
+
+  compute(): Float32Array {
+    if (this.historySteps === 1) {
+      return new Float32Array(this.history[0]);
+    }
+    const output = new Float32Array(this.size);
+    let offset = 0;
+    for (const buffer of this.history) {
+      output.set(buffer, offset);
+      offset += buffer.length;
+    }
+    return output;
+  }
+
+  private computeCurrent(state?: PolicyState): Float32Array {
+    const value = state?.rootAngVel ?? new Float32Array(3);
+    let out = new Float32Array(value);
+    if (!this.worldFrame) {
+      const quat = normalizeQuat(state?.rootQuat ?? [1, 0, 0, 0]);
+      const rotated = quatApplyInv(quat, out);
+      out = new Float32Array(rotated);
+    }
+    if (this.scale) {
+      for (let i = 0; i < out.length; i++) {
+        out[i] *= this.scale[i] ?? 1.0;
+      }
+    }
+    return out;
   }
 }
 
 export class JointVelocities extends ObservationBase {
   private numJoints: number;
+  private historySteps: number;
+  private history: Float32Array[];
+  private scale: Float32Array | null;
 
   constructor(runner: PolicyRunner, config: ObservationConfig) {
     super(runner, config);
     this.numJoints = runner.getNumActions();
+    this.historySteps = Math.max(1, Math.floor((config.history_steps as number | undefined) ?? 1));
+    this.history = Array.from(
+      { length: this.historySteps },
+      () => new Float32Array(this.numJoints)
+    );
+    this.scale = normalizeScale(config.scale, this.numJoints, 1.0);
   }
 
   get size(): number {
-    return this.numJoints;
+    return this.numJoints * this.historySteps;
   }
 
-  compute(state: PolicyState): Float32Array {
-    const value = state.jointVel ?? new Float32Array(this.numJoints);
-    return new Float32Array(value);
+  reset(state?: PolicyState): void {
+    const value = this.computeCurrent(state);
+    for (const buffer of this.history) {
+      buffer.set(value);
+    }
+  }
+
+  update(state: PolicyState): void {
+    for (let i = this.history.length - 1; i > 0; i--) {
+      this.history[i].set(this.history[i - 1]);
+    }
+    this.history[0].set(this.computeCurrent(state));
+  }
+
+  compute(): Float32Array {
+    if (this.historySteps === 1) {
+      return new Float32Array(this.history[0]);
+    }
+    const output = new Float32Array(this.size);
+    let offset = 0;
+    for (const buffer of this.history) {
+      output.set(buffer, offset);
+      offset += buffer.length;
+    }
+    return output;
+  }
+
+  private computeCurrent(state?: PolicyState): Float32Array {
+    const value = state?.jointVel ?? new Float32Array(this.numJoints);
+    const out = new Float32Array(value);
+    if (this.scale) {
+      for (let i = 0; i < out.length; i++) {
+        out[i] *= this.scale[i] ?? 1.0;
+      }
+    }
+    return out;
   }
 }
 
 export class SimpleVelocityCommand extends ObservationBase {
+  private historySteps: number;
+  private history: Float32Array[];
+  private scale: Float32Array | null;
+
+  constructor(runner: PolicyRunner, config: ObservationConfig) {
+    super(runner, config);
+    this.historySteps = Math.max(1, Math.floor((config.history_steps as number | undefined) ?? 1));
+    this.history = Array.from({ length: this.historySteps }, () => new Float32Array(3));
+    this.scale = normalizeScale(config.scale, 3, 1.0);
+  }
+
   get size(): number {
-    return 3;
+    return 3 * this.historySteps;
+  }
+
+  reset(): void {
+    const value = this.computeCurrent();
+    for (const buffer of this.history) {
+      buffer.set(value);
+    }
+  }
+
+  update(): void {
+    for (let i = this.history.length - 1; i > 0; i--) {
+      this.history[i].set(this.history[i - 1]);
+    }
+    this.history[0].set(this.computeCurrent());
   }
 
   compute(): Float32Array {
-    // Return default commands: [vel_x, vel_y, ang_vel_yaw]
-    // TODO: These should come from user input/gamepad
-    return new Float32Array([0.5, 0.0, 0.0]);
+    if (this.historySteps === 1) {
+      return new Float32Array(this.history[0]);
+    }
+    const output = new Float32Array(this.size);
+    let offset = 0;
+    for (const buffer of this.history) {
+      output.set(buffer, offset);
+      offset += buffer.length;
+    }
+    return output;
+  }
+
+  private computeCurrent(): Float32Array {
+    const out = new Float32Array([0.5, 0.0, 0.0]);
+    if (this.scale) {
+      for (let i = 0; i < out.length; i++) {
+        out[i] *= this.scale[i] ?? 1.0;
+      }
+    }
+    return out;
+  }
+}
+
+export class VelocityCommandWithOscillators extends ObservationBase {
+  private scale: Float32Array | null;
+
+  constructor(runner: PolicyRunner, config: ObservationConfig) {
+    super(runner, config);
+    this.scale = normalizeScale(config.scale, 3, 1.0);
+  }
+
+  get size(): number {
+    return 16;
+  }
+
+  compute(): Float32Array {
+    const output = new Float32Array(16);
+    const base = new Float32Array([0.5, 0.0, 0.0]);
+    if (this.scale) {
+      for (let i = 0; i < 3; i++) {
+        base[i] *= this.scale[i] ?? 1.0;
+      }
+    }
+    output[0] = base[0];
+    output[1] = base[1];
+    output[2] = base[2];
+    return output;
+  }
+}
+
+export class ImpedanceCommand extends ObservationBase {
+  get size(): number {
+    return 27;
+  }
+
+  compute(): Float32Array {
+    return new Float32Array(27);
   }
 }
 
 // Legacy aliases for config compatibility.
-export class ProjectedGravity extends ProjectedGravityB {}
-export class JointPositions extends JointPos {}
-export class PreviousActions extends PrevActions {}
+export class ProjectedGravity extends ProjectedGravityB { }
+export class JointPositions extends JointPos { }
+export class PreviousActions extends PrevActions { }
 
 export const Observations = {
   PrevActions,
@@ -404,4 +685,6 @@ export const Observations = {
   BaseAngularVelocity,
   JointVelocities,
   SimpleVelocityCommand,
+  VelocityCommandWithOscillators,
+  ImpedanceCommand,
 };

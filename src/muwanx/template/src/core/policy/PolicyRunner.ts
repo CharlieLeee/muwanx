@@ -22,9 +22,12 @@ export class PolicyRunner {
   private config: PolicyConfig;
   private options: PolicyRunnerOptions;
   private policyModule: PolicyModule | null;
-  private obsModules: ObservationBase[];
-  private obsLayout: { name: string; size: number }[];
-  private obsSize: number;
+  private obsGroups: Record<string, ObservationBase[]>;
+  private obsLayouts: Record<string, { name: string; size: number }[]>;
+  private obsSizes: Record<string, number>;
+  private historyConfig: Record<string, { steps: number; interleaved: boolean }>;
+  private historyBuffers: Record<string, Float32Array>;
+  private defaultObsKey: string | null;
   private context: PolicyRunnerContext | null;
   private policyJointNames: string[];
   private defaultJointPos: Float32Array;
@@ -35,9 +38,12 @@ export class PolicyRunner {
     this.config = config;
     this.options = options;
     this.policyModule = null;
-    this.obsModules = [];
-    this.obsLayout = [];
-    this.obsSize = 0;
+    this.obsGroups = {};
+    this.obsLayouts = {};
+    this.obsSizes = {};
+    this.historyConfig = {};
+    this.historyBuffers = {};
+    this.defaultObsKey = null;
     this.context = null;
 
     this.policyJointNames = (config.policy_joint_names ?? []).slice();
@@ -53,62 +59,87 @@ export class PolicyRunner {
   async init(context: PolicyRunnerContext): Promise<void> {
     this.context = context;
     this.policyModule = await this.buildPolicyModule(context);
-    this.obsModules = this.buildObservations();
-    this.obsLayout = this.obsModules.map((obs, index) => ({
-      name: this.getObsName(index),
-      size: obs.size,
-    }));
-    this.obsSize = this.obsLayout.reduce((sum, entry) => sum + entry.size, 0);
+    this.buildObservationGroups();
   }
 
   reset(state?: PolicyState): void {
     this.lastActions.fill(0.0);
-    this.policyModule?.reset(state);
-    for (const obs of this.obsModules) {
-      if (obs.reset) {
-        obs.reset(state);
+    this.policyModule?.reset();
+    for (const obsList of Object.values(this.obsGroups)) {
+      for (const obs of obsList) {
+        if (obs.reset) {
+          obs.reset(state);
+        }
+      }
+    }
+    if (state) {
+      for (const [key, config] of Object.entries(this.historyConfig)) {
+        if (config.steps > 1) {
+          const frame = this.buildFrame(this.obsGroups[key] ?? [], state);
+          const buffer = this.historyBuffers[key];
+          for (let i = 0; i < config.steps; i++) {
+            buffer.set(frame, i * frame.length);
+          }
+        }
       }
     }
   }
 
   update(state: PolicyState): void {
-    this.policyModule?.update(state);
-    for (const obs of this.obsModules) {
-      if (obs.update) {
-        obs.update(state);
+    this.policyModule?.update();
+    for (const obsList of Object.values(this.obsGroups)) {
+      for (const obs of obsList) {
+        if (obs.update) {
+          obs.update(state);
+        }
       }
     }
+  }
+
+  collectObservationsByKey(state: PolicyState): Record<string, Float32Array> {
+    this.update(state);
+    const outputs: Record<string, Float32Array> = {};
+
+    for (const [key, obsList] of Object.entries(this.obsGroups)) {
+      const history = this.historyConfig[key];
+      if (history && history.steps > 1) {
+        const frame = this.buildFrame(obsList, state);
+        const buffer = this.historyBuffers[key];
+        for (let i = buffer.length - 1; i >= frame.length; i--) {
+          buffer[i] = buffer[i - frame.length];
+        }
+        buffer.set(frame, 0);
+        outputs[key] = new Float32Array(buffer);
+      } else {
+        outputs[key] = this.buildFrame(obsList, state);
+      }
+    }
+    return outputs;
   }
 
   collectObservations(state: PolicyState): Float32Array {
-    this.update(state);
-
-    if (!this.obsSize) {
-      return new Float32Array(0);
+    const outputs = this.collectObservationsByKey(state);
+    if (this.defaultObsKey && outputs[this.defaultObsKey]) {
+      return outputs[this.defaultObsKey];
     }
-
-    const output = new Float32Array(this.obsSize);
-    let offset = 0;
-    for (const obs of this.obsModules) {
-      const value = obs.compute(state);
-      const array = value instanceof Float32Array ? value : Float32Array.from(value);
-      if (array.length !== obs.size) {
-        throw new Error(
-          `Observation size mismatch: expected ${obs.size}, got ${array.length}`
-        );
-      }
-      output.set(array, offset);
-      offset += array.length;
-    }
-    return output;
+    const first = Object.keys(outputs)[0];
+    return first ? outputs[first] : new Float32Array(0);
   }
 
   getObservationSize(): number {
-    return this.obsSize;
+    if (this.defaultObsKey && this.obsSizes[this.defaultObsKey] !== undefined) {
+      return this.obsSizes[this.defaultObsKey];
+    }
+    const first = Object.keys(this.obsSizes)[0];
+    return first ? this.obsSizes[first] : 0;
   }
 
   getObservationLayout(): { name: string; size: number }[] {
-    return this.obsLayout.map((entry) => ({ ...entry }));
+    if (this.defaultObsKey && this.obsLayouts[this.defaultObsKey]) {
+      return this.obsLayouts[this.defaultObsKey].map((entry) => ({ ...entry }));
+    }
+    const first = Object.keys(this.obsLayouts)[0];
+    return first ? this.obsLayouts[first].map((entry) => ({ ...entry })) : [];
   }
 
   getPolicyModuleContext(): Record<string, unknown> {
@@ -167,30 +198,101 @@ export class PolicyRunner {
     return module;
   }
 
-  private buildObservations(): ObservationBase[] {
+  private buildObservationGroups(): void {
     const registry = this.options.observations ?? {};
-    const obsList = Array.isArray(this.config.obs_config?.policy)
-      ? this.config.obs_config?.policy
-      : Array.isArray(this.config.obs_config?.observation)
-        ? this.config.obs_config?.observation
-        : [];
+    const obsConfig = this.config.obs_config ?? {};
+    this.obsGroups = {};
+    this.obsLayouts = {};
+    this.obsSizes = {};
+    this.historyConfig = {};
+    this.historyBuffers = {};
+    this.defaultObsKey = null;
 
-    return obsList.map((entry) => {
-      const ObsClass = registry[entry.name];
-      if (!ObsClass) {
-        throw new Error(`Unknown observation type: ${entry.name}`);
+    for (const [key, value] of Object.entries(obsConfig)) {
+      if (Array.isArray(value)) {
+        const obsList = value.map((entry) => {
+          const ObsClass = registry[entry.name];
+          if (!ObsClass) {
+            throw new Error(`Unknown observation type: ${entry.name}`);
+          }
+          return new ObsClass(this, entry);
+        });
+        this.registerGroup(key, obsList, value);
+        continue;
       }
-      return new ObsClass(this, entry);
-    });
+      if (value && typeof value === 'object') {
+        const configValue = value as {
+          history_steps?: number;
+          interleaved?: boolean;
+          components?: ObservationConfigEntry[];
+        };
+        if (Array.isArray(configValue.components)) {
+          const obsList = configValue.components.map((entry) => {
+            const ObsClass = registry[entry.name];
+            if (!ObsClass) {
+              throw new Error(`Unknown observation type: ${entry.name}`);
+            }
+            const entryConfig = { ...entry, history_steps: 1 };
+            return new ObsClass(this, entryConfig);
+          });
+          const steps = Math.max(1, Math.floor(configValue.history_steps ?? 1));
+          const interleaved = Boolean(configValue.interleaved);
+          this.registerGroup(key, obsList, configValue.components, {
+            steps,
+            interleaved,
+          });
+        }
+      }
+    }
+
+    if (this.obsGroups.policy) {
+      this.defaultObsKey = 'policy';
+    } else if (this.obsGroups.observation) {
+      this.defaultObsKey = 'observation';
+    } else if (this.obsGroups.obs_history) {
+      this.defaultObsKey = 'obs_history';
+    } else {
+      this.defaultObsKey = Object.keys(this.obsGroups)[0] ?? null;
+    }
   }
 
-  private getObsName(index: number): string {
-    const obsList = Array.isArray(this.config.obs_config?.policy)
-      ? this.config.obs_config?.policy
-      : Array.isArray(this.config.obs_config?.observation)
-        ? this.config.obs_config?.observation
-        : [];
-    return obsList[index]?.name ?? `obs_${index}`;
+  private registerGroup(
+    key: string,
+    obsList: ObservationBase[],
+    configList: ObservationConfigEntry[],
+    history?: { steps: number; interleaved: boolean }
+  ): void {
+    this.obsGroups[key] = obsList;
+    this.obsLayouts[key] = obsList.map((obs, index) => ({
+      name: configList[index]?.name ?? `obs_${index}`,
+      size: obs.size,
+    }));
+    const baseSize = this.obsLayouts[key].reduce((sum, entry) => sum + entry.size, 0);
+    if (history && history.steps > 1) {
+      this.historyConfig[key] = history;
+      this.historyBuffers[key] = new Float32Array(baseSize * history.steps);
+      this.obsSizes[key] = baseSize * history.steps;
+    } else {
+      this.obsSizes[key] = baseSize;
+    }
+  }
+
+  private buildFrame(obsList: ObservationBase[], state: PolicyState): Float32Array {
+    const size = obsList.reduce((sum, obs) => sum + obs.size, 0);
+    const output = new Float32Array(size);
+    let offset = 0;
+    for (const obs of obsList) {
+      const value = obs.compute(state);
+      const array = value instanceof Float32Array ? value : Float32Array.from(value);
+      if (array.length !== obs.size) {
+        throw new Error(
+          `Observation size mismatch: expected ${obs.size}, got ${array.length}`
+        );
+      }
+      output.set(array, offset);
+      offset += array.length;
+    }
+    return output;
   }
 
   private normalizeArray(

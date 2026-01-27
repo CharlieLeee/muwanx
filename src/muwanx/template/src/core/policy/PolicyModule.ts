@@ -18,9 +18,9 @@ export abstract class PolicyModule {
     this.context = context;
   }
 
-  reset(): void {}
+  reset(): void { }
 
-  update(): void {}
+  update(): void { }
 
   getContext(): Record<string, unknown> {
     return {};

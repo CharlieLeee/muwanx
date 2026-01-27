@@ -61,6 +61,7 @@ def setup_builder() -> muwanx.Builder:
     g1_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_g1/balance.onnx"),
         name="Balance",
+        config_path="assets/policy/unitree_g1/balance.json",
     )
 
     # 1.B. Unitree Go2
@@ -71,14 +72,17 @@ def setup_builder() -> muwanx.Builder:
     go2_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_go2/facet.onnx"),
         name="Facet",
+        config_path="assets/policy/unitree_go2/facet.json",
     )
     go2_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_go2/vanilla.onnx"),
         name="Vanilla",
+        config_path="assets/policy/unitree_go2/vanilla.json",
     )
     go2_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_go2/robust.onnx"),
         name="Robust",
+        config_path="assets/policy/unitree_go2/robust.json",
     )
 
     # 1.C. Unitree Go1
@@ -89,10 +93,12 @@ def setup_builder() -> muwanx.Builder:
     go1_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_go1/himloco.onnx"),
         name="HiMLoco",
+        config_path="assets/policy/unitree_go1/himloco.json",
     )
     go1_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_go1/decap.onnx"),
         name="Decap",
+        config_path="assets/policy/unitree_go1/decap.json",
     )
 
     # ============================

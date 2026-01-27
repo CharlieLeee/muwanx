@@ -4,7 +4,7 @@ export type OnnxConfig = {
   path: string;
   meta?: {
     in_keys?: string[];
-    out_keys?: string[];
+    out_keys?: (string | string[])[];
   };
 };
 
@@ -21,8 +21,10 @@ export class OnnxModule {
     }
     this.config = config;
     this.session = null;
-    this.inKeys = config.meta?.in_keys ?? ['policy'];
-    this.outKeys = config.meta?.out_keys ?? ['action'];
+    const inKeys = config.meta?.in_keys ?? ['policy'];
+    const outKeys = config.meta?.out_keys ?? ['action'];
+    this.inKeys = inKeys.map((key) => (Array.isArray(key) ? key.join(',') : key));
+    this.outKeys = outKeys.map((key) => (Array.isArray(key) ? key.join(',') : key));
     this.isRecurrent = this.inKeys.includes('adapt_hx');
   }
 

@@ -67,6 +67,7 @@ export class MuwanxRuntime {
   private policyDebugCounter: number;
   private policyControl:
     | {
+      controlType: string;
       ctrlAdr: number[];
       qposAdr: number[];
       qvelAdr: number[];
@@ -294,12 +295,20 @@ export class MuwanxRuntime {
       if (this.mjModel && this.mjData) {
         if (this.policyRunner && this.policyStateBuilder) {
           const state = this.policyStateBuilder.build();
-          const obs = this.policyRunner.collectObservations(state);
+          const obs = this.policyRunner.collectObservationsByKey(state);
           await this.runOnnxInference(obs);
           if (this.policyDebugCounter % 60 === 0) {
-            const preview = Array.from(obs.slice(0, 8));
+            const debugKey =
+              'policy' in obs
+                ? 'policy'
+                : 'observation' in obs
+                  ? 'observation'
+                  : Object.keys(obs)[0];
+            const debugObs = debugKey ? obs[debugKey] : null;
+            const preview = debugObs ? Array.from(debugObs.slice(0, 8)) : [];
             console.log('[PolicyRunner] obs', {
-              size: obs.length,
+              key: debugKey,
+              size: debugObs ? debugObs.length : 0,
               sample: preview,
             });
           }
@@ -320,6 +329,7 @@ export class MuwanxRuntime {
   }
 
   private async loadPolicyConfig(policyConfigPath: string | null): Promise<void> {
+    const previousPolicyConfigPath = this.policyConfigPath;
     this.policyConfigPath = policyConfigPath;
     this.policyRunner = null;
     this.policyStateBuilder = null;
@@ -336,6 +346,10 @@ export class MuwanxRuntime {
     if (!this.mjModel || !this.mjData) {
       console.warn('Policy config loaded before MuJoCo model is ready.');
       return;
+    }
+
+    if (policyConfigPath !== previousPolicyConfigPath) {
+      this.resetSimulationState();
     }
 
     try {
@@ -428,6 +442,7 @@ export class MuwanxRuntime {
     stateBuilder: PolicyStateBuilder
   ):
     | {
+      controlType: string;
       ctrlAdr: number[];
       qposAdr: number[];
       qvelAdr: number[];
@@ -438,7 +453,7 @@ export class MuwanxRuntime {
     }
     | null {
     const controlType = config.control_type ?? 'joint_position';
-    if (controlType !== 'joint_position') {
+    if (controlType !== 'joint_position' && controlType !== 'torque') {
       console.warn(`[PolicyRunner] Unsupported control_type: ${controlType}`);
       return null;
     }
@@ -456,6 +471,7 @@ export class MuwanxRuntime {
     const kd = this.normalizeControlArray(config.damping, numActions, 0.0);
 
     return {
+      controlType,
       ...mapping,
       actionScale,
       defaultJointPos,
@@ -484,6 +500,16 @@ export class MuwanxRuntime {
     return output;
   }
 
+  private resetSimulationState(): void {
+    if (!this.mjModel || !this.mjData) {
+      return;
+    }
+    this.mujoco.mj_resetData(this.mjModel, this.mjData);
+    this.mujoco.mj_forward(this.mjModel, this.mjData);
+    this.lastSimState.bodies.clear();
+    this.updateCachedState();
+  }
+
   private executeSimulationSteps(): void {
     if (!this.mjModel || !this.mjData) {
       return;
@@ -502,26 +528,35 @@ export class MuwanxRuntime {
       return;
     }
 
-    const { ctrlAdr, qposAdr, qvelAdr, actionScale, defaultJointPos, kp, kd } =
+    const { controlType, ctrlAdr, qposAdr, qvelAdr, actionScale, defaultJointPos, kp, kd } =
       this.policyControl;
     const numActions = ctrlAdr.length;
     const actions = this.policyRunner?.getLastActions() ?? new Float32Array(numActions);
     const ctrl = this.mjData.ctrl;
     ctrl.fill(0.0);
 
-    for (let i = 0; i < numActions; i++) {
-      const target = defaultJointPos[i] + actionScale[i] * actions[i];
-      const qpos = this.mjData.qpos[qposAdr[i]];
-      const qvel = this.mjData.qvel[qvelAdr[i]];
-      const torque = kp[i] * (target - qpos) + kd[i] * (0 - qvel);
-      const ctrlIndex = ctrlAdr[i];
-      if (ctrlIndex >= 0) {
-        ctrl[ctrlIndex] = torque;
+    if (controlType === 'joint_position') {
+      for (let i = 0; i < numActions; i++) {
+        const target = defaultJointPos[i] + actionScale[i] * actions[i];
+        const qpos = this.mjData.qpos[qposAdr[i]];
+        const qvel = this.mjData.qvel[qvelAdr[i]];
+        const torque = kp[i] * (target - qpos) + kd[i] * (0 - qvel);
+        const ctrlIndex = ctrlAdr[i];
+        if (ctrlIndex >= 0) {
+          ctrl[ctrlIndex] = torque;
+        }
+      }
+    } else if (controlType === 'torque') {
+      for (let i = 0; i < numActions; i++) {
+        const ctrlIndex = ctrlAdr[i];
+        if (ctrlIndex >= 0) {
+          ctrl[ctrlIndex] = actionScale[i] * actions[i];
+        }
       }
     }
   }
 
-  private async runOnnxInference(obs: Float32Array): Promise<void> {
+  private async runOnnxInference(obs: Record<string, Float32Array>): Promise<void> {
     if (!this.onnxModule || !this.policyRunner || this.onnxInferencing) {
       return;
     }
@@ -531,10 +566,24 @@ export class MuwanxRuntime {
       if (!this.onnxInputDict) {
         this.onnxInputDict = this.onnxModule.initInput();
       }
-      this.onnxInputDict.policy = new ort.Tensor('float32', obs, [1, obs.length]);
+      const input: Record<string, ort.Tensor> = { ...this.onnxInputDict };
+      for (const [key, value] of Object.entries(obs)) {
+        input[key] = new ort.Tensor('float32', value, [1, value.length]);
+      }
+      for (const key of this.onnxModule.inKeys) {
+        if (!input[key]) {
+          console.warn('[PolicyRunner] Missing ONNX input:', {
+            key,
+            available: Object.keys(input),
+          });
+          return;
+        }
+      }
 
-      const [result, carry] = await this.onnxModule.runInference(this.onnxInputDict);
-      this.onnxInputDict = { ...this.onnxInputDict, ...carry };
+      const [result, carry] = await this.onnxModule.runInference(input);
+      if (Object.keys(carry).length > 0) {
+        this.onnxInputDict = { ...this.onnxInputDict, ...carry };
+      }
 
       const actionTensor = result.action ?? result.policy ?? null;
       if (!actionTensor) {

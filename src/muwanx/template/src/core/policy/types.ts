@@ -22,6 +22,14 @@ export type ObservationConfigEntry = {
   [key: string]: unknown;
 };
 
+export type ObservationGroupConfig =
+  | ObservationConfigEntry[]
+  | {
+    history_steps?: number;
+    interleaved?: boolean;
+    components?: ObservationConfigEntry[];
+  };
+
 export type PolicyConfig = {
   policy_module?: string;
   policy_joint_names?: string[];
@@ -34,12 +42,9 @@ export type PolicyConfig = {
     path: string;
     meta?: {
       in_keys?: string[];
-      out_keys?: string[];
+      out_keys?: (string | string[])[];
     };
   };
-  obs_config?: {
-    policy?: ObservationConfigEntry[];
-    observation?: ObservationConfigEntry[];
-  };
+  obs_config?: Record<string, ObservationGroupConfig>;
   [key: string]: unknown;
 };
