@@ -1,5 +1,5 @@
 {
-  "_comment": "Go2 Vanilla policy using modern atomic components (117 dims policy + 16 dims command)",
+  "_comment": "Go2 Robust policy using modern atomic components (117 dims policy + 16 dims command)",
   "policy_joint_names": [
     "FL_hip_joint",
     "FR_hip_joint",
@@ -82,7 +82,7 @@
         ]
       ]
     },
-    "path": "policy/go2/vanilla.onnx"
+    "path": "go2/robust.onnx"
   },
   "obs_config": {
     "policy": [

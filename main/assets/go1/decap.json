@@ -45,7 +45,7 @@
         ]
       ]
     },
-    "path": "policy/go1/decap.onnx"
+    "path": "go1/decap.onnx"
   },
   "obs_config": {
     "obs_history": [

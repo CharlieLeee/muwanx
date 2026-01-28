@@ -1,5 +1,4 @@
 {
-  "_comment": "G1 Single-Foot Balance Policy using composable atomic observations (total: 93 dims)",
   "policy_joint_names": [
     "left_hip_pitch_joint",
     "left_hip_roll_joint",
@@ -62,54 +61,35 @@
     0.0,
     0.0
   ],
-  "onnx": {
-    "meta": {
-      "in_keys": [
-        "observation"
-      ],
-      "out_keys": [
-        "action"
-      ]
-    },
-    "path": "policy/g1/balance.onnx"
-  },
   "obs_config": {
-    "observation": [
+    "policy": [
       {
-        "name": "BaseAngularVelocity",
-        "history_steps": 1,
-        "_comment": "3 dims: [wx, wy, wz] in base frame"
+        "name": "BaseLinearVelocity"
       },
       {
-        "name": "ProjectedGravity",
-        "joint_name": "floating_base_joint",
-        "history_steps": 1,
-        "gravity": [
-          0,
-          0,
-          -1.0
+        "name": "BaseAngularVelocity"
+      },
+      {
+        "name": "ProjectedGravityB"
+      },
+      {
+        "name": "JointPos",
+        "pos_steps": [
+          0
         ],
-        "_comment": "3 dims: [gx, gy, gz] gravity projected to base frame"
-      },
-      {
-        "name": "JointPositions",
-        "joint_names": "isaac",
-        "scale": 1.0,
         "subtract_default": true,
-        "history_steps": 1,
-        "_comment": "29 dims: joint positions relative to default pose"
+        "scale": 1.0
       },
       {
         "name": "JointVelocities",
-        "joint_names": "isaac",
-        "scale": 1.0,
-        "history_steps": 1,
-        "_comment": "29 dims: joint velocities"
+        "scale": 1.0
       },
       {
-        "name": "PreviousActions",
-        "history_steps": 1,
-        "_comment": "29 dims: previous action taken"
+        "name": "PrevActions",
+        "history_steps": 1
+      },
+      {
+        "name": "SimpleVelocityCommand"
       }
     ]
   },
@@ -206,5 +186,16 @@
     1.06814150219,
     1.06814150219
   ],
-  "control_type": "joint_position"
+  "control_type": "joint_position",
+  "onnx": {
+    "path": "g1/locomotion.onnx",
+    "meta": {
+      "in_keys": [
+        "policy"
+      ],
+      "out_keys": [
+        "action"
+      ]
+    }
+  }
 }

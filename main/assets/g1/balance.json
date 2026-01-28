@@ -1,4 +1,5 @@
 {
+  "_comment": "G1 Single-Foot Balance Policy using composable atomic observations (total: 93 dims)",
   "policy_joint_names": [
     "left_hip_pitch_joint",
     "left_hip_roll_joint",
@@ -61,35 +62,54 @@
     0.0,
     0.0
   ],
+  "onnx": {
+    "meta": {
+      "in_keys": [
+        "observation"
+      ],
+      "out_keys": [
+        "action"
+      ]
+    },
+    "path": "g1/balance.onnx"
+  },
   "obs_config": {
-    "policy": [
+    "observation": [
       {
-        "name": "BaseLinearVelocity"
+        "name": "BaseAngularVelocity",
+        "history_steps": 1,
+        "_comment": "3 dims: [wx, wy, wz] in base frame"
       },
       {
-        "name": "BaseAngularVelocity"
-      },
-      {
-        "name": "ProjectedGravityB"
-      },
-      {
-        "name": "JointPos",
-        "pos_steps": [
-          0
+        "name": "ProjectedGravity",
+        "joint_name": "floating_base_joint",
+        "history_steps": 1,
+        "gravity": [
+          0,
+          0,
+          -1.0
         ],
+        "_comment": "3 dims: [gx, gy, gz] gravity projected to base frame"
+      },
+      {
+        "name": "JointPositions",
+        "joint_names": "isaac",
+        "scale": 1.0,
         "subtract_default": true,
-        "scale": 1.0
+        "history_steps": 1,
+        "_comment": "29 dims: joint positions relative to default pose"
       },
       {
         "name": "JointVelocities",
-        "scale": 1.0
+        "joint_names": "isaac",
+        "scale": 1.0,
+        "history_steps": 1,
+        "_comment": "29 dims: joint velocities"
       },
       {
-        "name": "PrevActions",
-        "history_steps": 1
-      },
-      {
-        "name": "SimpleVelocityCommand"
+        "name": "PreviousActions",
+        "history_steps": 1,
+        "_comment": "29 dims: previous action taken"
       }
     ]
   },
@@ -186,16 +206,5 @@
     1.06814150219,
     1.06814150219
   ],
-  "control_type": "joint_position",
-  "onnx": {
-    "path": "policy/g1/locomotion.onnx",
-    "meta": {
-      "in_keys": [
-        "policy"
-      ],
-      "out_keys": [
-        "action"
-      ]
-    }
-  }
+  "control_type": "joint_position"
 }

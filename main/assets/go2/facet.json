@@ -1,5 +1,5 @@
 {
-  "_comment": "Go2 Robust policy using modern atomic components (117 dims policy + 16 dims command)",
+  "_comment": "Go2 Facet policy using modern atomic components with impedance control (117 dims policy + 27 dims command)",
   "policy_joint_names": [
     "FL_hip_joint",
     "FR_hip_joint",
@@ -31,12 +31,13 @@
   "onnx": {
     "meta": {
       "in_keys": [
+        "command",
         "policy",
         "is_init",
-        "adapt_hx",
-        "command_"
+        "adapt_hx"
       ],
       "out_keys": [
+        "command",
         "policy",
         "priv_pred",
         "ext_pred",
@@ -66,6 +67,10 @@
         [
           [
             1,
+            27
+          ],
+          [
+            1,
             117
           ],
           [
@@ -74,47 +79,41 @@
           [
             1,
             128
-          ],
-          [
-            1,
-            16
           ]
         ]
       ]
     },
-    "path": "policy/go2/robust.onnx"
+    "path": "go2/facet.onnx"
   },
   "obs_config": {
     "policy": [
       {
         "name": "ProjectedGravity",
         "joint_name": "floating_base_joint",
-        "history_steps": 3,
-        "_comment": "9 dims (3x3): gravity in base frame with 3-step history"
+        "history_steps": 3
       },
       {
         "name": "JointPositions",
         "joint_names": "isaac",
         "history_steps": 3,
-        "_comment": "36 dims (12x3): joint positions with 3-step history"
+        "subtract_default": false,
+        "scale": 1.0
       },
       {
         "name": "JointVelocities",
         "joint_names": "isaac",
         "history_steps": 3,
-        "_comment": "36 dims (12x3): joint velocities with 3-step history"
+        "scale": 1.0
       },
       {
         "name": "PreviousActions",
         "history_steps": 3,
-        "transpose": true,
-        "_comment": "36 dims (12x3): previous actions with 3-step history"
+        "transpose": true
       }
     ],
-    "command_": [
+    "command": [
       {
-        "name": "VelocityCommandWithOscillators",
-        "_comment": "16 dims: velocity command (3) + padding (1) + oscillators (12)"
+        "name": "ImpedanceCommand"
       }
     ]
   },
