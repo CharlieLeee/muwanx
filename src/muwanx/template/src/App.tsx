@@ -168,6 +168,20 @@ function pickScene(project: ProjectConfig, sceneQuery: string | null): SceneConf
   );
 }
 
+function pickPolicy(scene: SceneConfig, policyQuery: string | null): string | null {
+  if (!scene.policies.length) {
+    return null;
+  }
+  if (!policyQuery) {
+    return scene.policies[0].name;
+  }
+  const normalized = policyQuery.trim().toLowerCase();
+  const found =
+    scene.policies.find((policy) => policy.name.toLowerCase() === normalized) ||
+    scene.policies.find((policy) => sanitizeName(policy.name) === normalized);
+  return found?.name ?? scene.policies[0].name;
+}
+
 function updateUrlParams(
   projectId: string | null,
   sceneName: string | null,
@@ -206,6 +220,10 @@ function AppContent() {
     const params = new URLSearchParams(window.location.search);
     return params.get('scene');
   }, []);
+  const policyQuery = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('policy');
+  }, []);
 
   useEffect(() => {
     showLoading();
@@ -224,14 +242,15 @@ function AppContent() {
         setCurrentProject(project);
         const selectedScene = pickScene(project, sceneQuery);
         setCurrentScene(selectedScene);
-        setSelectedMenu(selectedScene?.policies?.[0]?.name ?? null);
+        const selectedPolicy = selectedScene ? pickPolicy(selectedScene, policyQuery) : null;
+        setSelectedMenu(selectedPolicy);
       })
       .catch((err) => {
         console.error('Failed to load config:', err);
         setError(err.message || 'Failed to load config.');
         hideLoading();
       });
-  }, [projectId, sceneQuery, showLoading, hideLoading]);
+  }, [projectId, sceneQuery, policyQuery, showLoading, hideLoading]);
 
   const scenePath = useMemo(() => {
     if (!currentProject || !currentScene) {
@@ -323,7 +342,7 @@ function AppContent() {
       }
       showLoading();
       setCurrentScene(scene);
-      const nextPolicy = scene.policies?.[0]?.name ?? null;
+      const nextPolicy = pickPolicy(scene, null);
       setSelectedMenu(nextPolicy);
       updateUrlParams(currentProject.id, value, nextPolicy);
     },
