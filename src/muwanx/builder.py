@@ -274,6 +274,7 @@ class Builder:
                     "eslint.config.cjs",
                     ".browserslistrc",
                     ".gitignore",
+                    "README.md",
                 ]
                 for dev_file in dev_files:
                     dev_path = output_path / dev_file
