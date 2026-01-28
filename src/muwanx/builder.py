@@ -112,7 +112,7 @@ class Builder:
 
         return MuwanxApp(output_path)
 
-    def _save_json(self, output_path: Path) -> None:
+    def _save_config_json(self, output_path: Path) -> None:
         """Save configuration as JSON.
 
         Creates root assets/config.json with project metadata and structure information.
@@ -189,12 +189,38 @@ class Builder:
             │   └── (compiled js/css files)
             └── <project-id>/ (or 'main')
                 ├── index.html
+                ├── logo.svg
+                ├── manifest.json
                 └── assets/
+                    ├── config.json
                     ├── scene/
                     │   └── <scene-id>/
+                    │       ├── <policy-id>.onnx
+                    │       └── <policy-id>.json
                     └── policy/
-                        └── <policy-id>/
+                        └── <scene-id>/
+                            └── <policy-id>/
+                                ├── <policy-id>.onnx
+                                └── <policy-id>.json
 
+        New Structure (after mujoco wasm distribution):
+            dist/
+            ├── index.html
+            ├── logo.svg
+            ├── manifest.json
+            ├── robots.txt
+            ├── assets/
+            │   ├── config.json
+            │   └── (compiled js/css files)
+            └── <project-id>/ (or 'main')
+                ├── index.html
+                ├── logo.svg
+                ├── manifest.json
+                └── assets/
+                    └── <scene-id>/
+                        ├── scene.mjb
+                        ├── <policy-id>.onnx
+                        └── <policy-id>.json
         """
         if output_path.exists():
             shutil.rmtree(output_path)
@@ -272,8 +298,7 @@ class Builder:
         assets_dir.mkdir(exist_ok=True)
 
         # Save root configuration (project metadata and structure)
-        self._save_json(output_path)
-        root_config_file = assets_dir / "config.json"
+        self._save_config_json(output_path)
 
         # Save MuJoCo models and ONNX policies per project
         for project in self._projects:
@@ -289,12 +314,6 @@ class Builder:
             project_assets_dir.mkdir(parents=True, exist_ok=True)
 
             policy_dir.mkdir(exist_ok=True)
-
-            # Copy root config into project assets for standalone hosting.
-            if root_config_file.exists():
-                shutil.copy(
-                    str(root_config_file), str(project_assets_dir / "config.json")
-                )
 
             # Copy index.html to each project directory so direct navigation works
             root_index = output_path / "index.html"
