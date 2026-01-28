@@ -6,17 +6,34 @@
       "id": null,
       "scenes": [
         {
+          "name": "G1",
+          "path": "scene/muwanx/unitree_g1/scene.xml",
+          "policies": [
+            {
+              "name": "Locomotion",
+              "config": "policy/g1/locomotion.json"
+            },
+            {
+              "name": "Balance",
+              "config": "policy/g1/balance.json"
+            }
+          ]
+        },
+        {
           "name": "Go2",
           "path": "scene/muwanx/unitree_go2/scene.xml",
           "policies": [
             {
-              "name": "Facet"
+              "name": "Facet",
+              "config": "policy/go2/facet.json"
             },
             {
-              "name": "Vanilla"
+              "name": "Vanilla",
+              "config": "policy/go2/vanilla.json"
             },
             {
-              "name": "Robust"
+              "name": "Robust",
+              "config": "policy/go2/robust.json"
             }
           ]
         },
@@ -25,22 +42,12 @@
           "path": "scene/muwanx/unitree_go1/go1.xml",
           "policies": [
             {
-              "name": "HiMLoco"
+              "name": "HiMLoco",
+              "config": "policy/go1/himloco.json"
             },
             {
-              "name": "Decap"
-            }
-          ]
-        },
-        {
-          "name": "G1",
-          "path": "scene/muwanx/unitree_g1/scene.xml",
-          "policies": [
-            {
-              "name": "Locomotion"
-            },
-            {
-              "name": "Balance"
+              "name": "Decap",
+              "config": "policy/go1/decap.json"
             }
           ]
         }
