@@ -57,9 +57,9 @@ def setup_builder() -> muwanx.Builder:
         model=load_model("assets/scene/muwanx/unitree_g1/scene.xml"),
         name="G1",
     ).add_policy(
-        policy=onnx.load("assets/policy/unitree_g1/g1_velocity.onnx"),
-        name="Velocity",
-        config_path="assets/policy/unitree_g1/g1_velocity.json",
+        policy=onnx.load("assets/policy/unitree_g1/locomotion.onnx"),
+        name="Locomotion",
+        config_path="assets/policy/unitree_g1/locomotion.json",
     )
 
     return builder
