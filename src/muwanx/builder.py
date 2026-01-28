@@ -137,7 +137,7 @@ class Builder:
                                         **(
                                             {
                                                 "config": f"policy/{name2id(scene.name)}/"
-                                                f"{self._policy_filename(policy.name)}.json"
+                                                f"{name2id(policy.name)}.json"
                                             }
                                             if getattr(policy, "config_path", None)
                                             else {}
@@ -344,14 +344,15 @@ class Builder:
 
                 # Save policies
                 for policy in scene.policies:
-                    policy_name = self._policy_filename(policy.name)
+                    policy_name = name2id(policy.name)
                     policy_path = policy_dir / scene_name
                     policy_path.mkdir(parents=True, exist_ok=True)
 
                     onnx.save(policy.model, str(policy_path / f"{policy_name}.onnx"))
 
-                    if getattr(policy, "config_path", None):
-                        config_src = Path(policy.config_path).expanduser()
+                    config_path = getattr(policy, "config_path", None)
+                    if config_path:
+                        config_src = Path(config_path).expanduser()
                         if not config_src.is_absolute():
                             config_src = (Path.cwd() / config_src).resolve()
                         if config_src.exists():
