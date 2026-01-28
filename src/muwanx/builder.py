@@ -136,7 +136,7 @@ class Builder:
                                         "name": policy.name,
                                         **(
                                             {
-                                                "config": f"policy/{name2id(scene.name)}/"
+                                                "config": f"{name2id(scene.name)}/"
                                                 f"{name2id(policy.name)}.json"
                                             }
                                             if getattr(policy, "config_path", None)
@@ -178,7 +178,7 @@ class Builder:
     def _save_web(self, output_path: Path) -> None:
         """Save as a complete web application with hybrid structure.
 
-        Structure:
+        Output Structure:
             dist/
             ├── index.html
             ├── logo.svg
@@ -192,30 +192,18 @@ class Builder:
                 ├── logo.svg
                 ├── manifest.json
                 └── assets/
-                    ├── config.json
                     ├── scene/
                     │   └── <scene-id>/
-                    │       ├── <policy-id>.onnx
-                    │       └── <policy-id>.json
-                    └── policy/
-                        └── <scene-id>/
-                            └── <policy-id>/
-                                ├── <policy-id>.onnx
-                                └── <policy-id>.json
+                    │       └── (scene assets)
+                    └── <scene-id>/
+                        ├── <policy-id>.onnx
+                        └── <policy-id>.json
 
         New Structure (after mujoco wasm distribution):
             dist/
-            ├── index.html
-            ├── logo.svg
-            ├── manifest.json
-            ├── robots.txt
-            ├── assets/
-            │   ├── config.json
-            │   └── (compiled js/css files)
+            ...
             └── <project-id>/ (or 'main')
-                ├── index.html
-                ├── logo.svg
-                ├── manifest.json
+                ...
                 └── assets/
                     └── <scene-id>/
                         ├── scene.mjb
@@ -308,13 +296,10 @@ class Builder:
             project_dir = output_path / project_dir_name
             project_assets_dir = project_dir / "assets"
             scene_dir = project_assets_dir / "scene"
-            policy_dir = project_assets_dir / "policy"
             copied_scene_roots: set[Path] = set()
 
             # Create directories
             project_assets_dir.mkdir(parents=True, exist_ok=True)
-
-            policy_dir.mkdir(exist_ok=True)
 
             # Copy index.html to each project directory so direct navigation works
             root_index = output_path / "index.html"
@@ -365,7 +350,7 @@ class Builder:
                 # Save policies
                 for policy in scene.policies:
                     policy_name = name2id(policy.name)
-                    policy_path = policy_dir / scene_name
+                    policy_path = project_assets_dir / scene_name
                     policy_path.mkdir(parents=True, exist_ok=True)
 
                     onnx.save(policy.model, str(policy_path / f"{policy_name}.onnx"))
@@ -383,7 +368,7 @@ class Builder:
                                 data.setdefault("onnx", {})
                                 if isinstance(data["onnx"], dict):
                                     data["onnx"]["path"] = (
-                                        f"policy/{scene_name}/{policy_name}.onnx"
+                                        f"{scene_name}/{policy_name}.onnx"
                                     )
                                 with open(target, "w") as f:
                                     json.dump(data, f, indent=2)
