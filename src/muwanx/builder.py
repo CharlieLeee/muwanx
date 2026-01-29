@@ -319,8 +319,8 @@ class Builder:
                 scene_path.mkdir(parents=True, exist_ok=True)
 
                 # Save model as binary .mjb file
-                # scene_binary_path = scene_dir / f"{scene_name}.mjb"
-                # mujoco.mj_saveModel(scene.model, str(scene_binary_path))
+                # scene_path = scene_dir / f"scene.mjb"
+                # mujoco.mj_saveModel(scene.model, str(scene_path))
 
                 # Copy all scene assets
                 scene_source = self._resolve_scene_source(scene)

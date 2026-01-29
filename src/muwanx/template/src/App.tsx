@@ -211,7 +211,7 @@ function AppContent() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [currentProject, setCurrentProject] = useState<ProjectConfig | null>(null);
   const [currentScene, setCurrentScene] = useState<SceneConfig | null>(null);
-  const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
+  const [selectedPolicy, setSelectedPolicy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { showLoading, hideLoading } = useLoading();
 
@@ -242,8 +242,8 @@ function AppContent() {
         setCurrentProject(project);
         const selectedScene = pickScene(project, sceneQuery);
         setCurrentScene(selectedScene);
-        const selectedPolicy = selectedScene ? pickPolicy(selectedScene, policyQuery) : null;
-        setSelectedMenu(selectedPolicy);
+        const initialPolicy = selectedScene ? pickPolicy(selectedScene, policyQuery) : null;
+        setSelectedPolicy(initialPolicy);
       })
       .catch((err) => {
         console.error('Failed to load config:', err);
@@ -262,19 +262,19 @@ function AppContent() {
       : `scene/${sanitizeName(currentScene.name)}/scene.xml`;
     return `${projectDir}/assets/${sceneRelPath}`.replace(/\/+/g, '/');
   }, [currentProject, currentScene]);
-  const selectedPolicy = useMemo(() => {
-    if (!currentScene || !selectedMenu) {
+  const selectedPolicyConfig = useMemo(() => {
+    if (!currentScene || !selectedPolicy) {
       return null;
     }
-    return currentScene.policies.find((policy) => policy.name === selectedMenu) ?? null;
-  }, [currentScene, selectedMenu]);
+    return currentScene.policies.find((policy) => policy.name === selectedPolicy) ?? null;
+  }, [currentScene, selectedPolicy]);
   const policyConfigPath = useMemo(() => {
-    if (!currentProject || !selectedPolicy?.config) {
+    if (!currentProject || !selectedPolicyConfig?.config) {
       return null;
     }
     const projectDir = currentProject.id ? currentProject.id : 'main';
-    return `${projectDir}/assets/${selectedPolicy.config}`.replace(/\/+/g, '/');
-  }, [currentProject, selectedPolicy]);
+    return `${projectDir}/assets/${selectedPolicyConfig.config}`.replace(/\/+/g, '/');
+  }, [currentProject, selectedPolicyConfig]);
   const projectOptions = useMemo(() => {
     if (!config) {
       return [] as { value: string; label: string }[];
@@ -292,7 +292,7 @@ function AppContent() {
     return currentProject.scenes.map((scene) => ({ value: scene.name, label: scene.name }));
   }, [currentProject]);
 
-  const menuOptions = useMemo(() => {
+  const policyOptions = useMemo(() => {
     if (!currentScene || !currentScene.policies) {
       return [] as { value: string; label: string }[];
     }
@@ -325,7 +325,7 @@ function AppContent() {
       const nextScene = pickScene(project, null);
       setCurrentScene(nextScene);
       const nextPolicy = nextScene?.policies?.[0]?.name ?? null;
-      setSelectedMenu(nextPolicy);
+      setSelectedPolicy(nextPolicy);
       updateUrlParams(project.id, nextScene?.name ?? null, nextPolicy);
     },
     [config, showLoading]
@@ -343,18 +343,21 @@ function AppContent() {
       showLoading();
       setCurrentScene(scene);
       const nextPolicy = pickPolicy(scene, null);
-      setSelectedMenu(nextPolicy);
+      setSelectedPolicy(nextPolicy);
       updateUrlParams(currentProject.id, value, nextPolicy);
     },
     [currentProject, showLoading]
   );
 
-  const handleMenuChange = useCallback(
+  const handlePolicyChange = useCallback(
     (value: string | null) => {
-      setSelectedMenu(value);
+      if (value !== selectedPolicy) {
+        showLoading();
+      }
+      setSelectedPolicy(value);
       updateUrlParams(currentProject?.id ?? null, currentScene?.name ?? null, value);
     },
-    [currentProject, currentScene]
+    [currentProject, currentScene, selectedPolicy, showLoading]
   );
 
   if (error) {
@@ -386,9 +389,9 @@ function AppContent() {
           scenes={sceneOptions}
           sceneValue={sceneValue}
           onSceneChange={handleSceneChange}
-          menus={menuOptions}
-          menuValue={selectedMenu}
-          onMenuChange={handleMenuChange}
+          policies={policyOptions}
+          policyValue={selectedPolicy}
+          onPolicyChange={handlePolicyChange}
         />
         <MuwanxViewer
           scenePath={scenePath}
