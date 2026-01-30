@@ -374,6 +374,9 @@ def main():
     builder = muwanx.Builder()
     project = builder.add_project(name="MJLab All Tasks Observation & RL Explorer")  # noqa: F841
 
+    # target_task_id = "Mjlab-Velocity-Flat-Unitree-G1"
+    target_task_id = "Mjlab-Tracking-Flat-Unitree-G1"
+
     # ═══════════════════════════════════════════════════════════════════════════════
     # SECTION 1: OBSERVATIONS
     # ═══════════════════════════════════════════════════════════════════════════════
@@ -391,11 +394,9 @@ def main():
     print("\n" + "=" * 80)
     print("DETAILED EXAMPLE: Unitree G1 Velocity Task - Observations")
     print("=" * 80)
-    g1_velocity_obs = all_policy_obs_info.get("Mjlab-Velocity-Flat-Unitree-G1")
+    g1_velocity_obs = all_policy_obs_info.get(target_task_id)
     if g1_velocity_obs:
-        print_detailed_observation_info(
-            "Mjlab-Velocity-Flat-Unitree-G1", g1_velocity_obs
-        )
+        print_detailed_observation_info(target_task_id, g1_velocity_obs)
 
     # ═══════════════════════════════════════════════════════════════════════════════
     # SECTION 2: RL CONFIGURATIONS
@@ -414,9 +415,9 @@ def main():
     print("\n" + "=" * 80)
     print("DETAILED EXAMPLE: Unitree G1 Velocity Task - RL Configuration")
     print("=" * 80)
-    g1_velocity_rl = all_rl_info.get("Mjlab-Velocity-Flat-Unitree-G1")
+    g1_velocity_rl = all_rl_info.get(target_task_id)
     if g1_velocity_rl:
-        print_detailed_rl_config_info("Mjlab-Velocity-Flat-Unitree-G1", g1_velocity_rl)
+        print_detailed_rl_config_info(target_task_id, g1_velocity_rl)
 
 
 if __name__ == "__main__":

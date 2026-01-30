@@ -27,5 +27,8 @@ class PolicyConfig:
     source_path: str | None = None
     """Optional source path for the policy ONNX file."""
 
+    config_path: str | None = None
+    """Optional source path for the policy config JSON file."""
+
 
 __all__ = ["PolicyConfig"]

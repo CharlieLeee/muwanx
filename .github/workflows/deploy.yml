@@ -35,11 +35,10 @@ jobs:
         python -m pip install -e .
 
     - name: Build demo application
-      run: MUWANX_BASE_PATH="/muwanx/python/" MUWANX_NO_LAUNCH=1 python examples/demo/demo.py
+      run: MUWANX_BASE_PATH="/muwanx/" MUWANX_NO_LAUNCH=1 python examples/demo/demo.py
 
-    - name: Deploy to gh-pages (/python)
+    - name: Deploy to gh-pages branch
       uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./examples/demo/dist
-        destination_dir: python

@@ -10,6 +10,7 @@ import './App.css';
 interface PolicyConfig {
   name: string;
   metadata: Record<string, unknown>;
+  config?: string;
 }
 
 interface SceneConfig {
@@ -167,6 +168,20 @@ function pickScene(project: ProjectConfig, sceneQuery: string | null): SceneConf
   );
 }
 
+function pickPolicy(scene: SceneConfig, policyQuery: string | null): string | null {
+  if (!scene.policies.length) {
+    return null;
+  }
+  if (!policyQuery) {
+    return scene.policies[0].name;
+  }
+  const normalized = policyQuery.trim().toLowerCase();
+  const found =
+    scene.policies.find((policy) => policy.name.toLowerCase() === normalized) ||
+    scene.policies.find((policy) => sanitizeName(policy.name) === normalized);
+  return found?.name ?? scene.policies[0].name;
+}
+
 function updateUrlParams(
   projectId: string | null,
   sceneName: string | null,
@@ -196,7 +211,7 @@ function AppContent() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [currentProject, setCurrentProject] = useState<ProjectConfig | null>(null);
   const [currentScene, setCurrentScene] = useState<SceneConfig | null>(null);
-  const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
+  const [selectedPolicy, setSelectedPolicy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { showLoading, hideLoading } = useLoading();
 
@@ -204,6 +219,10 @@ function AppContent() {
   const sceneQuery = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('scene');
+  }, []);
+  const policyQuery = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('policy');
   }, []);
 
   useEffect(() => {
@@ -223,14 +242,15 @@ function AppContent() {
         setCurrentProject(project);
         const selectedScene = pickScene(project, sceneQuery);
         setCurrentScene(selectedScene);
-        setSelectedMenu(selectedScene?.policies?.[0]?.name ?? null);
+        const initialPolicy = selectedScene ? pickPolicy(selectedScene, policyQuery) : null;
+        setSelectedPolicy(initialPolicy);
       })
       .catch((err) => {
         console.error('Failed to load config:', err);
         setError(err.message || 'Failed to load config.');
         hideLoading();
       });
-  }, [projectId, sceneQuery, showLoading, hideLoading]);
+  }, [projectId, sceneQuery, policyQuery, showLoading, hideLoading]);
 
   const scenePath = useMemo(() => {
     if (!currentProject || !currentScene) {
@@ -242,6 +262,19 @@ function AppContent() {
       : `scene/${sanitizeName(currentScene.name)}/scene.xml`;
     return `${projectDir}/assets/${sceneRelPath}`.replace(/\/+/g, '/');
   }, [currentProject, currentScene]);
+  const selectedPolicyConfig = useMemo(() => {
+    if (!currentScene || !selectedPolicy) {
+      return null;
+    }
+    return currentScene.policies.find((policy) => policy.name === selectedPolicy) ?? null;
+  }, [currentScene, selectedPolicy]);
+  const policyConfigPath = useMemo(() => {
+    if (!currentProject || !selectedPolicyConfig?.config) {
+      return null;
+    }
+    const projectDir = currentProject.id ? currentProject.id : 'main';
+    return `${projectDir}/assets/${selectedPolicyConfig.config}`.replace(/\/+/g, '/');
+  }, [currentProject, selectedPolicyConfig]);
   const projectOptions = useMemo(() => {
     if (!config) {
       return [] as { value: string; label: string }[];
@@ -259,7 +292,7 @@ function AppContent() {
     return currentProject.scenes.map((scene) => ({ value: scene.name, label: scene.name }));
   }, [currentProject]);
 
-  const menuOptions = useMemo(() => {
+  const policyOptions = useMemo(() => {
     if (!currentScene || !currentScene.policies) {
       return [] as { value: string; label: string }[];
     }
@@ -292,7 +325,7 @@ function AppContent() {
       const nextScene = pickScene(project, null);
       setCurrentScene(nextScene);
       const nextPolicy = nextScene?.policies?.[0]?.name ?? null;
-      setSelectedMenu(nextPolicy);
+      setSelectedPolicy(nextPolicy);
       updateUrlParams(project.id, nextScene?.name ?? null, nextPolicy);
     },
     [config, showLoading]
@@ -309,19 +342,22 @@ function AppContent() {
       }
       showLoading();
       setCurrentScene(scene);
-      const nextPolicy = scene.policies?.[0]?.name ?? null;
-      setSelectedMenu(nextPolicy);
+      const nextPolicy = pickPolicy(scene, null);
+      setSelectedPolicy(nextPolicy);
       updateUrlParams(currentProject.id, value, nextPolicy);
     },
     [currentProject, showLoading]
   );
 
-  const handleMenuChange = useCallback(
+  const handlePolicyChange = useCallback(
     (value: string | null) => {
-      setSelectedMenu(value);
+      if (value !== selectedPolicy) {
+        showLoading();
+      }
+      setSelectedPolicy(value);
       updateUrlParams(currentProject?.id ?? null, currentScene?.name ?? null, value);
     },
-    [currentProject, currentScene]
+    [currentProject, currentScene, selectedPolicy, showLoading]
   );
 
   if (error) {
@@ -353,13 +389,14 @@ function AppContent() {
           scenes={sceneOptions}
           sceneValue={sceneValue}
           onSceneChange={handleSceneChange}
-          menus={menuOptions}
-          menuValue={selectedMenu}
-          onMenuChange={handleMenuChange}
+          policies={policyOptions}
+          policyValue={selectedPolicy}
+          onPolicyChange={handlePolicyChange}
         />
         <MuwanxViewer
           scenePath={scenePath}
           baseUrl={import.meta.env.BASE_URL || '/'}
+          policyConfigPath={policyConfigPath}
           onError={handleViewerError}
           onReady={handleViewerReady}
         />

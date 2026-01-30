@@ -15,6 +15,14 @@ import { threeToMjcCoordinate } from '../scene/coordinate';
 import { SceneCacheManager } from '../cache/sceneCacheManager';
 import { SceneResourceTracker } from '../cache/resourceTracker';
 import { MemoryMonitor } from '../cache/memoryMonitor';
+import { Observations } from '../observation/observations';
+import * as ort from 'onnxruntime-web';
+import { PolicyRunner } from '../policy/PolicyRunner';
+import { OnnxModule } from '../policy/OnnxModule';
+import { PolicyStateBuilder } from '../policy/PolicyStateBuilder';
+import type { PolicyConfig } from '../policy/types';
+import { TrackingPolicy } from '../policy/modules/TrackingPolicy';
+import { LocomotionPolicy } from '../policy/modules/LocomotionPolicy';
 
 type RuntimeOptions = {
   baseUrl?: string;
@@ -53,6 +61,25 @@ export class MuwanxRuntime {
   private sceneCacheManager: SceneCacheManager;
   private resourceTracker: SceneResourceTracker;
   private memoryMonitor: MemoryMonitor;
+  private policyRunner: PolicyRunner | null;
+  private policyStateBuilder: PolicyStateBuilder | null;
+  private policyConfigPath: string | null;
+  private policyDebugCounter: number;
+  private policyControl:
+    | {
+      controlType: string;
+      ctrlAdr: number[];
+      qposAdr: number[];
+      qvelAdr: number[];
+      actionScale: Float32Array;
+      defaultJointPos: Float32Array;
+      kp: Float32Array;
+      kd: Float32Array;
+    }
+    | null;
+  private onnxModule: OnnxModule | null;
+  private onnxInputDict: Record<string, ort.Tensor> | null;
+  private onnxInferencing: boolean;
 
   constructor(mujoco: Mujoco, container: HTMLElement, options: RuntimeOptions = {}) {
     this.mujoco = mujoco;
@@ -133,6 +160,14 @@ export class MuwanxRuntime {
     this.loadingScene = null;
     this.dragStateManager = null;
     this.dragForceScale = 100.0;
+    this.policyRunner = null;
+    this.policyStateBuilder = null;
+    this.policyConfigPath = null;
+    this.policyDebugCounter = 0;
+    this.policyControl = null;
+    this.onnxModule = null;
+    this.onnxInputDict = null;
+    this.onnxInferencing = false;
 
     // Initialize cache system (singleton shared across runtime instances)
     this.sceneCacheManager = SceneCacheManager.getInstance(this.mujoco);
@@ -140,7 +175,7 @@ export class MuwanxRuntime {
     this.memoryMonitor = new MemoryMonitor();
   }
 
-  async loadEnvironment(scenePath: string): Promise<void> {
+  async loadEnvironment(scenePath: string, policyConfigPath: string | null = null): Promise<void> {
     await this.stop();
 
     const startTime = performance.now();
@@ -174,6 +209,8 @@ export class MuwanxRuntime {
       // Capture and cache resources
       await this.captureAndCacheResources(scenePath);
     }
+
+    await this.loadPolicyConfig(policyConfigPath);
 
     this.running = true;
     void this.startLoop();
@@ -256,6 +293,27 @@ export class MuwanxRuntime {
       const loopStart = performance.now();
 
       if (this.mjModel && this.mjData) {
+        if (this.policyRunner && this.policyStateBuilder) {
+          const state = this.policyStateBuilder.build();
+          const obs = this.policyRunner.collectObservationsByKey(state);
+          await this.runOnnxInference(obs);
+          if (this.policyDebugCounter % 60 === 0) {
+            const debugKey =
+              'policy' in obs
+                ? 'policy'
+                : 'observation' in obs
+                  ? 'observation'
+                  : Object.keys(obs)[0];
+            const debugObs = debugKey ? obs[debugKey] : null;
+            const preview = debugObs ? Array.from(debugObs.slice(0, 8)) : [];
+            console.log('[PolicyRunner] obs', {
+              key: debugKey,
+              size: debugObs ? debugObs.length : 0,
+              sample: preview,
+            });
+          }
+          this.policyDebugCounter += 1;
+        }
         this.executeSimulationSteps();
         this.updateCachedState();
       }
@@ -270,6 +328,188 @@ export class MuwanxRuntime {
     this.loopPromise = null;
   }
 
+  private async loadPolicyConfig(policyConfigPath: string | null): Promise<void> {
+    const previousPolicyConfigPath = this.policyConfigPath;
+    this.policyConfigPath = policyConfigPath;
+    this.policyRunner = null;
+    this.policyStateBuilder = null;
+    this.policyDebugCounter = 0;
+    this.policyControl = null;
+    this.onnxModule = null;
+    this.onnxInputDict = null;
+    this.onnxInferencing = false;
+
+    if (!policyConfigPath) {
+      return;
+    }
+
+    if (!this.mjModel || !this.mjData) {
+      console.warn('Policy config loaded before MuJoCo model is ready.');
+      return;
+    }
+
+    if (policyConfigPath !== previousPolicyConfigPath) {
+      this.resetSimulationState();
+    }
+
+    try {
+      const { config } = await this.fetchPolicyConfig(policyConfigPath);
+      if (!config.policy_joint_names || config.policy_joint_names.length === 0) {
+        throw new Error('Policy config missing policy_joint_names.');
+      }
+
+      const runner = new PolicyRunner(config, {
+        policyModules: {
+          tracking: TrackingPolicy,
+          locomotion: LocomotionPolicy,
+        },
+        observations: Observations,
+      });
+
+      await runner.init({
+        mujoco: this.mujoco,
+        mjModel: this.mjModel,
+        mjData: this.mjData,
+      });
+
+      this.policyRunner = runner;
+      this.policyStateBuilder = new PolicyStateBuilder(
+        this.mujoco,
+        this.mjModel,
+        this.mjData,
+        runner.getPolicyJointNames()
+      );
+
+      const state = this.policyStateBuilder.build();
+      this.policyRunner.reset(state);
+      this.policyControl = this.buildPolicyControl(config, runner, this.policyStateBuilder);
+
+      if (config.onnx?.path) {
+        const onnxPath = this.resolvePolicyAssetPath(policyConfigPath, config.onnx.path);
+        const onnxUrl = this.resolveAssetUrl(onnxPath);
+        const onnxConfig = { ...config.onnx, path: onnxUrl };
+        const module = new OnnxModule(onnxConfig);
+        await module.init();
+        this.onnxModule = module;
+        this.onnxInputDict = module.initInput();
+      }
+
+      console.log('[PolicyRunner] config loaded', {
+        obsSize: runner.getObservationSize(),
+        obsLayout: runner.getObservationLayout(),
+        pdEnabled: this.policyControl !== null,
+      });
+    } catch (error) {
+      console.warn('Failed to load policy config:', error);
+    }
+  }
+
+  private async fetchPolicyConfig(
+    policyConfigPath: string
+  ): Promise<{ config: PolicyConfig; resolvedUrl: string }> {
+    const resolved = this.resolveAssetUrl(policyConfigPath);
+    const response = await fetch(resolved, { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch policy config: ${response.status}`);
+    }
+    const payload = await response.json();
+    return { config: payload as PolicyConfig, resolvedUrl: resolved };
+  }
+
+  private resolveAssetUrl(assetPath: string): string {
+    if (/^[a-z]+:\/\//i.test(assetPath)) {
+      return assetPath;
+    }
+    const base = (this.baseUrl || '/').replace(/\/+$/, '/');
+    const baseUrl = new URL(base, window.location.origin + '/').toString();
+    return new URL(assetPath.replace(/^\/+/, ''), baseUrl).toString();
+  }
+
+  private resolvePolicyAssetPath(configPath: string, assetPath: string): string {
+    const marker = '/assets/';
+    const normalizedConfig = configPath.replace(/\\/g, '/');
+    const index = normalizedConfig.indexOf(marker);
+    if (index >= 0) {
+      const prefix = normalizedConfig.slice(0, index + marker.length);
+      return `${prefix}${assetPath}`.replace(/\/+/g, '/');
+    }
+    return assetPath;
+  }
+
+  private buildPolicyControl(
+    config: PolicyConfig,
+    runner: PolicyRunner,
+    stateBuilder: PolicyStateBuilder
+  ):
+    | {
+      controlType: string;
+      ctrlAdr: number[];
+      qposAdr: number[];
+      qvelAdr: number[];
+      actionScale: Float32Array;
+      defaultJointPos: Float32Array;
+      kp: Float32Array;
+      kd: Float32Array;
+    }
+    | null {
+    const controlType = config.control_type ?? 'joint_position';
+    if (controlType !== 'joint_position' && controlType !== 'torque') {
+      console.warn(`[PolicyRunner] Unsupported control_type: ${controlType}`);
+      return null;
+    }
+
+    const mapping = stateBuilder.getControlMapping();
+    if (!mapping) {
+      console.warn('[PolicyRunner] Failed to build control mapping.');
+      return null;
+    }
+
+    const numActions = mapping.qposAdr.length;
+    const actionScale = this.normalizeControlArray(config.action_scale, numActions, 1.0);
+    const defaultJointPos = runner.getDefaultJointPos();
+    const kp = this.normalizeControlArray(config.stiffness, numActions, 0.0);
+    const kd = this.normalizeControlArray(config.damping, numActions, 0.0);
+
+    return {
+      controlType,
+      ...mapping,
+      actionScale,
+      defaultJointPos,
+      kp,
+      kd,
+    };
+  }
+
+  private normalizeControlArray(
+    values: number[] | number | undefined,
+    length: number,
+    fallback: number
+  ): Float32Array {
+    const output = new Float32Array(length);
+    if (typeof values === 'number') {
+      output.fill(values);
+      return output;
+    }
+    if (Array.isArray(values)) {
+      for (let i = 0; i < length; i++) {
+        output[i] = typeof values[i] === 'number' ? values[i] : fallback;
+      }
+      return output;
+    }
+    output.fill(fallback);
+    return output;
+  }
+
+  private resetSimulationState(): void {
+    if (!this.mjModel || !this.mjData) {
+      return;
+    }
+    this.mujoco.mj_resetData(this.mjModel, this.mjData);
+    this.mujoco.mj_forward(this.mjModel, this.mjData);
+    this.lastSimState.bodies.clear();
+    this.updateCachedState();
+  }
+
   private executeSimulationSteps(): void {
     if (!this.mjModel || !this.mjData) {
       return;
@@ -278,7 +518,92 @@ export class MuwanxRuntime {
     this.applyDragForces();
 
     for (let substep = 0; substep < this.decimation; substep++) {
+      this.applyPolicyControl();
       this.mujoco.mj_step(this.mjModel, this.mjData);
+    }
+  }
+
+  private applyPolicyControl(): void {
+    if (!this.policyControl || !this.mjData) {
+      return;
+    }
+
+    const { controlType, ctrlAdr, qposAdr, qvelAdr, actionScale, defaultJointPos, kp, kd } =
+      this.policyControl;
+    const numActions = ctrlAdr.length;
+    const actions = this.policyRunner?.getLastActions() ?? new Float32Array(numActions);
+    const ctrl = this.mjData.ctrl;
+    ctrl.fill(0.0);
+
+    if (controlType === 'joint_position') {
+      for (let i = 0; i < numActions; i++) {
+        const target = defaultJointPos[i] + actionScale[i] * actions[i];
+        const qpos = this.mjData.qpos[qposAdr[i]];
+        const qvel = this.mjData.qvel[qvelAdr[i]];
+        const torque = kp[i] * (target - qpos) + kd[i] * (0 - qvel);
+        const ctrlIndex = ctrlAdr[i];
+        if (ctrlIndex >= 0) {
+          ctrl[ctrlIndex] = torque;
+        }
+      }
+    } else if (controlType === 'torque') {
+      for (let i = 0; i < numActions; i++) {
+        const ctrlIndex = ctrlAdr[i];
+        if (ctrlIndex >= 0) {
+          ctrl[ctrlIndex] = actionScale[i] * actions[i];
+        }
+      }
+    }
+  }
+
+  private async runOnnxInference(obs: Record<string, Float32Array>): Promise<void> {
+    if (!this.onnxModule || !this.policyRunner || this.onnxInferencing) {
+      return;
+    }
+
+    this.onnxInferencing = true;
+    try {
+      if (!this.onnxInputDict) {
+        this.onnxInputDict = this.onnxModule.initInput();
+      }
+      const input: Record<string, ort.Tensor> = { ...this.onnxInputDict };
+      for (const [key, value] of Object.entries(obs)) {
+        input[key] = new ort.Tensor('float32', value, [1, value.length]);
+      }
+      for (const key of this.onnxModule.inKeys) {
+        if (!input[key]) {
+          console.warn('[PolicyRunner] Missing ONNX input:', {
+            key,
+            available: Object.keys(input),
+          });
+          return;
+        }
+      }
+
+      const [result, carry] = await this.onnxModule.runInference(input);
+      if (Object.keys(carry).length > 0) {
+        this.onnxInputDict = { ...this.onnxInputDict, ...carry };
+      }
+
+      const actionTensor = result.action ?? result.policy ?? null;
+      if (!actionTensor) {
+        return;
+      }
+
+      const raw = actionTensor.data as Float32Array | number[];
+      const action = ArrayBuffer.isView(raw) ? new Float32Array(raw) : Float32Array.from(raw);
+      if (this.policyControl && action.length !== this.policyControl.ctrlAdr.length) {
+        console.warn('[PolicyRunner] Action size mismatch:', {
+          expected: this.policyControl.ctrlAdr.length,
+          got: action.length,
+        });
+        return;
+      }
+      this.policyRunner.setLastActions(action);
+    } catch (error) {
+      console.warn('[PolicyRunner] ONNX inference failed:', error);
+    } finally {
+      this.onnxInferencing = false;
     }
   }
 
@@ -418,6 +743,9 @@ export class MuwanxRuntime {
 
   dispose(): void {
     this.stop();
+    this.policyRunner = null;
+    this.policyStateBuilder = null;
+    this.policyConfigPath = null;
 
     if (this.dragStateManager) {
       this.dragStateManager.dispose();

@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 
 import mujoco
+import onnx
 
 import muwanx
 
@@ -55,6 +56,10 @@ def setup_builder() -> muwanx.Builder:
     demo_project.add_scene(
         model=load_model("assets/scene/muwanx/unitree_g1/scene.xml"),
         name="G1",
+    ).add_policy(
+        policy=onnx.load("assets/policy/unitree_g1/locomotion.onnx"),
+        name="Locomotion",
+        config_path="assets/policy/unitree_g1/locomotion.json",
     )
 
     return builder

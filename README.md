@@ -13,7 +13,8 @@
 </p>
 
 <p align="center">
-  Create your own interactive MuJoCo simulations with real-time policy control, all running directly in the browser. It is built on top of <a href="https://github.com/google-deepmind/mujoco/tree/main/wasm"><strong>MU</strong>joco <strong>WA</strong>sm</a>, <a href="https://github.com/microsoft/onnxruntime">on<strong>NX</strong> runtime</a>, and <a href="https://github.com/mrdoob/three.js/">three.js</a>. This enables easy sharing of AI robot simulation demos as static sites, perfect for GitHub Pages hosting and rapid visualization of custom MuJoCo scenes with policy control.
+
+  muwanx is a powerful framework for creating interactive MuJoCo simulations with real-time policy control, running entirely in the browser. Built on top of <a href="https://github.com/google-deepmind/mujoco/tree/main/wasm"><strong>MU</strong>joco <strong>WA</strong>sm</a>, <a href="https://github.com/microsoft/onnxruntime">on<strong>NX</strong> runtime</a>, and <a href="https://github.com/mrdoob/three.js/">three.js</a>, it enables easy sharing of AI robot simulation demos as static sites, perfect for GitHub Pages hosting.
 </p>
 
 <p align="center">
@@ -22,16 +23,14 @@
 
 <p align="center">
   <em>Check out the demo ― <a href="https://ttktjmt.github.io/muwanx/">ttktjmt.github.io/muwanx</a></em>
-  <br>
-  <em>Demo from python ― <a href="https://ttktjmt.github.io/muwanx/python">ttktjmt.github.io/muwanx/python</a></em>
 </p>
 
 <p align="center">
-  <a href="https://ttktjmt.github.io/muwanx/#/myosuite"><img src="https://img.shields.io/badge/MyoSuite-E0E0E0?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMxNTUyNTc7fS5jbHMtMntmaWxsOiNlNmY1ZjA7fTwvc3R5bGU+PC9kZWZzPjxnIGlkPSJMYXllcl8xMCIgZGF0YS1uYW1lPSJMYXllciAxMCI+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMjEsMTNsLTQuMywzLjQ2TDEyLjE3LDkuMzksNy4yOCw2LDEwLjM5LDI2LjJsNi4zMSwxLDYuODctMTAuNDFaTTE1LjY2LDI1LjFsLTMuOS0uNTlMOS4zNCw5LjA2bC41OS40LDYuMjgsOS43NSw0LjkzLTMuOTIuNTQuNzhaIi8+PHBhdGggY2xhc3M9ImNscy0yIiBkPSJNMjEuMTQsMTUuMjlsLTQuOTMsMy45Mkw5LjkzLDkuNDZsLS41OS0uNCwyLjQyLDE1LjQ1LDMuOS41OSw2LTlaIi8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTQuNDQsMjQuMzFhMy40OCwzLjQ4LDAsMCwwLTEuMTYtLjE5LDMuNTcsMy41NywwLDAsMC0xLjE1LDYuOTQsMy40NywzLjQ3LDAsMCwwLDEuMTUuMTksMy41OCwzLjU4LDAsMCwwLDMuMzgtMi40MSwzLjU3LDMuNTcsMCwwLDAtMi4yMi00LjUzWiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTEzLjA2LDguMjNhMy41NSwzLjU1LDAsMCwwLTEtMi41NEEzLjQ5LDMuNDksMCwwLDAsOS41Niw0LjZIOS40OUEzLjU5LDMuNTksMCwwLDAsNS45Miw4LjFhMy41NywzLjU3LDAsMCwwLDMuNSwzLjYzaC4wN0EzLjU5LDMuNTksMCwwLDAsMTMuMDYsOC4yM1oiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0yNi4xOCwxNS4xOEEzLjU1LDMuNTUsMCwwLDAsMjYsMTIuNDVhMy42MiwzLjYyLDAsMCwwLTMuMi0yLDMuNTcsMy41NywwLDAsMC0xLjE2LDcsMy40OCwzLjQ4LDAsMCwwLDEuMTYuMTlBMy41NiwzLjU2LDAsMCwwLDI2LjE4LDE1LjE4WiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTIyLDUuNTJhMy42MSwzLjYxLDAsMCwwLS4xNy0yLjcyLDMuNTUsMy41NSwwLDAsMC0zLjIxLTJoMEEzLjU3LDMuNTcsMCwxLDAsMjIsNS41MloiLz48L2c+PC9zdmc+" alt="MyoSuite Demo"></a>
+  <a href="https://ttktjmt.github.io/muwanx/myosuite"><img src="https://img.shields.io/badge/MyoSuite-E0E0E0?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMxNTUyNTc7fS5jbHMtMntmaWxsOiNlNmY1ZjA7fTwvc3R5bGU+PC9kZWZzPjxnIGlkPSJMYXllcl8xMCIgZGF0YS1uYW1lPSJMYXllciAxMCI+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMjEsMTNsLTQuMywzLjQ2TDEyLjE3LDkuMzksNy4yOCw2LDEwLjM5LDI2LjJsNi4zMSwxLDYuODctMTAuNDFaTTE1LjY2LDI1LjFsLTMuOS0uNTlMOS4zNCw5LjA2bC41OS40LDYuMjgsOS43NSw0LjkzLTMuOTIuNTQuNzhaIi8+PHBhdGggY2xhc3M9ImNscy0yIiBkPSJNMjEuMTQsMTUuMjlsLTQuOTMsMy45Mkw5LjkzLDkuNDZsLS41OS0uNCwyLjQyLDE1LjQ1LDMuOS41OSw2LTlaIi8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTQuNDQsMjQuMzFhMy40OCwzLjQ4LDAsMCwwLTEuMTYtLjE5LDMuNTcsMy41NywwLDAsMC0xLjE1LDYuOTQsMy40NywzLjQ3LDAsMCwwLDEuMTUuMTksMy41OCwzLjU4LDAsMCwwLDMuMzgtMi40MSwzLjU3LDMuNTcsMCwwLDAtMi4yMi00LjUzWiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTEzLjA2LDguMjNhMy41NSwzLjU1LDAsMCwwLTEtMi41NEEzLjQ5LDMuNDksMCwwLDAsOS41Niw0LjZIOS40OUEzLjU5LDMuNTksMCwwLDAsNS45Miw4LjFhMy41NywzLjU3LDAsMCwwLDMuNSwzLjYzaC4wN0EzLjU5LDMuNTksMCwwLDAsMTMuMDYsOC4yM1oiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0yNi4xOCwxNS4xOEEzLjU1LDMuNTUsMCwwLDAsMjYsMTIuNDVhMy42MiwzLjYyLDAsMCwwLTMuMi0yLDMuNTcsMy41NywwLDAsMC0xLjE2LDcsMy40OCwzLjQ4LDAsMCwwLDEuMTYuMTlBMy41NiwzLjU2LDAsMCwwLDI2LjE4LDE1LjE4WiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTIyLDUuNTJhMy42MSwzLjYxLDAsMCwwLS4xNy0yLjcyLDMuNTUsMy41NSwwLDAsMC0zLjIxLTJoMEEzLjU3LDMuNTcsMCwxLDAsMjIsNS41MloiLz48L2c+PC9zdmc+" alt="MyoSuite Demo"></a>
   &nbsp;
-  <a href="https://ttktjmt.github.io/muwanx/#/menagerie"><img src="https://img.shields.io/badge/MuJoCo_Menagerie-E0E0E0?logo=deepmind" alt="MuJoCo Menagerie Demo"></a>
+  <a href="https://ttktjmt.github.io/muwanx/menagerie"><img src="https://img.shields.io/badge/MuJoCo_Menagerie-E0E0E0?logo=deepmind" alt="MuJoCo Menagerie Demo"></a>
   &nbsp;
-  <a href="https://ttktjmt.github.io/muwanx/#/playground"><img src="https://img.shields.io/badge/MuJoCo_Playground-E0E0E0?logo=deepmind" alt="MuJoCo Playground Demo"></a>
+  <a href="https://ttktjmt.github.io/muwanx/playground"><img src="https://img.shields.io/badge/MuJoCo_Playground-E0E0E0?logo=deepmind" alt="MuJoCo Playground Demo"></a>
 </p>
 
 ---

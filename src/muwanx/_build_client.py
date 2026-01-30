@@ -22,7 +22,7 @@ __all__ = ["ClientBuilder", "ensure_node_env", "build_client"]
 class ClientBuilder:
     """Manages isolated Node.js environment and client builds."""
 
-    NODE_VERSION = "20.4.0"
+    NODE_VERSION = "25.5.0"
 
     def __init__(self, project_dir: Path) -> None:
         self.project_dir = Path(project_dir).resolve()

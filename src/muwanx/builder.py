@@ -112,7 +112,7 @@ class Builder:
 
         return MuwanxApp(output_path)
 
-    def _save_json(self, output_path: Path) -> None:
+    def _save_config_json(self, output_path: Path) -> None:
         """Save configuration as JSON.
 
         Creates root assets/config.json with project metadata and structure information.
@@ -134,6 +134,14 @@ class Builder:
                                 (
                                     {
                                         "name": policy.name,
+                                        **(
+                                            {
+                                                "config": f"{name2id(scene.name)}/"
+                                                f"{name2id(policy.name)}.json"
+                                            }
+                                            if getattr(policy, "config_path", None)
+                                            else {}
+                                        ),
                                         **(
                                             {"source": policy.source_path}
                                             if getattr(policy, "source_path", None)
@@ -158,10 +166,19 @@ class Builder:
         with open(root_config_file, "w") as f:
             json.dump(root_config, f, indent=2)
 
+    def _policy_filename(self, name: str) -> str:
+        if not name or name.strip() == "":
+            raise ValueError("Policy name must be a non-empty string.")
+        if "/" in name or "\\" in name:
+            raise ValueError(
+                "Policy name cannot contain path separators ('/' or '\\')."
+            )
+        return name
+
     def _save_web(self, output_path: Path) -> None:
         """Save as a complete web application with hybrid structure.
 
-        Structure:
+        Output Structure:
             dist/
             ├── index.html
             ├── logo.svg
@@ -172,12 +189,26 @@ class Builder:
             │   └── (compiled js/css files)
             └── <project-id>/ (or 'main')
                 ├── index.html
+                ├── logo.svg
+                ├── manifest.json
                 └── assets/
                     ├── scene/
                     │   └── <scene-id>/
-                    └── policy/
-                        └── <policy-id>/
+                    │       └── (scene assets)
+                    └── <scene-id>/
+                        ├── <policy-id>.onnx
+                        └── <policy-id>.json
 
+        New Structure (after mujoco wasm distribution):
+            dist/
+            ...
+            └── <project-id>/ (or 'main')
+                ...
+                └── assets/
+                    └── <scene-id>/
+                        ├── scene.mjb
+                        ├── <policy-id>.onnx
+                        └── <policy-id>.json
         """
         if output_path.exists():
             shutil.rmtree(output_path)
@@ -231,6 +262,7 @@ class Builder:
                     "eslint.config.cjs",
                     ".browserslistrc",
                     ".gitignore",
+                    "README.md",
                 ]
                 for dev_file in dev_files:
                     dev_path = output_path / dev_file
@@ -255,8 +287,7 @@ class Builder:
         assets_dir.mkdir(exist_ok=True)
 
         # Save root configuration (project metadata and structure)
-        self._save_json(output_path)
-        root_config_file = assets_dir / "config.json"
+        self._save_config_json(output_path)
 
         # Save MuJoCo models and ONNX policies per project
         for project in self._projects:
@@ -265,19 +296,10 @@ class Builder:
             project_dir = output_path / project_dir_name
             project_assets_dir = project_dir / "assets"
             scene_dir = project_assets_dir / "scene"
-            policy_dir = project_assets_dir / "policy"
             copied_scene_roots: set[Path] = set()
 
             # Create directories
             project_assets_dir.mkdir(parents=True, exist_ok=True)
-
-            policy_dir.mkdir(exist_ok=True)
-
-            # Copy root config into project assets for standalone hosting.
-            if root_config_file.exists():
-                shutil.copy(
-                    str(root_config_file), str(project_assets_dir / "config.json")
-                )
 
             # Copy index.html to each project directory so direct navigation works
             root_index = output_path / "index.html"
@@ -297,8 +319,8 @@ class Builder:
                 scene_path.mkdir(parents=True, exist_ok=True)
 
                 # Save model as binary .mjb file
-                # scene_binary_path = scene_dir / f"{scene_name}.mjb"
-                # mujoco.mj_saveModel(scene.model, str(scene_binary_path))
+                # scene_path = scene_dir / f"scene.mjb"
+                # mujoco.mj_saveModel(scene.model, str(scene_path))
 
                 # Copy all scene assets
                 scene_source = self._resolve_scene_source(scene)
@@ -328,10 +350,36 @@ class Builder:
                 # Save policies
                 for policy in scene.policies:
                     policy_name = name2id(policy.name)
-                    policy_path = policy_dir / scene_name
+                    policy_path = project_assets_dir / scene_name
                     policy_path.mkdir(parents=True, exist_ok=True)
 
                     onnx.save(policy.model, str(policy_path / f"{policy_name}.onnx"))
+
+                    config_path = getattr(policy, "config_path", None)
+                    if config_path:
+                        config_src = Path(config_path).expanduser()
+                        if not config_src.is_absolute():
+                            config_src = (Path.cwd() / config_src).resolve()
+                        if config_src.exists():
+                            target = policy_path / f"{policy_name}.json"
+                            try:
+                                with open(config_src, "r") as f:
+                                    data = json.load(f)
+                                data.setdefault("onnx", {})
+                                if isinstance(data["onnx"], dict):
+                                    data["onnx"]["path"] = (
+                                        f"{scene_name}/{policy_name}.onnx"
+                                    )
+                                with open(target, "w") as f:
+                                    json.dump(data, f, indent=2)
+                            except Exception:
+                                shutil.copy(str(config_src), str(target))
+                        else:
+                            warnings.warn(
+                                f"Policy config path not found: {config_src}",
+                                category=RuntimeWarning,
+                                stacklevel=2,
+                            )
 
         print(f"✓ Saved muwanx application to: {output_path}")
 

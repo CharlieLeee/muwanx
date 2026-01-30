@@ -16,9 +16,9 @@ interface ControlPanelProps {
   scenes: SelectOption[];
   sceneValue: string | null;
   onSceneChange: (value: string | null) => void;
-  menus: SelectOption[];
-  menuValue: string | null;
-  onMenuChange: (value: string | null) => void;
+  policies: SelectOption[];
+  policyValue: string | null;
+  onPolicyChange: (value: string | null) => void;
 }
 
 function ControlPanel(props: ControlPanelProps) {
@@ -30,13 +30,13 @@ function ControlPanel(props: ControlPanelProps) {
     scenes,
     sceneValue,
     onSceneChange,
-    menus,
-    menuValue,
-    onMenuChange,
+    policies,
+    policyValue,
+    onPolicyChange,
   } = props;
 
   // Only show panel if we have data to display
-  if (!projects.length && !scenes.length && !menus.length) {
+  if (!projects.length && !scenes.length && !policies.length) {
     return null;
   }
 
@@ -131,14 +131,14 @@ function ControlPanel(props: ControlPanelProps) {
             </LabeledInput>
           )}
 
-          {menus.length > 0 && (
+          {policies.length > 0 && (
             <LabeledInput id="policy-select" label="Policy">
               <Select
                 id="policy-select"
                 placeholder="Select policy"
-                data={menus}
-                value={menuValue}
-                onChange={onMenuChange}
+                data={policies}
+                value={policyValue}
+                onChange={onPolicyChange}
                 size="xs"
                 radius="xs"
                 searchable

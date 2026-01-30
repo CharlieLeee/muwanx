@@ -66,6 +66,7 @@ class SceneHandle:
         *,
         metadata: dict[str, Any] | None = None,
         source_path: str | None = None,
+        config_path: str | None = None,
     ) -> PolicyConfig:
         """Add an ONNX policy to this scene.
 
@@ -81,7 +82,11 @@ class SceneHandle:
             metadata = {}
 
         policy_config = PolicyConfig(
-            name=name, model=policy, metadata=metadata, source_path=source_path
+            name=name,
+            model=policy,
+            metadata=metadata,
+            source_path=source_path,
+            config_path=config_path,
         )
         self._config.policies.append(policy_config)
         return policy_config

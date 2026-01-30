@@ -48,39 +48,7 @@ def setup_builder() -> muwanx.Builder:
         name="Muwanx Demo",
     )
 
-    # 1.A. Unitree Go2
-    go2_scene = demo_project.add_scene(
-        model=load_model("assets/scene/muwanx/unitree_go2/scene.xml"),
-        name="Go2",
-    )
-    go2_scene.add_policy(
-        policy=onnx.load("assets/policy/unitree_go2/facet.onnx"),
-        name="Facet",
-    )
-    go2_scene.add_policy(
-        policy=onnx.load("assets/policy/unitree_go2/vanilla.onnx"),
-        name="Vanilla",
-    )
-    go2_scene.add_policy(
-        policy=onnx.load("assets/policy/unitree_go2/robust.onnx"),
-        name="Robust",
-    )
-
-    # 1.B. Unitree Go1
-    go1_scene = demo_project.add_scene(
-        model=load_model("assets/scene/muwanx/unitree_go1/go1.xml"),
-        name="Go1",
-    )
-    go1_scene.add_policy(
-        policy=onnx.load("assets/policy/unitree_go1/himloco.onnx"),
-        name="HiMLoco",
-    )
-    go1_scene.add_policy(
-        policy=onnx.load("assets/policy/unitree_go1/decap.onnx"),
-        name="Decap",
-    )
-
-    # 1.C. Unitree G1
+    # 1.A. Unitree G1
     g1_scene = demo_project.add_scene(
         model=load_model("assets/scene/muwanx/unitree_g1/scene.xml"),
         name="G1",
@@ -88,10 +56,49 @@ def setup_builder() -> muwanx.Builder:
     g1_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_g1/locomotion.onnx"),
         name="Locomotion",
+        config_path="assets/policy/unitree_g1/locomotion.json",
     )
     g1_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_g1/balance.onnx"),
         name="Balance",
+        config_path="assets/policy/unitree_g1/balance.json",
+    )
+
+    # 1.B. Unitree Go2
+    go2_scene = demo_project.add_scene(
+        model=load_model("assets/scene/muwanx/unitree_go2/scene.xml"),
+        name="Go2",
+    )
+    go2_scene.add_policy(
+        policy=onnx.load("assets/policy/unitree_go2/facet.onnx"),
+        name="Facet",
+        config_path="assets/policy/unitree_go2/facet.json",
+    )
+    go2_scene.add_policy(
+        policy=onnx.load("assets/policy/unitree_go2/vanilla.onnx"),
+        name="Vanilla",
+        config_path="assets/policy/unitree_go2/vanilla.json",
+    )
+    go2_scene.add_policy(
+        policy=onnx.load("assets/policy/unitree_go2/robust.onnx"),
+        name="Robust",
+        config_path="assets/policy/unitree_go2/robust.json",
+    )
+
+    # 1.C. Unitree Go1
+    go1_scene = demo_project.add_scene(
+        model=load_model("assets/scene/muwanx/unitree_go1/go1.xml"),
+        name="Go1",
+    )
+    go1_scene.add_policy(
+        policy=onnx.load("assets/policy/unitree_go1/himloco.onnx"),
+        name="HiMLoco",
+        config_path="assets/policy/unitree_go1/himloco.json",
+    )
+    go1_scene.add_policy(
+        policy=onnx.load("assets/policy/unitree_go1/decap.onnx"),
+        name="Decap",
+        config_path="assets/policy/unitree_go1/decap.json",
     )
 
     # ============================
