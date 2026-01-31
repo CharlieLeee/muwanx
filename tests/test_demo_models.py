@@ -1,4 +1,4 @@
-"""Test suite for validating MuJoCo model files used in demo.py.
+"""Test suite for validating MuJoCo model files used in full.py.
 
 This test ensures all XML model files referenced in the demo application
 can be loaded successfully using mujoco.MjModel.from_xml_path().
@@ -14,7 +14,7 @@ import pytest
 DEMO_DIR = Path(__file__).parent.parent / "examples" / "demo"
 
 
-# List of all model paths used in demo.py
+# List of all model paths used in full.py
 MODEL_PATHS = [
     # Muwanx Demo Project
     "assets/scene/muwanx/unitree_go2/scene.xml",
@@ -177,7 +177,7 @@ def test_all_model_paths_are_unique():
 
 
 def test_demo_projects_count():
-    """Test that demo.py creates all expected scenes across all projects.
+    """Test that full.py creates all expected scenes across all projects.
 
     This test validates:
     - All MODEL_PATHS are used to create scenes

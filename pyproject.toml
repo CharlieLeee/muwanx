@@ -69,7 +69,7 @@ examples = [
 "GitHub" = "https://github.com/ttktjmt/muwanx"
 
 [project.scripts]
-demo = "muwanx._cli:demo"
+full = "muwanx._cli:full"
 simple = "muwanx._cli:simple"
 mjlab = "muwanx._cli:mjlab"
 

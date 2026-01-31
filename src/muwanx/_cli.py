@@ -22,9 +22,9 @@ def _run_script(script_path: str) -> None:
     sys.exit(result.returncode)
 
 
-def demo() -> None:
-    """Run examples/demo/demo.py"""
-    _run_script("examples/demo/demo.py")
+def full() -> None:
+    """Run examples/demo/full.py"""
+    _run_script("examples/demo/full.py")
 
 
 def simple() -> None:
