@@ -188,7 +188,7 @@ def test_demo_projects_count():
     sys.path.insert(0, str(demo_dir))
 
     try:
-        from demo import setup_builder  # pyright: ignore[reportMissingImports]  # noqa: I001
+        from full import setup_builder  # pyright: ignore[reportMissingImports]  # noqa: I001
 
         builder = setup_builder()
         projects = builder.get_projects()
