@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { MantineProvider } from '@mantine/core';
 import MuwanxViewer from './components/MuwanxViewer';
-import ControlPanel from './ControlPanel';
+import ControlPanel, { CommandPanel } from './ControlPanel';
 import { theme } from './AppTheme';
 import { LoadingProvider, useLoading } from './contexts/LoadingContext';
 import { Loader } from './components/Loader';
@@ -393,6 +393,9 @@ function AppContent() {
           policyValue={selectedPolicy}
           onPolicyChange={handlePolicyChange}
         />
+        <div style={{ position: 'absolute', top: '1em', left: '1em', zIndex: 10 }}>
+          <CommandPanel enabled={!!policyConfigPath} />
+        </div>
         <MuwanxViewer
           scenePath={scenePath}
           baseUrl={import.meta.env.BASE_URL || '/'}

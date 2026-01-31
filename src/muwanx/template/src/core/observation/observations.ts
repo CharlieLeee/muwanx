@@ -12,6 +12,11 @@ import {
 import type { PolicyState } from '../policy/types';
 import type { TrackingHelper } from '../policy/modules/TrackingPolicy';
 import type { PolicyRunner } from '../policy/PolicyRunner';
+import { getCommandManager } from '../command';
+import {
+  VelocityCommandObservation,
+  VelocityCommandWithOscillatorsObservation,
+} from './CommandObservation';
 
 function getTrackingContext(runner: PolicyRunner): TrackingHelper | null {
   const context = runner.getPolicyModuleContext();
@@ -616,7 +621,10 @@ export class SimpleVelocityCommand extends ObservationBase {
   }
 
   private computeCurrent(): Float32Array {
-    const out = new Float32Array([0.5, 0.0, 0.0]);
+    // Get velocity command from CommandManager
+    const commandManager = getCommandManager();
+    const velocityCmd = commandManager.getVelocityCommand();
+    const out = new Float32Array(velocityCmd);
     if (this.scale) {
       for (let i = 0; i < out.length; i++) {
         out[i] *= this.scale[i] ?? 1.0;
@@ -640,7 +648,10 @@ export class VelocityCommandWithOscillators extends ObservationBase {
 
   compute(): Float32Array {
     const output = new Float32Array(16);
-    const base = new Float32Array([0.5, 0.0, 0.0]);
+    // Get velocity command from CommandManager
+    const commandManager = getCommandManager();
+    const velocityCmd = commandManager.getVelocityCommand();
+    const base = new Float32Array(velocityCmd);
     if (this.scale) {
       for (let i = 0; i < 3; i++) {
         base[i] *= this.scale[i] ?? 1.0;
@@ -686,5 +697,7 @@ export const Observations = {
   JointVelocities,
   SimpleVelocityCommand,
   VelocityCommandWithOscillators,
+  VelocityCommandObservation,
+  VelocityCommandWithOscillatorsObservation,
   ImpedanceCommand,
 };

@@ -23,6 +23,7 @@ import { PolicyStateBuilder } from '../policy/PolicyStateBuilder';
 import type { PolicyConfig } from '../policy/types';
 import { TrackingPolicy } from '../policy/modules/TrackingPolicy';
 import { LocomotionPolicy } from '../policy/modules/LocomotionPolicy';
+import { getCommandManager, DEFAULT_VELOCITY_COMMANDS } from '../command';
 
 type RuntimeOptions = {
   baseUrl?: string;
@@ -180,6 +181,9 @@ export class MuwanxRuntime {
 
     const startTime = performance.now();
 
+    // Initialize CommandManager with default velocity commands
+    this.initializeCommands();
+
     // Check cache first
     if (this.sceneCacheManager.has(scenePath)) {
       await this.restoreFromCache(scenePath);
@@ -214,6 +218,29 @@ export class MuwanxRuntime {
 
     this.running = true;
     void this.startLoop();
+  }
+
+  /**
+   * Initialize the CommandManager with default velocity commands
+   */
+  private initializeCommands(): void {
+    const commandManager = getCommandManager();
+    commandManager.clear();
+    commandManager.registerCommands(DEFAULT_VELOCITY_COMMANDS);
+    commandManager.setResetCallback(() => this.resetSimulation());
+  }
+
+  /**
+   * Public method to reset the simulation state
+   * Can be called from UI components via the CommandManager
+   */
+  resetSimulation(): void {
+    this.resetSimulationState();
+    if (this.policyRunner && this.policyStateBuilder) {
+      const state = this.policyStateBuilder.build();
+      this.policyRunner.reset(state);
+    }
+    console.log('[MuwanxRuntime] Simulation reset');
   }
 
   async loadScene(scenePath: string): Promise<void> {
