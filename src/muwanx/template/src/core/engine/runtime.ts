@@ -23,7 +23,7 @@ import { PolicyStateBuilder } from '../policy/PolicyStateBuilder';
 import type { PolicyConfig } from '../policy/types';
 import { TrackingPolicy } from '../policy/modules/TrackingPolicy';
 import { LocomotionPolicy } from '../policy/modules/LocomotionPolicy';
-import { getCommandManager, DEFAULT_VELOCITY_COMMANDS } from '../command';
+import { getCommandManager, type CommandsConfig } from '../command';
 
 type RuntimeOptions = {
   baseUrl?: string;
@@ -221,13 +221,22 @@ export class MuwanxRuntime {
   }
 
   /**
-   * Initialize the CommandManager with default velocity commands
+   * Initialize the CommandManager (clear and set up reset callback)
+   * Commands are registered from policy config in loadPolicyConfig()
    */
   private initializeCommands(): void {
     const commandManager = getCommandManager();
     commandManager.clear();
-    commandManager.registerCommands(DEFAULT_VELOCITY_COMMANDS);
     commandManager.setResetCallback(() => this.resetSimulation());
+  }
+
+  /**
+   * Initialize commands from policy config
+   */
+  private initializeCommandsFromConfig(commands: CommandsConfig): void {
+    const commandManager = getCommandManager();
+    commandManager.registerCommandsFromConfig(commands);
+    console.log('[MuwanxRuntime] Commands loaded from policy config:', Object.keys(commands));
   }
 
   /**
@@ -381,6 +390,12 @@ export class MuwanxRuntime {
 
     try {
       const { config } = await this.fetchPolicyConfig(policyConfigPath);
+
+      // Initialize commands from policy config if present
+      if (config.commands && typeof config.commands === 'object') {
+        this.initializeCommandsFromConfig(config.commands as CommandsConfig);
+      }
+
       if (!config.policy_joint_names || config.policy_joint_names.length === 0) {
         throw new Error('Policy config missing policy_joint_names.');
       }

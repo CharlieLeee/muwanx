@@ -16,6 +16,7 @@ import { getCommandManager } from '../command';
 import {
   VelocityCommandObservation,
   VelocityCommandWithOscillatorsObservation,
+  GeneratedCommandsObservation,
 } from './CommandObservation';
 
 function getTrackingContext(runner: PolicyRunner): TrackingHelper | null {
@@ -699,5 +700,7 @@ export const Observations = {
   VelocityCommandWithOscillators,
   VelocityCommandObservation,
   VelocityCommandWithOscillatorsObservation,
+  GeneratedCommands: GeneratedCommandsObservation,
+  GeneratedCommandsObservation,
   ImpedanceCommand,
 };

@@ -5,6 +5,8 @@
  * CommandManager. It supports:
  * - Slider controls for continuous values (e.g., velocity commands)
  * - Button controls for actions (e.g., Reset)
+ *
+ * Commands are grouped by their command group name (e.g., "velocity").
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
@@ -76,29 +78,41 @@ function SliderControl({
 }
 
 /**
+ * Format group name for display (e.g., "velocity" -> "Velocity")
+ */
+function formatGroupName(groupName: string): string {
+  return groupName
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+/**
  * CommandPanel - Main panel component
  */
 function CommandPanel({ onReset, enabled = true }: CommandPanelProps) {
   const [commands, setCommands] = useState<CommandDefinition[]>([]);
+  const [commandGroups, setCommandGroups] = useState<string[]>([]);
   const [values, setValues] = useState<Record<string, number>>({});
   const [expanded, { toggle: toggleExpanded }] = useDisclosure(true);
 
   // Initialize commands from CommandManager
   useEffect(() => {
     const commandManager = getCommandManager();
-    const allCommands = commandManager.getCommands();
-    setCommands(allCommands);
-    setValues(commandManager.getValues());
 
-    // Subscribe to command changes
-    const listener = () => {
+    const updateCommands = () => {
       setCommands(commandManager.getCommands());
+      setCommandGroups(commandManager.getCommandGroups());
       setValues(commandManager.getValues());
     };
-    commandManager.addEventListener(listener);
+
+    updateCommands();
+
+    // Subscribe to command changes
+    commandManager.addEventListener(updateCommands);
 
     return () => {
-      commandManager.removeEventListener(listener);
+      commandManager.removeEventListener(updateCommands);
     };
   }, []);
 
@@ -112,19 +126,18 @@ function CommandPanel({ onReset, enabled = true }: CommandPanelProps) {
   // Handle reset button click
   const handleReset = useCallback(() => {
     const commandManager = getCommandManager();
-    commandManager.triggerButton('reset');
+    commandManager.triggerButton('_system:reset');
     if (onReset) {
       onReset();
     }
   }, [onReset]);
 
-  // Get slider commands (excluding reset button)
-  const sliderCommands = commands.filter((cmd) => cmd.config.type === 'slider');
-
-  // Only show panel if we have commands
-  if (commands.length === 0) {
-    return null;
-  }
+  // Get slider commands for a specific group
+  const getSliderCommandsForGroup = (groupName: string): CommandDefinition[] => {
+    return commands.filter(
+      (cmd) => cmd.groupName === groupName && cmd.config.type === 'slider'
+    );
+  };
 
   return (
     <Paper
@@ -181,7 +194,7 @@ function CommandPanel({ onReset, enabled = true }: CommandPanelProps) {
         <Divider mx="xs" />
         <ScrollArea.Autosize mah={400}>
           <Box px="sm" py="xs">
-            {/* Reset Button */}
+            {/* Reset Button - always shown */}
             <Button
               variant="light"
               color="red"
@@ -195,19 +208,29 @@ function CommandPanel({ onReset, enabled = true }: CommandPanelProps) {
               Reset Simulation
             </Button>
 
-            {/* Divider if there are slider commands */}
-            {sliderCommands.length > 0 && <Divider mb="sm" />}
+            {/* Command Groups */}
+            {commandGroups.map((groupName) => {
+              const groupCommands = getSliderCommandsForGroup(groupName);
+              if (groupCommands.length === 0) return null;
 
-            {/* Slider Commands */}
-            {sliderCommands.map((command) => (
-              <SliderControl
-                key={command.id}
-                command={command}
-                value={values[command.id] ?? 0}
-                onChange={handleSliderChange}
-                disabled={!enabled}
-              />
-            ))}
+              return (
+                <React.Fragment key={groupName}>
+                  <Divider mb="xs" />
+                  <Text size="xs" fw={600} c="dimmed" mb="xs">
+                    {formatGroupName(groupName)}
+                  </Text>
+                  {groupCommands.map((command) => (
+                    <SliderControl
+                      key={command.id}
+                      command={command}
+                      value={values[command.id] ?? 0}
+                      onChange={handleSliderChange}
+                      disabled={!enabled}
+                    />
+                  ))}
+                </React.Fragment>
+              );
+            })}
           </Box>
         </ScrollArea.Autosize>
       </Collapse>

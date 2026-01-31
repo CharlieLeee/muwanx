@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 import mujoco
 import onnx
 
-from .policy import PolicyConfig
+from .policy import PolicyConfig, PolicyHandle
 
 if TYPE_CHECKING:
     from .project import ProjectHandle
@@ -67,16 +67,26 @@ class SceneHandle:
         metadata: dict[str, Any] | None = None,
         source_path: str | None = None,
         config_path: str | None = None,
-    ) -> PolicyConfig:
+    ) -> PolicyHandle:
         """Add an ONNX policy to this scene.
 
         Args:
             policy: ONNX model containing the policy.
             name: Name for the policy (displayed in the UI).
             metadata: Optional metadata dictionary for the policy.
+            source_path: Optional source path for the policy ONNX file.
+            config_path: Optional source path for the policy config JSON file.
 
         Returns:
-            PolicyConfig object representing the added policy.
+            PolicyHandle for configuring the policy (adding commands, etc.)
+
+        Example:
+            policy = scene.add_policy(
+                policy=onnx.load("locomotion.onnx"),
+                name="Locomotion",
+                config_path="locomotion.json",
+            )
+            policy.add_velocity_command()
         """
         if metadata is None:
             metadata = {}
@@ -89,7 +99,7 @@ class SceneHandle:
             config_path=config_path,
         )
         self._config.policies.append(policy_config)
-        return policy_config
+        return PolicyHandle(policy_config, self)
 
     def set_metadata(self, key: str, value: Any) -> SceneHandle:
         """Set metadata for this scene.
