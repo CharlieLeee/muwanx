@@ -8,7 +8,6 @@
 
 import { ObservationBase } from './ObservationBase';
 import type { ObservationConfig } from './ObservationBase';
-import type { PolicyState } from '../policy/types';
 import type { PolicyRunner } from '../policy/PolicyRunner';
 import { getCommandManager } from '../command';
 

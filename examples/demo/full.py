@@ -53,16 +53,22 @@ def setup_builder() -> muwanx.Builder:
         model=load_model("assets/scene/muwanx/unitree_g1/scene.xml"),
         name="G1",
     )
-    g1_scene.add_policy(
+    g1_loco_policy = g1_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_g1/locomotion.onnx"),
         name="Locomotion",
         config_path="assets/policy/unitree_g1/locomotion.json",
-    ).add_velocity_command()
+    )
+    g1_loco_policy.add_velocity_command(
+        lin_vel_x=(-1.5, 1.5),
+        lin_vel_y=(-0.5, 0.5),
+        default_lin_vel_x=0.5,
+        default_lin_vel_y=0.0,
+    )
     g1_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_g1/balance.onnx"),
         name="Balance",
         config_path="assets/policy/unitree_g1/balance.json",
-    ).add_velocity_command()
+    )
 
     # 1.B. Unitree Go2
     go2_scene = demo_project.add_scene(

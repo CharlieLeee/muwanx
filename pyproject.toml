@@ -107,7 +107,13 @@ lint.ignore = [
     "PLW2901",  # For loop variable overwritten.
     "PLW0642",  # Reassigned self in instance method.
 ]
-exclude = [ ".nodeenv", "typings" ]
+exclude = [
+    ".nodeenv",
+    "typings",
+    "examples/demo/assets/scene/myosuite",
+    "examples/demo/assets/scene/mujoco_menagerie",
+    "examples/demo/assets/scene/mujoco_playground",
+]
 
 [tool.uv]
 required-environments = [

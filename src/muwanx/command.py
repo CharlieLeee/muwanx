@@ -16,7 +16,7 @@ Example usage:
 """
 
 from dataclasses import dataclass, field
-from typing import Literal, Any
+from typing import Any, Literal
 
 CommandType = Literal["slider", "button"]
 
@@ -32,6 +32,7 @@ class SliderConfig:
         default: Default value when initialized
         step: Step size for the slider (default: 0.01)
     """
+
     name: str
     label: str
     range: tuple[float, float] = (-1.0, 1.0)
@@ -71,6 +72,7 @@ class ButtonConfig:
         name: Internal identifier (e.g., "reset")
         label: Display label shown in the UI (e.g., "Reset Simulation")
     """
+
     name: str
     label: str
 
@@ -104,14 +106,13 @@ class CommandGroupConfig:
               This name is used by observations to retrieve command values.
         inputs: List of command input configurations (sliders, buttons, etc.)
     """
+
     name: str
     inputs: list[CommandInput] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary for JSON export."""
-        return {
-            "inputs": [inp.to_dict() for inp in self.inputs]
-        }
+        return {"inputs": [inp.to_dict() for inp in self.inputs]}
 
 
 def velocity_command(
@@ -162,5 +163,5 @@ def velocity_command(
                 default=default_ang_vel_z,
                 step=0.05,
             ),
-        ]
+        ],
     )

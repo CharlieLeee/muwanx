@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 import onnx
 
-from .command import CommandGroupConfig, CommandInput, SliderConfig, velocity_command
+from .command import CommandGroupConfig, CommandInput, velocity_command
 
 if TYPE_CHECKING:
     from .scene import SceneHandle
