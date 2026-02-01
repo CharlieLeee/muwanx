@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Box, Button, Divider, Menu, Select, Slider, Text } from '@mantine/core';
 import { IconChevronDown, IconRefresh, IconRobot } from '@tabler/icons-react';
 import FloatingPanel from './FloatingPanel';
 import { LabeledInput } from './LabeledInput';
+import { CommandSection } from './CommandSection';
 import {
   getCommandManager,
   type CommandDefinition,
@@ -287,13 +288,11 @@ function ControlPanel(props: ControlPanelProps) {
                 if (groupCommands.length === 0) return null;
 
                 return (
-                  <React.Fragment key={groupName}>
-                    <Divider my="xs" mx="xs" />
-                    <Box px="xs" pb="0.25em">
-                      <Text size="xs" fw={600} c="dimmed">
-                        {formatGroupName(groupName)}
-                      </Text>
-                    </Box>
+                  <CommandSection
+                    key={groupName}
+                    label={formatGroupName(groupName)}
+                    expandByDefault={true}
+                  >
                     {groupCommands.map((command) => (
                       <SliderControl
                         key={command.id}
@@ -303,7 +302,7 @@ function ControlPanel(props: ControlPanelProps) {
                         disabled={!commandsEnabled}
                       />
                     ))}
-                  </React.Fragment>
+                  </CommandSection>
                 );
               })}
             </>
