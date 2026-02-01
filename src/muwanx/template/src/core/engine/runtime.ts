@@ -375,6 +375,11 @@ export class MuwanxRuntime {
     this.onnxInputDict = null;
     this.onnxInferencing = false;
 
+    // Clear existing commands when switching policies
+    const commandManager = getCommandManager();
+    commandManager.clear();
+    commandManager.setResetCallback(() => this.resetSimulation());
+
     if (!policyConfigPath) {
       return;
     }
