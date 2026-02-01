@@ -42,7 +42,7 @@ function formatGroupName(groupName: string): string {
 }
 
 /**
- * SliderControl - Renders a slider for a slider command using LabeledInput style
+ * SliderControl - Renders a slider for a slider command with horizontal layout
  */
 function SliderControl({
   command,
@@ -58,30 +58,28 @@ function SliderControl({
   const config = command.config as SliderCommandConfig;
 
   return (
-    <Box pb="0.5em" px="xs">
-      <Box
+    <Box
+      pb="0.5em"
+      px="xs"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75em',
+      }}
+    >
+      <Text
+        c="dimmed"
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '0.25rem',
+          fontSize: '0.875em',
+          fontWeight: 450,
+          lineHeight: '1.375em',
+          letterSpacing: '-0.75px',
+          flexShrink: 0,
+          width: '5.5em',
         }}
       >
-        <Text
-          c="dimmed"
-          style={{
-            fontSize: '0.875em',
-            fontWeight: 450,
-            lineHeight: '1.375em',
-            letterSpacing: '-0.75px',
-          }}
-        >
-          {config.label}
-        </Text>
-        <Text size="xs" fw={500} style={{ minWidth: '3em', textAlign: 'right' }}>
-          {value.toFixed(2)}
-        </Text>
-      </Box>
+        {config.label}
+      </Text>
       <Slider
         value={value}
         onChange={(val) => onChange(command.id, val)}
@@ -90,8 +88,9 @@ function SliderControl({
         step={config.step}
         size="xs"
         disabled={disabled}
+        style={{ flex: 1 }}
         styles={{
-          root: { padding: '0 0.25rem' },
+          root: { padding: '0' },
           track: { height: 4 },
           thumb: { width: 12, height: 12 },
         }}
