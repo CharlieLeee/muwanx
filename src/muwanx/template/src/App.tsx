@@ -392,6 +392,7 @@ function AppContent() {
           policies={policyOptions}
           policyValue={selectedPolicy}
           onPolicyChange={handlePolicyChange}
+          commandsEnabled={!!policyConfigPath}
         />
         <MuwanxViewer
           scenePath={scenePath}
