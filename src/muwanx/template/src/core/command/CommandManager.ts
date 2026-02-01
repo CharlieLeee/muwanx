@@ -50,7 +50,7 @@ export interface CommandDefinition {
   config: CommandInputConfig;
 }
 
-export type CommandEventType = 'change' | 'reset' | 'button' | 'group_registered';
+export type CommandEventType = 'change' | 'reset' | 'button' | 'group_registered' | 'clear';
 
 export interface CommandEvent {
   type: CommandEventType;
@@ -356,6 +356,8 @@ export class CommandManager {
       this.commands.set('_system:reset', resetCommand);
       this.commandGroups.set('_system', ['_system:reset']);
     }
+    // Notify listeners that commands have been cleared
+    this.emit({ type: 'clear', commandId: '' });
   }
 
   /**
