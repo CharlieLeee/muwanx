@@ -64,7 +64,6 @@ function SliderControl({
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '0.75em',
       }}
     >
       <Text
@@ -74,27 +73,28 @@ function SliderControl({
           fontWeight: 450,
           lineHeight: '1.375em',
           letterSpacing: '-0.75px',
+          width: '50%',
           flexShrink: 0,
-          width: '5.5em',
         }}
       >
         {config.label}
       </Text>
-      <Slider
-        value={value}
-        onChange={(val) => onChange(command.id, val)}
-        min={config.min}
-        max={config.max}
-        step={config.step}
-        size="xs"
-        disabled={disabled}
-        style={{ flex: 1 }}
-        styles={{
-          root: { padding: '0' },
-          track: { height: 4 },
-          thumb: { width: 12, height: 12 },
-        }}
-      />
+      <Box style={{ width: '50%' }}>
+        <Slider
+          value={value}
+          onChange={(val) => onChange(command.id, val)}
+          min={config.min}
+          max={config.max}
+          step={config.step}
+          size="xs"
+          disabled={disabled}
+          styles={{
+            root: { padding: '0' },
+            track: { height: 4 },
+            thumb: { width: 12, height: 12 },
+          }}
+        />
+      </Box>
     </Box>
   );
 }
@@ -279,31 +279,35 @@ function ControlPanel(props: ControlPanelProps) {
             </LabeledInput>
           )}
 
-          {/* Command Groups */}
-          {commandGroups.map((groupName) => {
-            const groupCommands = getSliderCommandsForGroup(groupName);
-            if (groupCommands.length === 0) return null;
+          {/* Command Groups - only show if there are commands */}
+          {commandGroups.length > 0 && commands.filter(cmd => cmd.config.type === 'slider').length > 0 && (
+            <>
+              {commandGroups.map((groupName) => {
+                const groupCommands = getSliderCommandsForGroup(groupName);
+                if (groupCommands.length === 0) return null;
 
-            return (
-              <React.Fragment key={groupName}>
-                <Divider my="xs" mx="xs" />
-                <Box px="xs" pb="0.25em">
-                  <Text size="xs" fw={600} c="dimmed">
-                    {formatGroupName(groupName)}
-                  </Text>
-                </Box>
-                {groupCommands.map((command) => (
-                  <SliderControl
-                    key={command.id}
-                    command={command}
-                    value={values[command.id] ?? 0}
-                    onChange={handleSliderChange}
-                    disabled={!commandsEnabled}
-                  />
-                ))}
-              </React.Fragment>
-            );
-          })}
+                return (
+                  <React.Fragment key={groupName}>
+                    <Divider my="xs" mx="xs" />
+                    <Box px="xs" pb="0.25em">
+                      <Text size="xs" fw={600} c="dimmed">
+                        {formatGroupName(groupName)}
+                      </Text>
+                    </Box>
+                    {groupCommands.map((command) => (
+                      <SliderControl
+                        key={command.id}
+                        command={command}
+                        value={values[command.id] ?? 0}
+                        onChange={handleSliderChange}
+                        disabled={!commandsEnabled}
+                      />
+                    ))}
+                  </React.Fragment>
+                );
+              })}
+            </>
+          )}
 
           {/* Reset Button - always at bottom */}
           <Divider my="xs" mx="xs" />
