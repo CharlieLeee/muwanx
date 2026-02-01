@@ -1,0 +1,16 @@
+export {
+  CommandManager,
+  getCommandManager,
+  resetCommandManager,
+  DEFAULT_VELOCITY_COMMANDS,
+  type CommandType,
+  type CommandInputConfig,
+  type SliderCommandConfig,
+  type ButtonCommandConfig,
+  type CommandGroupConfig,
+  type CommandsConfig,
+  type CommandDefinition,
+  type CommandEvent,
+  type CommandEventType,
+  type CommandEventListener,
+} from './CommandManager';

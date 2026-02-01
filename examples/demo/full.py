@@ -53,10 +53,16 @@ def setup_builder() -> muwanx.Builder:
         model=load_model("assets/scene/muwanx/unitree_g1/scene.xml"),
         name="G1",
     )
-    g1_scene.add_policy(
+    g1_loco_policy = g1_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_g1/locomotion.onnx"),
         name="Locomotion",
         config_path="assets/policy/unitree_g1/locomotion.json",
+    )
+    g1_loco_policy.add_velocity_command(
+        lin_vel_x=(-1.5, 1.5),
+        lin_vel_y=(-0.5, 0.5),
+        default_lin_vel_x=0.5,
+        default_lin_vel_y=0.0,
     )
     g1_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_g1/balance.onnx"),
@@ -73,17 +79,17 @@ def setup_builder() -> muwanx.Builder:
         policy=onnx.load("assets/policy/unitree_go2/facet.onnx"),
         name="Facet",
         config_path="assets/policy/unitree_go2/facet.json",
-    )
+    ).add_velocity_command()
     go2_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_go2/vanilla.onnx"),
         name="Vanilla",
         config_path="assets/policy/unitree_go2/vanilla.json",
-    )
+    ).add_velocity_command()
     go2_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_go2/robust.onnx"),
         name="Robust",
         config_path="assets/policy/unitree_go2/robust.json",
-    )
+    ).add_velocity_command()
 
     # 1.C. Unitree Go1
     go1_scene = demo_project.add_scene(
@@ -94,12 +100,12 @@ def setup_builder() -> muwanx.Builder:
         policy=onnx.load("assets/policy/unitree_go1/himloco.onnx"),
         name="HiMLoco",
         config_path="assets/policy/unitree_go1/himloco.json",
-    )
+    ).add_velocity_command()
     go1_scene.add_policy(
         policy=onnx.load("assets/policy/unitree_go1/decap.onnx"),
         name="Decap",
         config_path="assets/policy/unitree_go1/decap.json",
-    )
+    ).add_velocity_command()
 
     # ============================
     # 2. MuJoCo Menagerie Project

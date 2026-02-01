@@ -1,7 +1,14 @@
-import { Box, Menu, Select } from '@mantine/core';
-import { IconChevronDown, IconRobot } from '@tabler/icons-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Box, Button, Divider, Menu, Select, Slider, Text } from '@mantine/core';
+import { IconChevronDown, IconRefresh, IconRobot } from '@tabler/icons-react';
 import FloatingPanel from './FloatingPanel';
 import { LabeledInput } from './LabeledInput';
+import { CommandSection } from './CommandSection';
+import {
+  getCommandManager,
+  type CommandDefinition,
+  type SliderCommandConfig,
+} from '../core/command';
 
 export interface SelectOption {
   value: string;
@@ -19,6 +26,78 @@ interface ControlPanelProps {
   policies: SelectOption[];
   policyValue: string | null;
   onPolicyChange: (value: string | null) => void;
+  /** Whether command controls are enabled */
+  commandsEnabled?: boolean;
+  /** Callback when reset button is pressed */
+  onReset?: () => void;
+}
+
+/**
+ * Format group name for display (e.g., "velocity" -> "Velocity")
+ */
+function formatGroupName(groupName: string): string {
+  return groupName
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+/**
+ * SliderControl - Renders a slider for a slider command with horizontal layout
+ */
+function SliderControl({
+  command,
+  value,
+  onChange,
+  disabled,
+}: {
+  command: CommandDefinition;
+  value: number;
+  onChange: (id: string, value: number) => void;
+  disabled?: boolean;
+}) {
+  const config = command.config as SliderCommandConfig;
+
+  return (
+    <Box
+      pb="0.5em"
+      px="xs"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+      }}
+    >
+      <Text
+        c="dimmed"
+        style={{
+          fontSize: '0.875em',
+          fontWeight: 450,
+          lineHeight: '1.375em',
+          letterSpacing: '-0.75px',
+          width: '50%',
+          flexShrink: 0,
+        }}
+      >
+        {config.label}
+      </Text>
+      <Box style={{ width: '50%' }}>
+        <Slider
+          value={value}
+          onChange={(val) => onChange(command.id, val)}
+          min={config.min}
+          max={config.max}
+          step={config.step}
+          size="xs"
+          disabled={disabled}
+          styles={{
+            root: { padding: '0' },
+            track: { height: 4 },
+            thumb: { width: 12, height: 12 },
+          }}
+        />
+      </Box>
+    </Box>
+  );
 }
 
 function ControlPanel(props: ControlPanelProps) {
@@ -33,7 +112,57 @@ function ControlPanel(props: ControlPanelProps) {
     policies,
     policyValue,
     onPolicyChange,
+    commandsEnabled = false,
+    onReset,
   } = props;
+
+  // Command state
+  const [commands, setCommands] = useState<CommandDefinition[]>([]);
+  const [commandGroups, setCommandGroups] = useState<string[]>([]);
+  const [values, setValues] = useState<Record<string, number>>({});
+
+  // Initialize commands from CommandManager
+  useEffect(() => {
+    const commandManager = getCommandManager();
+
+    const updateCommands = () => {
+      setCommands(commandManager.getCommands());
+      setCommandGroups(commandManager.getCommandGroups());
+      setValues(commandManager.getValues());
+    };
+
+    updateCommands();
+
+    // Subscribe to command changes
+    commandManager.addEventListener(updateCommands);
+
+    return () => {
+      commandManager.removeEventListener(updateCommands);
+    };
+  }, []);
+
+  // Handle slider value changes
+  const handleSliderChange = useCallback((id: string, value: number) => {
+    const commandManager = getCommandManager();
+    commandManager.setValue(id, value);
+    setValues((prev) => ({ ...prev, [id]: value }));
+  }, []);
+
+  // Handle reset button click
+  const handleReset = useCallback(() => {
+    const commandManager = getCommandManager();
+    commandManager.triggerButton('_system:reset');
+    if (onReset) {
+      onReset();
+    }
+  }, [onReset]);
+
+  // Get slider commands for a specific group
+  const getSliderCommandsForGroup = (groupName: string): CommandDefinition[] => {
+    return commands.filter(
+      (cmd) => cmd.groupName === groupName && cmd.config.type === 'slider'
+    );
+  };
 
   // Only show panel if we have data to display
   if (!projects.length && !scenes.length && !policies.length) {
@@ -150,6 +279,50 @@ function ControlPanel(props: ControlPanelProps) {
               />
             </LabeledInput>
           )}
+
+          {/* Command Groups - only show if there are commands */}
+          {commandGroups.length > 0 && commands.filter(cmd => cmd.config.type === 'slider').length > 0 && (
+            <>
+              {commandGroups.map((groupName) => {
+                const groupCommands = getSliderCommandsForGroup(groupName);
+                if (groupCommands.length === 0) return null;
+
+                return (
+                  <CommandSection
+                    key={groupName}
+                    label={formatGroupName(groupName)}
+                    expandByDefault={true}
+                  >
+                    {groupCommands.map((command) => (
+                      <SliderControl
+                        key={command.id}
+                        command={command}
+                        value={values[command.id] ?? 0}
+                        onChange={handleSliderChange}
+                        disabled={!commandsEnabled}
+                      />
+                    ))}
+                  </CommandSection>
+                );
+              })}
+            </>
+          )}
+
+          {/* Reset Button - always at bottom */}
+          <Divider my="xs" mx="xs" />
+          <Box px="xs" pb="xs">
+            <Button
+              variant="light"
+              color="red"
+              size="xs"
+              fullWidth
+              leftSection={<IconRefresh size={14} />}
+              onClick={handleReset}
+              disabled={!commandsEnabled}
+            >
+              Reset
+            </Button>
+          </Box>
         </Box>
       </FloatingPanel.Contents>
     </FloatingPanel>

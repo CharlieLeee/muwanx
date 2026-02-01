@@ -23,6 +23,7 @@ import { PolicyStateBuilder } from '../policy/PolicyStateBuilder';
 import type { PolicyConfig } from '../policy/types';
 import { TrackingPolicy } from '../policy/modules/TrackingPolicy';
 import { LocomotionPolicy } from '../policy/modules/LocomotionPolicy';
+import { getCommandManager, type CommandsConfig } from '../command';
 
 type RuntimeOptions = {
   baseUrl?: string;
@@ -180,6 +181,9 @@ export class MuwanxRuntime {
 
     const startTime = performance.now();
 
+    // Initialize CommandManager with default velocity commands
+    this.initializeCommands();
+
     // Check cache first
     if (this.sceneCacheManager.has(scenePath)) {
       await this.restoreFromCache(scenePath);
@@ -214,6 +218,38 @@ export class MuwanxRuntime {
 
     this.running = true;
     void this.startLoop();
+  }
+
+  /**
+   * Initialize the CommandManager (clear and set up reset callback)
+   * Commands are registered from policy config in loadPolicyConfig()
+   */
+  private initializeCommands(): void {
+    const commandManager = getCommandManager();
+    commandManager.clear();
+    commandManager.setResetCallback(() => this.resetSimulation());
+  }
+
+  /**
+   * Initialize commands from policy config
+   */
+  private initializeCommandsFromConfig(commands: CommandsConfig): void {
+    const commandManager = getCommandManager();
+    commandManager.registerCommandsFromConfig(commands);
+    console.log('[MuwanxRuntime] Commands loaded from policy config:', Object.keys(commands));
+  }
+
+  /**
+   * Public method to reset the simulation state
+   * Can be called from UI components via the CommandManager
+   */
+  resetSimulation(): void {
+    this.resetSimulationState();
+    if (this.policyRunner && this.policyStateBuilder) {
+      const state = this.policyStateBuilder.build();
+      this.policyRunner.reset(state);
+    }
+    console.log('[MuwanxRuntime] Simulation reset');
   }
 
   async loadScene(scenePath: string): Promise<void> {
@@ -339,6 +375,11 @@ export class MuwanxRuntime {
     this.onnxInputDict = null;
     this.onnxInferencing = false;
 
+    // Clear existing commands when switching policies
+    const commandManager = getCommandManager();
+    commandManager.clear();
+    commandManager.setResetCallback(() => this.resetSimulation());
+
     if (!policyConfigPath) {
       return;
     }
@@ -354,6 +395,12 @@ export class MuwanxRuntime {
 
     try {
       const { config } = await this.fetchPolicyConfig(policyConfigPath);
+
+      // Initialize commands from policy config if present
+      if (config.commands && typeof config.commands === 'object') {
+        this.initializeCommandsFromConfig(config.commands as CommandsConfig);
+      }
+
       if (!config.policy_joint_names || config.policy_joint_names.length === 0) {
         throw new Error('Policy config missing policy_joint_names.');
       }

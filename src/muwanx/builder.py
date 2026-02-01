@@ -140,6 +140,7 @@ class Builder:
                                                 f"{name2id(policy.name)}.json"
                                             }
                                             if getattr(policy, "config_path", None)
+                                            or getattr(policy, "commands", None)
                                             else {}
                                         ),
                                         **(
@@ -370,6 +371,12 @@ class Builder:
                                     data["onnx"]["path"] = (
                                         f"{scene_name}/{policy_name}.onnx"
                                     )
+                                # Serialize commands if any are defined
+                                if policy.commands:
+                                    data["commands"] = {
+                                        name: cmd.to_dict()
+                                        for name, cmd in policy.commands.items()
+                                    }
                                 with open(target, "w") as f:
                                     json.dump(data, f, indent=2)
                             except Exception:
@@ -380,6 +387,18 @@ class Builder:
                                 category=RuntimeWarning,
                                 stacklevel=2,
                             )
+                    elif policy.commands:
+                        # No config_path but commands defined - create config with commands only
+                        target = policy_path / f"{policy_name}.json"
+                        data = {
+                            "onnx": {"path": f"{scene_name}/{policy_name}.onnx"},
+                            "commands": {
+                                name: cmd.to_dict()
+                                for name, cmd in policy.commands.items()
+                            },
+                        }
+                        with open(target, "w") as f:
+                            json.dump(data, f, indent=2)
 
         print(f"✓ Saved muwanx application to: {output_path}")
 

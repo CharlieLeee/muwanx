@@ -60,6 +60,11 @@ def setup_builder() -> muwanx.Builder:
         policy=onnx.load("assets/policy/unitree_g1/locomotion.onnx"),
         name="Locomotion",
         config_path="assets/policy/unitree_g1/locomotion.json",
+    ).add_velocity_command(
+        lin_vel_x=(-2.0, 2.0),
+        lin_vel_y=(-0.5, 0.5),
+        default_lin_vel_x=0.5,
+        default_lin_vel_y=0.0,
     )
 
     return builder
