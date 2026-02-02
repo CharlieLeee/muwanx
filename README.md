@@ -59,6 +59,11 @@ or with `npm`:
 npm install muwanx
 ```
 
+You can run the demo using the `uv` command with the python package:
+```sh
+uv run full
+```
+
 For detailed installation instructions, visit the [documentation](https://muwanx.readthedocs.io).
 
 
