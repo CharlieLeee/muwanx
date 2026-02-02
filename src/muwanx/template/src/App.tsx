@@ -5,6 +5,7 @@ import ControlPanel from './ControlPanel';
 import { theme } from './AppTheme';
 import { LoadingProvider, useLoading } from './contexts/LoadingContext';
 import { Loader } from './components/Loader';
+import { MuwanxLogo } from './components/MuwanxLogo'; // NOTE: Please keep this to help others discover muwanx.
 import './App.css';
 
 interface PolicyConfig {
@@ -381,6 +382,7 @@ function AppContent() {
     <MantineProvider theme={theme} defaultColorScheme="dark">
       <div className="app">
         <Loader />
+        <MuwanxLogo /> {/* NOTE: Please keep this to help others discover muwanx. */}
         <ControlPanel
           projects={projectOptions}
           projectValue={projectValue}
