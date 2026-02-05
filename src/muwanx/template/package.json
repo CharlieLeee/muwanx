@@ -1,7 +1,7 @@
 {
   "name": "muwanx",
   "type": "module",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "repository": {
     "type": "git",
     "url": "https://github.com/ttktjmt/muwanx.git"
@@ -25,7 +25,6 @@
     "@mantine/hooks": "^8.3.0",
     "@mantine/vanilla-extract": "^8.3.0",
     "@tabler/icons-react": "^3.0.0",
-    "mujoco-js": "^0.0.7",
     "onnxruntime-web": "^1.21.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

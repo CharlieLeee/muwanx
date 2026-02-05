@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import type { MjData, MjModel } from 'mujoco-js';
-import type { Mujoco } from '../../types/mujoco';
+import type { MainModule, MjData, MjModel, MjVFS } from 'mujoco';
 import { mujocoAssetCollector } from '../utils/mujocoAssetCollector';
 import { normalizeScenePath } from '../utils/pathUtils';
 import { createLights } from './lights';
@@ -33,7 +32,7 @@ function isInlineXML(input: string): boolean {
   return trimmed.startsWith('<mujoco') || trimmed.startsWith('<?xml');
 }
 
-function ensureWorkingDirectories(mujoco: Mujoco, segments: string[]): void {
+function ensureWorkingDirectories(mujoco: MainModule, segments: string[]): void {
   if (!segments.length) {
     return;
   }
@@ -68,7 +67,7 @@ function normalizePathSegments(path: string): string {
 }
 
 export async function loadSceneFromURL(
-  mujoco: Mujoco,
+  mujoco: MainModule,
   filename: string,
   parent: {
     mjModel: MjModel | null;
@@ -128,17 +127,21 @@ export async function loadSceneFromURL(
 
   let newModel: MjModel | null = null;
   try {
-    // Note: Binary format (.mjb) not directly supported, use XML
     if (modelPath.toLowerCase().endsWith('.mjb')) {
-      throw new Error('Binary model format (.mjb) requires XML conversion');
+      // Load binary model using mj_loadBinary with MjVFS
+      const binaryData = mujoco.FS.readFile(modelPath) as Uint8Array;
+      const vfs: MjVFS = new mujoco.MjVFS();
+      vfs.addBuffer(modelPath, binaryData);
+      newModel = mujoco.MjModel.mj_loadBinary(modelPath, vfs);
+    } else {
+      newModel = mujoco.MjModel.mj_loadXML(modelPath);
     }
-    newModel = mujoco.MjModel.loadFromXML(modelPath);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to load MjModel from ${modelPath}: ${message}`);
   }
   if (!newModel) {
-    throw new Error(`MjModel.loadFromXML returned null for ${modelPath}`);
+    throw new Error(`MjModel loading returned null for ${modelPath}`);
   }
 
   let newData: MjData | null = null;
@@ -542,7 +545,7 @@ export function getQuaternion(
 }
 
 export async function downloadExampleScenesFolder(
-  mujoco: Mujoco,
+  mujoco: MainModule,
   scenePath: string,
   baseUrl: string = DEFAULT_BASE_URL
 ): Promise<void> {

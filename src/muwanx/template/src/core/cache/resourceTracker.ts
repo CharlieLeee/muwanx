@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import type { MjData, MjModel } from 'mujoco-js';
-import type { Mujoco } from '../../types/mujoco';
+import type { MainModule, MjData, MjModel } from 'mujoco';
 
 /**
  * Snapshot of resources loaded for a scene
@@ -26,7 +25,7 @@ export class SceneResourceTracker {
   /**
    * Start tracking FS writes
    */
-  public startTracking(mujoco: Mujoco): void {
+  public startTracking(mujoco: MainModule): void {
     if (this.isTracking) {
       console.warn('[ResourceTracker] Already tracking FS writes');
       return;
@@ -60,7 +59,7 @@ export class SceneResourceTracker {
   /**
    * Stop tracking and return captured files
    */
-  public stopTracking(mujoco: Mujoco): string[] {
+  public stopTracking(mujoco: MainModule): string[] {
     if (!this.isTracking) {
       return [];
     }

@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import type { MjData, MjModel } from 'mujoco-js';
-import type { Mujoco } from '../../types/mujoco';
+import type { MainModule, MjData, MjModel } from 'mujoco';
 import { clearSceneDownloadCache } from '../scene/scene';
 import { normalizeScenePath } from '../utils/pathUtils';
 
@@ -60,9 +59,9 @@ export class SceneCacheManager {
   private readonly MAX_CACHE_SIZE = 5;
   private cache: Map<string, CachedSceneResources>;
   private metrics: CacheMetrics;
-  private mujoco: Mujoco;
+  private mujoco: MainModule;
 
-  private constructor(mujoco: Mujoco) {
+  private constructor(mujoco: MainModule) {
     this.mujoco = mujoco;
     this.cache = new Map();
     this.metrics = {
@@ -79,7 +78,7 @@ export class SceneCacheManager {
   /**
    * Get singleton instance
    */
-  public static getInstance(mujoco: Mujoco): SceneCacheManager {
+  public static getInstance(mujoco: MainModule): SceneCacheManager {
     if (!SceneCacheManager.instance) {
       SceneCacheManager.instance = new SceneCacheManager(mujoco);
       console.log('[SceneCache] Created new cache manager singleton');

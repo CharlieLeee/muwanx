@@ -19,7 +19,6 @@ from . import __version__
 from ._build_client import ClientBuilder
 from .app import MuwanxApp
 from .project import ProjectConfig, ProjectHandle
-from .scene import SceneConfig
 from .utils import name2id
 
 
@@ -129,7 +128,7 @@ class Builder:
                         {
                             "name": scene.name,
                             # "path": scene.path,
-                            "path": self._get_scene_web_path(scene),
+                            "path": f"{name2id(scene.name)}/scene.mjb",
                             "policies": [
                                 (
                                     {
@@ -251,6 +250,15 @@ class Builder:
                 # Remove the now-empty dist directory
                 built_dist.rmdir()
 
+                # Move mujoco files from mujoco/ to assets/
+                mujoco_dir = output_path / "mujoco"
+                mujoco_assets_dest = output_path / "assets"
+                if mujoco_dir.exists() and mujoco_dir.is_dir():
+                    for mujoco_file in mujoco_dir.iterdir():
+                        dest = mujoco_assets_dest / mujoco_file.name
+                        shutil.move(str(mujoco_file), str(dest))
+                    mujoco_dir.rmdir()
+
                 # Clean up development files that shouldn't be in production
                 dev_files = [
                     "src",
@@ -296,8 +304,6 @@ class Builder:
             project_dir_name = project.id if project.id else "main"
             project_dir = output_path / project_dir_name
             project_assets_dir = project_dir / "assets"
-            scene_dir = project_assets_dir / "scene"
-            copied_scene_roots: set[Path] = set()
 
             # Create directories
             project_assets_dir.mkdir(parents=True, exist_ok=True)
@@ -315,46 +321,17 @@ class Builder:
 
             # Save scenes and policies
             for scene in project.scenes:
-                scene_name = name2id(scene.name)
-                scene_path = scene_dir / scene_name
-                scene_path.mkdir(parents=True, exist_ok=True)
-
-                # Save model as binary .mjb file
-                # scene_path = scene_dir / f"scene.mjb"
-                # mujoco.mj_saveModel(scene.model, str(scene_path))
-
-                # Copy all scene assets
-                scene_source = self._resolve_scene_source(scene)
-                if scene_source:
-                    source_path, rel_scene_path, copy_root, copy_target = scene_source
-                    if copy_root and copy_target:
-                        if copy_root not in copied_scene_roots:
-                            shutil.copytree(
-                                copy_root,
-                                project_assets_dir / copy_target,
-                                dirs_exist_ok=True,
-                            )
-                            copied_scene_roots.add(copy_root)
-                    if rel_scene_path:
-                        target_path = project_assets_dir / rel_scene_path
-                        target_path.parent.mkdir(parents=True, exist_ok=True)
-                        if (
-                            source_path
-                            and source_path.exists()
-                            and not target_path.exists()
-                        ):
-                            shutil.copy(str(source_path), str(target_path))
-                else:
-                    scene_xml_path = str(scene_path / "scene.xml")
-                    mujoco.mj_saveLastXML(scene_xml_path, scene.model)
+                scene_id = name2id(scene.name)
+                scene_dir = project_assets_dir / scene_id
+                scene_dir.mkdir(parents=True, exist_ok=True)
+                scene_path = scene_dir / "scene.mjb"
+                mujoco.mj_saveModel(scene.model, str(scene_path))
 
                 # Save policies
                 for policy in scene.policies:
-                    policy_name = name2id(policy.name)
-                    policy_path = project_assets_dir / scene_name
-                    policy_path.mkdir(parents=True, exist_ok=True)
-
-                    onnx.save(policy.model, str(policy_path / f"{policy_name}.onnx"))
+                    policy_id = name2id(policy.name)
+                    policy_path = scene_dir / f"{policy_id}.onnx"
+                    onnx.save(policy.model, str(policy_path))
 
                     config_path = getattr(policy, "config_path", None)
                     if config_path:
@@ -362,15 +339,13 @@ class Builder:
                         if not config_src.is_absolute():
                             config_src = (Path.cwd() / config_src).resolve()
                         if config_src.exists():
-                            target = policy_path / f"{policy_name}.json"
+                            target = policy_path.with_suffix(".json")
                             try:
                                 with open(config_src, "r") as f:
                                     data = json.load(f)
                                 data.setdefault("onnx", {})
                                 if isinstance(data["onnx"], dict):
-                                    data["onnx"]["path"] = (
-                                        f"{scene_name}/{policy_name}.onnx"
-                                    )
+                                    data["onnx"]["path"] = str(policy_path)
                                 # Serialize commands if any are defined
                                 if policy.commands:
                                     data["commands"] = {
@@ -389,9 +364,9 @@ class Builder:
                             )
                     elif policy.commands:
                         # No config_path but commands defined - create config with commands only
-                        target = policy_path / f"{policy_name}.json"
+                        target = policy_path.with_suffix(".json")
                         data = {
-                            "onnx": {"path": f"{scene_name}/{policy_name}.onnx"},
+                            "onnx": {"path": str(policy_path)},
                             "commands": {
                                 name: cmd.to_dict()
                                 for name, cmd in policy.commands.items()
@@ -402,47 +377,38 @@ class Builder:
 
         print(f"✓ Saved muwanx application to: {output_path}")
 
-    def _resolve_scene_source(
-        self, scene: SceneConfig
-    ) -> tuple[Path | None, Path | None, Path | None, Path | None] | None:
-        if not scene.source_path:
-            return None
+    # def _resolve_scene_source(
+    #     self, scene: SceneConfig
+    # ) -> tuple[Path | None, Path | None, Path | None, Path | None] | None:
+    #     if not scene.source_path:
+    #         return None
 
-        source_path = Path(scene.source_path).expanduser()
-        if not source_path.is_absolute():
-            source_path = (Path.cwd() / source_path).resolve()
+    #     source_path = Path(scene.source_path).expanduser()
+    #     if not source_path.is_absolute():
+    #         source_path = (Path.cwd() / source_path).resolve()
 
-        if not source_path.exists():
-            warnings.warn(
-                f"Scene source path not found: {source_path}",
-                category=RuntimeWarning,
-                stacklevel=2,
-            )
-            return None
+    #     if not source_path.exists():
+    #         warnings.warn(
+    #             f"Scene source path not found: {source_path}",
+    #             category=RuntimeWarning,
+    #             stacklevel=2,
+    #         )
+    #         return None
 
-        parts = source_path.parts
-        for idx in range(len(parts) - 1):
-            if parts[idx] == "assets" and parts[idx + 1] == "scene":
-                assets_scene_root = Path(*parts[: idx + 2])
-                rel_under = Path(*parts[idx + 2 :])
-                if not rel_under.parts:
-                    break
-                library_root = assets_scene_root / rel_under.parts[0]
-                rel_scene_path = Path("scene") / rel_under
-                copy_target = Path("scene") / rel_under.parts[0]
-                return source_path, rel_scene_path, library_root, copy_target
+    #     parts = source_path.parts
+    #     for idx in range(len(parts) - 1):
+    #         if parts[idx] == "assets" and parts[idx + 1] == "scene":
+    #             assets_scene_root = Path(*parts[: idx + 2])
+    #             rel_under = Path(*parts[idx + 2 :])
+    #             if not rel_under.parts:
+    #                 break
+    #             library_root = assets_scene_root / rel_under.parts[0]
+    #             rel_scene_path = Path(rel_under.parts[0]) / rel_under.relative_to(rel_under.parts[0])
+    #             copy_target = Path(rel_under.parts[0]) / rel_under.parts[0]
+    #             return source_path, rel_scene_path, library_root, copy_target
 
-        rel_scene_path = Path("scene") / name2id(scene.name) / "scene.xml"
-        return source_path, rel_scene_path, source_path.parent, rel_scene_path.parent
-
-    def _get_scene_web_path(self, scene: SceneConfig) -> str:
-        resolved = self._resolve_scene_source(scene)
-        if resolved:
-            _, rel_scene_path, _, _ = resolved
-            if rel_scene_path:
-                return rel_scene_path.as_posix()
-        scene_name = name2id(scene.name)
-        return f"scene/{scene_name}/scene.xml"
+    #     rel_scene_path = Path(name2id(scene.name)) / "scene.mjb"
+    #     return source_path, rel_scene_path, source_path.parent, rel_scene_path.parent
 
     def get_projects(self) -> list[ProjectConfig]:
         """Get a copy of all project configurations.

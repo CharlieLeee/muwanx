@@ -1,9 +1,8 @@
-import type { MjData, MjModel } from 'mujoco-js';
-import type { Mujoco } from '../../types/mujoco';
+import type { MainModule, MjData, MjModel } from 'mujoco';
 import type { PolicyState } from './types';
 
 export class PolicyStateBuilder {
-  private mujoco: Mujoco;
+  private mujoco: MainModule;
   private mjModel: MjModel;
   private mjData: MjData;
   private qposAdr: number[];
@@ -12,7 +11,7 @@ export class PolicyStateBuilder {
   private jointIndices: number[];
   private numActions: number;
 
-  constructor(mujoco: Mujoco, mjModel: MjModel, mjData: MjData, jointNames: string[]) {
+  constructor(mujoco: MainModule, mjModel: MjModel, mjData: MjData, jointNames: string[]) {
     this.mujoco = mujoco;
     this.mjModel = mjModel;
     this.mjData = mjData;

@@ -42,6 +42,11 @@ export class MuJoCoAssetCollector {
 
     const normalizedXmlPath = this._normalizePath(xmlPath);
 
+    // For binary .mjb files, just return the file itself - no XML parsing needed
+    if (this._isBinary(normalizedXmlPath)) {
+      return [normalizedXmlPath];
+    }
+
     const cacheKey = `${baseUrl}/${normalizedXmlPath}`;
     if (this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey);

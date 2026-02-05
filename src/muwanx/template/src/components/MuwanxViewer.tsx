@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { MuwanxRuntime } from '../core/engine/runtime';
-import type { Mujoco } from '../types/mujoco';
+import type { MainModule } from 'mujoco';
 
 type MuwanxViewerProps = {
   scenePath: string;
@@ -21,7 +21,7 @@ const MuwanxViewer: React.FC<MuwanxViewerProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const runtimeRef = useRef<MuwanxRuntime | null>(null);
-  const mujocoRef = useRef<Mujoco | null>(null);
+  const mujocoRef = useRef<MainModule | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +33,7 @@ const MuwanxViewer: React.FC<MuwanxViewerProps> = ({
     const init = async () => {
       notify('Loading MuJoCo...');
       if (!mujocoRef.current) {
-        const mujocoModule = await import('mujoco-js');
+        const mujocoModule = await import('mujoco');
         mujocoRef.current = await mujocoModule.default();
       }
       if (cancelled) {

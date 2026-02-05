@@ -1,9 +1,8 @@
 import * as THREE from 'three';
-import type { MjModel } from 'mujoco-js';
-import type { Mujoco } from '../../types/mujoco';
+import type { MainModule, MjModel } from 'mujoco';
 
 interface CreateTextureParams {
-  mujoco: Mujoco;
+  mujoco: MainModule;
   mjModel: MjModel;
   texId: number;
 }
