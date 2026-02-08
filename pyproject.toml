@@ -129,7 +129,7 @@ mjlab = { git = "https://github.com/mujocolab/mjlab" }
 mjlab_myosuite = { git = "https://github.com/ttktjmt/mjlab_myosuite", branch = "die-reorientation" }
 warp-lang = { index = "nvidia", marker = "sys_platform != 'darwin'" }
 mujoco = { path = "../mujoco.wasm/python", editable = true }
-# mujoco = { git = "https://github.com/google-deepmind/mujoco.git", rev = "e6639f1e2960faa3ddabd065ed19bbbf4fdf139f", subdirectory = "python" }
+# mujoco = { git = "https://github.com/google-deepmind/mujoco.git", rev = "e6639f1e2960faa3ddabd065ed19bbbf4fdf139f" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

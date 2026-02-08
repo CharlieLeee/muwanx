@@ -318,7 +318,6 @@ function ControlPanel(props: ControlPanelProps) {
               fullWidth
               leftSection={<IconRefresh size={14} />}
               onClick={handleReset}
-              disabled={!commandsEnabled}
             >
               Reset
             </Button>

@@ -12,20 +12,6 @@ import onnx
 
 import muwanx
 
-# Flag to control model loading method
-USE_MJMODEL = True
-
-
-def load_model(path: str):
-    """Load model based on USE_MJMODEL flag.
-
-    If USE_MJMODEL is True, returns MjModel.from_xml_path(path).
-    Otherwise, returns the path string directly.
-    """
-    if USE_MJMODEL:
-        return mujoco.MjModel.from_xml_path(path)
-    return path
-
 
 def setup_builder() -> muwanx.Builder:
     """Set up and return the builder with demo projects configured.
@@ -46,15 +32,15 @@ def setup_builder() -> muwanx.Builder:
     )
 
     demo_project.add_scene(
-        model=load_model("assets/scene/muwanx/unitree_go2/scene.xml"),
+        model=mujoco.MjModel.from_xml_path("assets/scene/muwanx/unitree_go2/scene.xml"),
         name="Go2",
     )
     demo_project.add_scene(
-        model=load_model("assets/scene/muwanx/unitree_go1/go1.xml"),
+        model=mujoco.MjModel.from_xml_path("assets/scene/muwanx/unitree_go1/go1.xml"),
         name="Go1",
     )
     demo_project.add_scene(
-        model=load_model("assets/scene/muwanx/unitree_g1/scene.xml"),
+        model=mujoco.MjModel.from_xml_path("assets/scene/muwanx/unitree_g1/scene.xml"),
         name="G1",
     ).add_policy(
         policy=onnx.load("assets/policy/unitree_g1/locomotion.onnx"),
