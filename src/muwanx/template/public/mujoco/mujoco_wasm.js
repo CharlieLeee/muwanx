@@ -7561,6 +7561,7 @@ function assignWasmImports() {
     /** @export */ invoke_viiididdddddd,
     /** @export */ invoke_viiii,
     /** @export */ invoke_viiiii,
+    /** @export */ invoke_viiiiid,
     /** @export */ invoke_viiiiii,
     /** @export */ invoke_viiiiiii,
     /** @export */ invoke_viiiiiiii,
@@ -7922,6 +7923,17 @@ function invoke_viidii(index, a1, a2, a3, a4, a5) {
   var sp = stackSave();
   try {
     getWasmTableEntry(index)(a1, a2, a3, a4, a5);
+  } catch (e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_viiiiid(index, a1, a2, a3, a4, a5, a6) {
+  var sp = stackSave();
+  try {
+    getWasmTableEntry(index)(a1, a2, a3, a4, a5, a6);
   } catch (e) {
     stackRestore(sp);
     if (!(e instanceof EmscriptenEH)) throw e;

@@ -297,10 +297,10 @@ def setup_builder() -> muwanx.Builder:
         model=load_model("assets/scene/mujoco_menagerie/robotis_op3/scene.xml"),
         name="Robotis OP3",
     )
-    menagerie_project.add_scene(
-        model=load_model("assets/scene/mujoco_menagerie/shadow_dexee/scene.xml"),
-        name="Shadow DEXEE",
-    )
+    # menagerie_project.add_scene(
+    #     model=load_model("assets/scene/mujoco_menagerie/shadow_dexee/scene.xml"),
+    #     name="Shadow DEXEE",
+    # )
     menagerie_project.add_scene(
         model=load_model("assets/scene/mujoco_menagerie/shadow_hand/scene_left.xml"),
         name="Shadow Hand Left",

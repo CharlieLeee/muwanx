@@ -4,7 +4,7 @@ const globals = require('globals');
 
 module.exports = [
   {
-    ignores: ['dist', 'node_modules'],
+    ignores: ['dist', 'node_modules', 'src/mujoco/*.d.ts'],
   },
   {
     files: ['**/*.ts', '**/*.tsx'],

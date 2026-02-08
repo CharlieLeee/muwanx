@@ -13,7 +13,7 @@ import onnx
 import muwanx
 
 # Flag to control model loading method
-USE_MJMODEL = False
+USE_MJMODEL = True
 
 
 def load_model(path: str):

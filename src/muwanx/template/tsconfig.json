@@ -19,6 +19,6 @@
       "mujoco": ["./src/mujoco"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "public/mujoco/mujoco_wasm.js"],
   "exclude": ["node_modules", ".nodeenv", "dist"]
 }

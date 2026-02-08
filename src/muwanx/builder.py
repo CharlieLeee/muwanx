@@ -345,7 +345,7 @@ class Builder:
                                     data = json.load(f)
                                 data.setdefault("onnx", {})
                                 if isinstance(data["onnx"], dict):
-                                    data["onnx"]["path"] = str(policy_path)
+                                    data["onnx"]["path"] = policy_path.name
                                 # Serialize commands if any are defined
                                 if policy.commands:
                                     data["commands"] = {
@@ -366,7 +366,7 @@ class Builder:
                         # No config_path but commands defined - create config with commands only
                         target = policy_path.with_suffix(".json")
                         data = {
-                            "onnx": {"path": str(policy_path)},
+                            "onnx": {"path": policy_path.name},
                             "commands": {
                                 name: cmd.to_dict()
                                 for name, cmd in policy.commands.items()

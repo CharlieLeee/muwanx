@@ -472,12 +472,11 @@ export class MuwanxRuntime {
   }
 
   private resolvePolicyAssetPath(configPath: string, assetPath: string): string {
-    const marker = '/assets/';
     const normalizedConfig = configPath.replace(/\\/g, '/');
-    const index = normalizedConfig.indexOf(marker);
-    if (index >= 0) {
-      const prefix = normalizedConfig.slice(0, index + marker.length);
-      return `${prefix}${assetPath}`.replace(/\/+/g, '/');
+    const lastSlash = normalizedConfig.lastIndexOf('/');
+    if (lastSlash >= 0) {
+      const dir = normalizedConfig.slice(0, lastSlash + 1);
+      return `${dir}${assetPath}`.replace(/\/+/g, '/');
     }
     return assetPath;
   }

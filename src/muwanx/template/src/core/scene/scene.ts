@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { MainModule, MjData, MjModel, MjVFS } from 'mujoco';
+import type { MainModule, MjData, MjModel } from 'mujoco';
 import { mujocoAssetCollector } from '../utils/mujocoAssetCollector';
 import { normalizeScenePath } from '../utils/pathUtils';
 import { createLights } from './lights';
@@ -128,11 +128,7 @@ export async function loadSceneFromURL(
   let newModel: MjModel | null = null;
   try {
     if (modelPath.toLowerCase().endsWith('.mjb')) {
-      // Load binary model using mj_loadBinary with MjVFS
-      const binaryData = mujoco.FS.readFile(modelPath) as Uint8Array;
-      const vfs: MjVFS = new mujoco.MjVFS();
-      vfs.addBuffer(modelPath, binaryData);
-      newModel = mujoco.MjModel.mj_loadBinary(modelPath, vfs);
+      newModel = mujoco.MjModel.mj_loadBinary(modelPath);
     } else {
       newModel = mujoco.MjModel.mj_loadXML(modelPath);
     }
@@ -173,7 +169,7 @@ export async function loadSceneFromURL(
 
   const textDecoder = new TextDecoder('utf-8');
   const namesArray = new Uint8Array(mjModel.names);
-  const fullString = textDecoder.decode(mjModel.names);
+  const fullString = textDecoder.decode(namesArray.slice());
   const names = fullString.split(textDecoder.decode(new ArrayBuffer(1)));
 
   const mujocoRoot = new THREE.Group();

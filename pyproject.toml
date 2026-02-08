@@ -45,7 +45,7 @@ classifiers = [
     "Natural Language :: English",
 ]
 dependencies = [
-    "mujoco>=3.4.0",
+    "mujoco==3.4.0",
     "nodeenv>=1.9.1",
     "onnx>=1.20.0",
     "wandb>=0.23.1",
@@ -121,19 +121,15 @@ required-environments = [
     "sys_platform == 'linux' and platform_machine == 'x86_64'",
 ]
 override-dependencies = [
-    "mujoco>=3.4.0",
+    "mujoco==3.4.0",
 ]
-
-[[tool.uv.index]]
-name = "mujoco"
-url = "https://py.mujoco.org"
-explicit = true
 
 [tool.uv.sources]
 mjlab = { git = "https://github.com/mujocolab/mjlab" }
 mjlab_myosuite = { git = "https://github.com/ttktjmt/mjlab_myosuite", branch = "die-reorientation" }
 warp-lang = { index = "nvidia", marker = "sys_platform != 'darwin'" }
-mujoco = { index = "mujoco" }
+mujoco = { path = "../mujoco.wasm/python", editable = true }
+# mujoco = { git = "https://github.com/google-deepmind/mujoco.git", rev = "e6639f1e2960faa3ddabd065ed19bbbf4fdf139f", subdirectory = "python" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

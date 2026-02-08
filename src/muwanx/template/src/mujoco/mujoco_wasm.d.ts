@@ -561,7 +561,7 @@ export type mjtStage = mjtStageValue<0>|mjtStageValue<1>|mjtStageValue<2>|mjtSta
 export interface mjtStateValue<T extends number> {
   value: T;
 }
-export type mjtState = mjtStateValue<1>|mjtStateValue<2>|mjtStateValue<4>|mjtStateValue<8>|mjtStateValue<16>|mjtStateValue<32>|mjtStateValue<64>|mjtStateValue<128>|mjtStateValue<256>|mjtStateValue<512>|mjtStateValue<1024>|mjtStateValue<2048>|mjtStateValue<4096>|mjtStateValue<13>|mjtStateValue<14>|mjtStateValue<4111>|mjtStateValue<4064>|mjtStateValue<8191>;
+export type mjtState = mjtStateValue<1>|mjtStateValue<2>|mjtStateValue<4>|mjtStateValue<8>|mjtStateValue<16>|mjtStateValue<32>|mjtStateValue<64>|mjtStateValue<128>|mjtStateValue<256>|mjtStateValue<512>|mjtStateValue<1024>|mjtStateValue<2048>|mjtStateValue<4096>|mjtStateValue<8192>|mjtStateValue<14>|mjtStateValue<30>|mjtStateValue<8223>|mjtStateValue<8128>|mjtStateValue<16383>;
 
 export interface mjtStereoValue<T extends number> {
   value: T;
@@ -1154,6 +1154,7 @@ export interface MjData extends ClassHandle {
   readonly flexvert_xpos: any;
   readonly geom_xmat: any;
   readonly geom_xpos: any;
+  readonly history: any;
   readonly iLD: any;
   readonly iLDiagInv: any;
   readonly iM: any;
@@ -1320,6 +1321,7 @@ export interface MjModel extends ClassHandle {
   ngravcomp: number;
   nhfield: number;
   nhfielddata: number;
+  nhistory: number;
   njmax: number;
   njnt: number;
   nkey: number;
@@ -1397,6 +1399,7 @@ export interface MjModel extends ClassHandle {
   readonly actuator_cranklength: any;
   readonly actuator_ctrllimited: any;
   readonly actuator_ctrlrange: any;
+  readonly actuator_delay: any;
   readonly actuator_dynprm: any;
   readonly actuator_dyntype: any;
   readonly actuator_forcelimited: any;
@@ -1405,6 +1408,8 @@ export interface MjModel extends ClassHandle {
   readonly actuator_gaintype: any;
   readonly actuator_gear: any;
   readonly actuator_group: any;
+  readonly actuator_history: any;
+  readonly actuator_historyadr: any;
   readonly actuator_length0: any;
   readonly actuator_lengthrange: any;
   readonly actuator_plugin: any;
@@ -1734,7 +1739,11 @@ export interface MjModel extends ClassHandle {
   readonly sensor_adr: any;
   readonly sensor_cutoff: any;
   readonly sensor_datatype: any;
+  readonly sensor_delay: any;
   readonly sensor_dim: any;
+  readonly sensor_history: any;
+  readonly sensor_historyadr: any;
+  readonly sensor_interval: any;
   readonly sensor_intprm: any;
   readonly sensor_needstage: any;
   readonly sensor_noise: any;
@@ -2069,7 +2078,10 @@ export interface MjsActuator extends ClassHandle {
   ctrllimited: number;
   forcelimited: number;
   group: number;
+  interp: number;
+  nsample: number;
   cranklength: number;
+  delay: number;
   inheritrange: number;
   get info(): string;
   set info(value: EmbindString);
@@ -2475,7 +2487,10 @@ export interface MjsSensor extends ClassHandle {
   type: mjtSensor;
   readonly userdata: mjDoubleVec;
   dim: number;
+  interp: number;
+  nsample: number;
   cutoff: number;
+  delay: number;
   noise: number;
   get info(): string;
   set info(value: EmbindString);
@@ -2483,6 +2498,7 @@ export interface MjsSensor extends ClassHandle {
   set objname(value: EmbindString);
   get refname(): string;
   set refname(value: EmbindString);
+  readonly interval: any;
   readonly intprm: any;
 }
 
@@ -2980,7 +2996,7 @@ interface EmbindModule {
   mjtSleepState: {mjS_STATIC: mjtSleepStateValue<-1>, mjS_ASLEEP: mjtSleepStateValue<0>, mjS_AWAKE: mjtSleepStateValue<1>};
   mjtSolver: {mjSOL_PGS: mjtSolverValue<0>, mjSOL_CG: mjtSolverValue<1>, mjSOL_NEWTON: mjtSolverValue<2>};
   mjtStage: {mjSTAGE_NONE: mjtStageValue<0>, mjSTAGE_POS: mjtStageValue<1>, mjSTAGE_VEL: mjtStageValue<2>, mjSTAGE_ACC: mjtStageValue<3>};
-  mjtState: {mjSTATE_TIME: mjtStateValue<1>, mjSTATE_QPOS: mjtStateValue<2>, mjSTATE_QVEL: mjtStateValue<4>, mjSTATE_ACT: mjtStateValue<8>, mjSTATE_WARMSTART: mjtStateValue<16>, mjSTATE_CTRL: mjtStateValue<32>, mjSTATE_QFRC_APPLIED: mjtStateValue<64>, mjSTATE_XFRC_APPLIED: mjtStateValue<128>, mjSTATE_EQ_ACTIVE: mjtStateValue<256>, mjSTATE_MOCAP_POS: mjtStateValue<512>, mjSTATE_MOCAP_QUAT: mjtStateValue<1024>, mjSTATE_USERDATA: mjtStateValue<2048>, mjSTATE_PLUGIN: mjtStateValue<4096>, mjNSTATE: mjtStateValue<13>, mjSTATE_PHYSICS: mjtStateValue<14>, mjSTATE_FULLPHYSICS: mjtStateValue<4111>, mjSTATE_USER: mjtStateValue<4064>, mjSTATE_INTEGRATION: mjtStateValue<8191>};
+  mjtState: {mjSTATE_TIME: mjtStateValue<1>, mjSTATE_QPOS: mjtStateValue<2>, mjSTATE_QVEL: mjtStateValue<4>, mjSTATE_ACT: mjtStateValue<8>, mjSTATE_HISTORY: mjtStateValue<16>, mjSTATE_WARMSTART: mjtStateValue<32>, mjSTATE_CTRL: mjtStateValue<64>, mjSTATE_QFRC_APPLIED: mjtStateValue<128>, mjSTATE_XFRC_APPLIED: mjtStateValue<256>, mjSTATE_EQ_ACTIVE: mjtStateValue<512>, mjSTATE_MOCAP_POS: mjtStateValue<1024>, mjSTATE_MOCAP_QUAT: mjtStateValue<2048>, mjSTATE_USERDATA: mjtStateValue<4096>, mjSTATE_PLUGIN: mjtStateValue<8192>, mjNSTATE: mjtStateValue<14>, mjSTATE_PHYSICS: mjtStateValue<30>, mjSTATE_FULLPHYSICS: mjtStateValue<8223>, mjSTATE_USER: mjtStateValue<8128>, mjSTATE_INTEGRATION: mjtStateValue<16383>};
   mjtStereo: {mjSTEREO_NONE: mjtStereoValue<0>, mjSTEREO_QUADBUFFERED: mjtStereoValue<1>, mjSTEREO_SIDEBYSIDE: mjtStereoValue<2>};
   mjtTaskStatus: {mjTASK_NEW: mjtTaskStatusValue<0>, mjTASK_QUEUED: mjtTaskStatusValue<1>, mjTASK_COMPLETED: mjtTaskStatusValue<2>};
   mjtTexture: {mjTEXTURE_2D: mjtTextureValue<0>, mjTEXTURE_CUBE: mjtTextureValue<1>, mjTEXTURE_SKYBOX: mjtTextureValue<2>};
@@ -3032,7 +3048,7 @@ interface EmbindModule {
   MjModel: {
     new(_0: MjModel): MjModel;
     mj_loadXML(_0: EmbindString): MjModel;
-    mj_loadBinary(_0: EmbindString, _1: MjVFS): MjModel;
+    mj_loadBinary(_0: EmbindString): MjModel;
   };
   MjOption: {
     new(): MjOption;
@@ -3359,6 +3375,7 @@ interface EmbindModule {
   mj_copyBack(_0: MjSpec, _1: MjModel): number;
   mj_copyState(_0: MjModel, _1: MjData, _2: MjData, _3: number): void;
   mj_forwardSkip(_0: MjModel, _1: MjData, _2: number, _3: number): void;
+  mj_initCtrlHistory(_0: MjModel, _1: MjData, _2: number, _3: number[], _4: number[]): void;
   mj_inverseSkip(_0: MjModel, _1: MjData, _2: number, _3: number): void;
   mj_isDual(_0: MjModel): number;
   mj_isPyramidal(_0: MjModel): number;
@@ -3408,6 +3425,8 @@ interface EmbindModule {
   mjVERSION_HEADER: number;
   mj_sizeModel(_0: MjModel): bigint;
   mj_getTotalmass(_0: MjModel): number;
+  mj_initSensorHistory(_0: MjModel, _1: MjData, _2: number, _3: number[], _4: number[], _5: number): void;
+  mj_readCtrl(_0: MjModel, _1: MjData, _2: number, _3: number, _4: number): number;
   mj_setTotalmass(_0: MjModel, _1: number): void;
   mjs_getWrapCoef(_0: MjsWrap): number;
   mjs_getWrapDivisor(_0: MjsWrap): number;
