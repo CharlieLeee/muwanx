@@ -59,7 +59,6 @@ theme:
 
 plugins:
   - search
-  - link-cards
 
 markdown_extensions:
   - admonition

@@ -28,7 +28,7 @@ muwanx can be installed using either Python (pip) or JavaScript (npm), depending
 
 >   :simple-docker: &nbsp; __Docker / Cluster__
 >   ---
->   Not supported yet.
+>   Not supported.
 
 </div>
 
@@ -49,13 +49,13 @@ pip install muwanx
 For development work, you can install with optional dependencies:
 
 ```bash
-pip install muwanx[dev]
+pip install 'muwanx[dev]'
 ```
 
 For running examples:
 
 ```bash
-pip install muwanx[examples]
+pip install 'muwanx[examples]'
 ```
 
 ## JavaScript Installation

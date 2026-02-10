@@ -51,7 +51,7 @@
 
 muwanx can be installed with `pip`:
 ``` sh
-pip install muwanx
+pip install muwanx  # or 'muwanx[dev]', 'muwanx[examples]'
 ```
 
 or with `npm`:
@@ -59,7 +59,7 @@ or with `npm`:
 npm install muwanx
 ```
 
-You can run the demo using the `uv` command with the python package:
+You can run the demo using the `uv` command with the python package `muwanx[examples]`:
 ```sh
 uv run full
 ```
