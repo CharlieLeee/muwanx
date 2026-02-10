@@ -192,19 +192,6 @@ class Builder:
                 ├── logo.svg
                 ├── manifest.json
                 └── assets/
-                    ├── scene/
-                    │   └── <scene-id>/
-                    │       └── (scene assets)
-                    └── <scene-id>/
-                        ├── <policy-id>.onnx
-                        └── <policy-id>.json
-
-        New Structure (after mujoco wasm distribution):
-            dist/
-            ...
-            └── <project-id>/ (or 'main')
-                ...
-                └── assets/
                     └── <scene-id>/
                         ├── scene.mjb
                         ├── <policy-id>.onnx
@@ -249,15 +236,6 @@ class Builder:
                     shutil.move(str(item), str(output_path))
                 # Remove the now-empty dist directory
                 built_dist.rmdir()
-
-                # Move mujoco files from mujoco/ to assets/
-                mujoco_dir = output_path / "mujoco"
-                mujoco_assets_dest = output_path / "assets"
-                if mujoco_dir.exists() and mujoco_dir.is_dir():
-                    for mujoco_file in mujoco_dir.iterdir():
-                        dest = mujoco_assets_dest / mujoco_file.name
-                        shutil.move(str(mujoco_file), str(dest))
-                    mujoco_dir.rmdir()
 
                 # Clean up development files that shouldn't be in production
                 dev_files = [

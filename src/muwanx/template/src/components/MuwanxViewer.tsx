@@ -33,7 +33,9 @@ const MuwanxViewer: React.FC<MuwanxViewerProps> = ({
     const init = async () => {
       notify('Loading MuJoCo...');
       if (!mujocoRef.current) {
-        const mujocoModule = await import('mujoco');
+        const baseWasmUrl = import.meta.env.BASE_URL || '/';
+        const modulePath = `${baseWasmUrl}assets/mujoco/mujoco_wasm.js`.replace(/\/+/g, '/');
+        const mujocoModule = await import(/* @vite-ignore */ modulePath);
         mujocoRef.current = await mujocoModule.default();
       }
       if (cancelled) {
