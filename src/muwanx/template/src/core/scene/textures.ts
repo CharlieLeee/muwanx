@@ -53,14 +53,14 @@ function expandChannelsToRGBA(src: Uint8Array, dest: Uint8Array, nchannel: numbe
 }
 
 function create2DTexture(mjModel: MjModel, texId: number): THREE.DataTexture | null {
-  const width = mjModel.tex_width ? mjModel.tex_width[texId] : 0;
-  const height = mjModel.tex_height ? mjModel.tex_height[texId] : 0;
+  const width = mjModel.tex_width ? Number(mjModel.tex_width[texId]) : 0;
+  const height = mjModel.tex_height ? Number(mjModel.tex_height[texId]) : 0;
   if (!width || !height) {
     return null;
   }
 
-  const texAdr = mjModel.tex_adr ? mjModel.tex_adr[texId] : 0;
-  const nchannel = mjModel.tex_nchannel ? mjModel.tex_nchannel[texId] : 0;
+  const texAdr = mjModel.tex_adr ? Number(mjModel.tex_adr[texId]) : 0;
+  const nchannel = mjModel.tex_nchannel ? Number(mjModel.tex_nchannel[texId]) : 0;
 
   if (nchannel < 1 || nchannel > 4) {
     console.warn(`Invalid channel count ${nchannel} for texture ${texId}`);
@@ -97,8 +97,8 @@ function create2DTexture(mjModel: MjModel, texId: number): THREE.DataTexture | n
 }
 
 function createCubeTexture(mjModel: MjModel, texId: number): THREE.CubeTexture | null {
-  const width = mjModel.tex_width ? mjModel.tex_width[texId] : 0;
-  const height = mjModel.tex_height ? mjModel.tex_height[texId] : 0;
+  const width = mjModel.tex_width ? Number(mjModel.tex_width[texId]) : 0;
+  const height = mjModel.tex_height ? Number(mjModel.tex_height[texId]) : 0;
 
   if (!width || !height) {
     return null;
@@ -124,8 +124,8 @@ function createCubeTexture(mjModel: MjModel, texId: number): THREE.CubeTexture |
     return null;
   }
 
-  const texAdr = mjModel.tex_adr ? mjModel.tex_adr[texId] : 0;
-  const nchannel = mjModel.tex_nchannel ? mjModel.tex_nchannel[texId] : 0;
+  const texAdr = mjModel.tex_adr ? Number(mjModel.tex_adr[texId]) : 0;
+  const nchannel = mjModel.tex_nchannel ? Number(mjModel.tex_nchannel[texId]) : 0;
 
   const facePixelCount = faceSize * faceHeight;
   const faceSrcByteCount = facePixelCount * nchannel;
@@ -199,7 +199,7 @@ export function createTexture({
     return null;
   }
 
-  const type = mjModel.tex_type ? mjModel.tex_type[texId] : mujoco.mjtTexture.mjTEXTURE_2D.value;
+  const type = mjModel.tex_type ? Number(mjModel.tex_type[texId]) : mujoco.mjtTexture.mjTEXTURE_2D.value;
 
   if (type === mujoco.mjtTexture.mjTEXTURE_2D.value) {
     return create2DTexture(mjModel, texId);
