@@ -63,7 +63,6 @@ MODEL_PATHS = [
     "assets/scene/mujoco_menagerie/robotiq_2f85/scene.xml",
     "assets/scene/mujoco_menagerie/robotiq_2f85_v4/scene.xml",
     "assets/scene/mujoco_menagerie/robotis_op3/scene.xml",
-    "assets/scene/mujoco_menagerie/shadow_dexee/scene.xml",
     "assets/scene/mujoco_menagerie/shadow_hand/scene_left.xml",
     "assets/scene/mujoco_menagerie/shadow_hand/scene_right.xml",
     "assets/scene/mujoco_menagerie/skydio_x2/scene.xml",
