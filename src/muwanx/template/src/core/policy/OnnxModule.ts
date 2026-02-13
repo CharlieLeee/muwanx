@@ -1,5 +1,8 @@
 import * as ort from 'onnxruntime-web';
 
+ort.env.wasm.proxy = false;
+ort.env.wasm.numThreads = 1;
+
 export type OnnxConfig = {
   path: string;
   meta?: {

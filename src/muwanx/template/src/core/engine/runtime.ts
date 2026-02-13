@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import type { MjData, MjModel } from 'mujoco-js';
-import type { Mujoco } from '../../types/mujoco';
+import type { MainModule, MjData, MjModel } from 'mujoco';
 import {
   downloadExampleScenesFolder,
   getPosition,
@@ -35,7 +34,7 @@ type BodyState = {
 };
 
 export class MuwanxRuntime {
-  private mujoco: Mujoco;
+  private mujoco: MainModule;
   private container: HTMLElement;
   private baseUrl: string;
   private scene: THREE.Scene;
@@ -82,7 +81,7 @@ export class MuwanxRuntime {
   private onnxInputDict: Record<string, ort.Tensor> | null;
   private onnxInferencing: boolean;
 
-  constructor(mujoco: Mujoco, container: HTMLElement, options: RuntimeOptions = {}) {
+  constructor(mujoco: MainModule, container: HTMLElement, options: RuntimeOptions = {}) {
     this.mujoco = mujoco;
     this.container = container;
     this.baseUrl = options.baseUrl || '/';
@@ -473,12 +472,11 @@ export class MuwanxRuntime {
   }
 
   private resolvePolicyAssetPath(configPath: string, assetPath: string): string {
-    const marker = '/assets/';
     const normalizedConfig = configPath.replace(/\\/g, '/');
-    const index = normalizedConfig.indexOf(marker);
-    if (index >= 0) {
-      const prefix = normalizedConfig.slice(0, index + marker.length);
-      return `${prefix}${assetPath}`.replace(/\/+/g, '/');
+    const lastSlash = normalizedConfig.lastIndexOf('/');
+    if (lastSlash >= 0) {
+      const dir = normalizedConfig.slice(0, lastSlash + 1);
+      return `${dir}${assetPath}`.replace(/\/+/g, '/');
     }
     return assetPath;
   }

@@ -40,10 +40,22 @@ class MuwanxApp:
         import socket
         import socketserver
         import webbrowser
-        from functools import partial
 
         directory = str(self._app_dir)
-        handler = partial(http.server.SimpleHTTPRequestHandler, directory=directory)
+
+        class CrossOriginIsolatedHandler(http.server.SimpleHTTPRequestHandler):
+            """HTTP handler with Cross-Origin Isolation headers for SharedArrayBuffer."""
+
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, directory=directory, **kwargs)
+
+            def end_headers(self):
+                # Required for SharedArrayBuffer (used by MuJoCo WASM threading)
+                self.send_header("Cross-Origin-Opener-Policy", "same-origin")
+                self.send_header("Cross-Origin-Embedder-Policy", "require-corp")
+                super().end_headers()
+
+        handler = CrossOriginIsolatedHandler
 
         def _find_available_port(
             bind_host: str, start_port: int, max_tries: int = 1000

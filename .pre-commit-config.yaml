@@ -31,3 +31,4 @@ repos:
           --fix
         language: node
         files: ^src/muwanx/template/.*\.(js|jsx|ts|tsx)$
+        exclude: ^src/muwanx/template/src/mujoco/.*\.d\.ts$

@@ -1,10 +1,9 @@
 import * as THREE from 'three';
-import type { MjData, MjModel } from 'mujoco-js';
-import type { Mujoco } from '../../types/mujoco';
+import type { MainModule, MjData, MjModel } from 'mujoco';
 import { mjcToThreeCoordinate } from './coordinate';
 
 interface CreateLightsParams {
-  mujoco: Mujoco;
+  mujoco: MainModule;
   mjModel: MjModel;
   mujocoRoot: THREE.Group;
   bodies: Record<number, THREE.Group>;
@@ -192,7 +191,7 @@ export function createLights({
   return lights;
 }
 
-export function updateLightsFromData(mujoco: Mujoco, mjData: MjData, lights: THREE.Light[]): void {
+export function updateLightsFromData(mujoco: MainModule, mjData: MjData, lights: THREE.Light[]): void {
   if (!mjData || !mjData.light_xpos || !mjData.light_xdir) {
     return;
   }

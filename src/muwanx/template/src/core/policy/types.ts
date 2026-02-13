@@ -1,8 +1,7 @@
-import type { MjData, MjModel } from 'mujoco-js';
-import type { Mujoco } from '../../types/mujoco';
+import type { MainModule, MjData, MjModel } from 'mujoco';
 
 export type PolicyRunnerContext = {
-  mujoco: Mujoco;
+  mujoco: MainModule;
   mjModel: MjModel | null;
   mjData: MjData | null;
 };

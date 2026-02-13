@@ -15,9 +15,10 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "mujoco": ["./src/mujoco/mujoco_wasm"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "public/assets/mujoco/mujoco_wasm.js"],
   "exclude": ["node_modules", ".nodeenv", "dist"]
 }
