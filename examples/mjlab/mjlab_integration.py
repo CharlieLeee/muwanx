@@ -1,4 +1,4 @@
-"""MJLab Integration Example - Visualize MuJoCo scenes from all mjlab tasks
+"""mjlab Integration Example - Visualize MuJoCo scenes from all mjlab tasks
 
 Extracts the MuJoCo model from each mjlab task and visualizes them
 in the browser using muwanx.
@@ -12,7 +12,7 @@ import muwanx
 
 def main():
     builder = muwanx.Builder()
-    project = builder.add_project(name="MJLab Visualization")
+    project = builder.add_project(name="mjlab Examples")
 
     for task_id in list_tasks():
         env_cfg = load_env_cfg(task_id)

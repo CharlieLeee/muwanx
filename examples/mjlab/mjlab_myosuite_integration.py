@@ -3,22 +3,30 @@
 This example demonstrates how to build muwanx projects using mjlab_myosuite setups.
 """
 
-import mjlab_myosuite  # noqa: F401
-from mjlab.tasks.registry import list_tasks, load_env_cfg, load_rl_cfg
+import os
 
-import muwanx
+os.environ["MUJOCO_GL"] = "disable"
+
+import mjlab_myosuite  # noqa: F401, E402
+from mjlab.scene import Scene  # noqa: E402
+from mjlab.tasks.registry import list_tasks, load_env_cfg  # noqa: E402
+
+import muwanx  # noqa: E402
 
 
 def main():
     builder = muwanx.Builder()
-    mjlab_myosuite_project = builder.add_project(  # noqa: F841
-        name="MJLab Integration Example with mjlab_myosuite"
-    )
-    task_id = "Myosuite-Manipulation-DieReorient-Myohand"
-    env_cfg = load_env_cfg(task_id)  # noqa: F841
-    rl_cfg = load_rl_cfg(task_id)  # noqa: F841
+    project = builder.add_project(name="mjlab Examples")
 
-    print(list_tasks())
+    for task_id in list_tasks():
+        env_cfg = load_env_cfg(task_id)
+        env_cfg.scene.num_envs = 1
+        scene = Scene(env_cfg.scene, device="cpu")
+        mj_model = scene.compile()
+        project.add_scene(model=mj_model, name=task_id)
+
+    app = builder.build()
+    app.launch()
 
 
 if __name__ == "__main__":
