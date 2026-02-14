@@ -18,6 +18,7 @@ import onnx
 from . import __version__
 from ._build_client import ClientBuilder
 from .app import MuwanxApp
+from .asset_collector import collect_spec_assets
 from .project import ProjectConfig, ProjectHandle
 from .utils import name2id
 
@@ -87,7 +88,7 @@ class Builder:
                 "Example:\n"
                 "  builder = mwx.Builder()\n"
                 "  project = builder.add_project(name='My Project')\n"
-                "  scene = project.add_scene(model=mujoco_model, name='Scene 1')\n"
+                "  scene = project.add_scene(spec=mujoco_spec, name='Scene 1')\n"
                 "  app = builder.build()"
             )
 
@@ -128,7 +129,7 @@ class Builder:
                         {
                             "name": scene.name,
                             # "path": scene.path,
-                            "path": f"{name2id(scene.name)}/scene.mjb",
+                            "path": f"{name2id(scene.name)}/{scene.scene_filename}",
                             "policies": [
                                 (
                                     {
@@ -193,7 +194,7 @@ class Builder:
                 ├── manifest.json
                 └── assets/
                     └── <scene-id>/
-                        ├── scene.mjb
+                        ├── scene.mjz/.mjb
                         ├── <policy-id>.onnx
                         └── <policy-id>.json
         """
@@ -302,8 +303,12 @@ class Builder:
                 scene_id = name2id(scene.name)
                 scene_dir = project_assets_dir / scene_id
                 scene_dir.mkdir(parents=True, exist_ok=True)
-                scene_path = scene_dir / "scene.mjb"
-                mujoco.mj_saveModel(scene.model, str(scene_path))
+                scene_path = scene_dir / scene.scene_filename
+                if scene.spec is not None:
+                    scene.spec.assets.update(collect_spec_assets(scene.spec))
+                    scene.spec.to_zip(str(scene_path))  # Saves as .mjz
+                else:
+                    mujoco.mj_saveModel(scene.model, str(scene_path))  # Saves as .mjb
 
                 # Save policies
                 for policy in scene.policies:
@@ -354,39 +359,6 @@ class Builder:
                             json.dump(data, f, indent=2)
 
         print(f"✓ Saved muwanx application to: {output_path}")
-
-    # def _resolve_scene_source(
-    #     self, scene: SceneConfig
-    # ) -> tuple[Path | None, Path | None, Path | None, Path | None] | None:
-    #     if not scene.source_path:
-    #         return None
-
-    #     source_path = Path(scene.source_path).expanduser()
-    #     if not source_path.is_absolute():
-    #         source_path = (Path.cwd() / source_path).resolve()
-
-    #     if not source_path.exists():
-    #         warnings.warn(
-    #             f"Scene source path not found: {source_path}",
-    #             category=RuntimeWarning,
-    #             stacklevel=2,
-    #         )
-    #         return None
-
-    #     parts = source_path.parts
-    #     for idx in range(len(parts) - 1):
-    #         if parts[idx] == "assets" and parts[idx + 1] == "scene":
-    #             assets_scene_root = Path(*parts[: idx + 2])
-    #             rel_under = Path(*parts[idx + 2 :])
-    #             if not rel_under.parts:
-    #                 break
-    #             library_root = assets_scene_root / rel_under.parts[0]
-    #             rel_scene_path = Path(rel_under.parts[0]) / rel_under.relative_to(rel_under.parts[0])
-    #             copy_target = Path(rel_under.parts[0]) / rel_under.parts[0]
-    #             return source_path, rel_scene_path, library_root, copy_target
-
-    #     rel_scene_path = Path(name2id(scene.name)) / "scene.mjb"
-    #     return source_path, rel_scene_path, source_path.parent, rel_scene_path.parent
 
     def get_projects(self) -> list[ProjectConfig]:
         """Get a copy of all project configurations.

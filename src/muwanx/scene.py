@@ -25,17 +25,22 @@ class SceneConfig:
     name: str
     """Name of the scene."""
 
-    model: mujoco.MjModel
-    """MuJoCo model for the scene."""
+    model: mujoco.MjModel | None = None
+    """MuJoCo model for the scene (saved as .mjb)."""
 
-    source_path: str | None = None
-    """Optional source XML path for the scene."""
+    spec: mujoco.MjSpec | None = None
+    """MuJoCo spec for the scene (saved as .mjz)."""
 
     policies: list[PolicyConfig] = field(default_factory=list)
     """List of policies available for this scene."""
 
     metadata: dict[str, Any] = field(default_factory=dict)
     """Additional metadata for the scene."""
+
+    @property
+    def scene_filename(self) -> str:
+        """Return the scene filename based on which field is set."""
+        return "scene.mjz" if self.spec is not None else "scene.mjb"
 
 
 class SceneHandle:
@@ -53,11 +58,6 @@ class SceneHandle:
     def name(self) -> str:
         """Name of the scene."""
         return self._config.name
-
-    @property
-    def model(self) -> mujoco.MjModel:
-        """MuJoCo model for the scene."""
-        return self._config.model
 
     def add_policy(
         self,

@@ -2,12 +2,13 @@ import * as THREE from 'three';
 import type { MainModule, MjData, MjModel } from 'mujoco';
 import { mujocoAssetCollector } from '../utils/mujocoAssetCollector';
 import { normalizeScenePath } from '../utils/pathUtils';
+import { loadMjzFile } from '../utils/mjzLoader';
 import { createLights } from './lights';
 import { createTexture } from './textures';
 import { createTendonMeshes } from './tendons';
 
 const DEFAULT_BASE_URL = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
-const BINARY_EXTENSIONS = ['.png', '.stl', '.skn', '.mjb', '.msh', '.npy'];
+const BINARY_EXTENSIONS = ['.png', '.stl', '.skn', '.mjb', '.mjz', '.msh', '.npy'];
 const sceneDownloadPromises = new Map<string, Promise<void>>();
 
 /**
@@ -130,6 +131,21 @@ export async function loadSceneFromURL(
     if (modelPath.toLowerCase().endsWith('.mjb')) {
       newModel = mujoco.MjModel.mj_loadBinary(modelPath);
     } else {
+      // TODO: Remove mjzLoader after mujoco wasm mj_loadXML() supports mjz format loading.
+      if (modelPath.toLowerCase().endsWith('.mjz')) {
+        const xmlPath = await loadMjzFile(mujoco, modelPath);
+        modelPath = xmlPath;
+      }
+      console.log(`[loadSceneFromURL] Attempting to load XML from: ${modelPath}`);
+
+      // Debug: list files in /working directory
+      try {
+        const workingContents = mujoco.FS.readdir('/working');
+        console.log(`[loadSceneFromURL] /working directory contents:`, workingContents);
+      } catch (e) {
+        console.warn(`[loadSceneFromURL] Could not list /working directory:`, e);
+      }
+
       newModel = mujoco.MjModel.mj_loadXML(modelPath);
     }
   } catch (error: unknown) {
@@ -597,6 +613,8 @@ export async function downloadExampleScenesFolder(
       if (manifest.length === 0) {
         throw new Error('No assets found by collector');
       }
+      console.log(`[downloadExampleScenesFolder] Analyzed ${normalizedPath}: found ${manifest.length} assets`);
+      console.log(`[downloadExampleScenesFolder] Asset manifest:`, manifest);
     } catch {
       try {
         const manifestResponse = await fetch(
@@ -611,6 +629,7 @@ export async function downloadExampleScenesFolder(
         if (!Array.isArray(manifest)) {
           throw new Error(`Invalid scene manifest for ${xmlDirectory}`);
         }
+        console.log(`[downloadExampleScenesFolder] Loaded manifest from index.json: ${manifest.length} assets`);
       } catch (fallbackError: unknown) {
         const fallbackMsg =
           fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
@@ -653,6 +672,8 @@ export async function downloadExampleScenesFolder(
       uniqueAssets.push(asset);
     }
 
+    console.log(`[downloadExampleScenesFolder] Downloading ${uniqueAssets.length} unique assets for ${xmlDirectory}`);
+
     const requests = uniqueAssets.map(({ normalizedPath }) => {
       const fullPath = `${basePrefix}/${normalizedPath}`.replace(/\/+/g, '/');
       return fetch(fullPath);
@@ -680,9 +701,11 @@ export async function downloadExampleScenesFolder(
         if (isBinaryAsset(normalizedPath) || isBinaryAsset(originalPath)) {
           const arrayBuffer = await response.arrayBuffer();
           mujoco.FS.writeFile(targetPath, new Uint8Array(arrayBuffer));
+          console.log(`[downloadExampleScenesFolder] Written binary asset: ${targetPath}`);
         } else {
           const text = await response.text();
           mujoco.FS.writeFile(targetPath, text);
+          console.log(`[downloadExampleScenesFolder] Written text asset: ${targetPath}`);
         }
       } catch (error) {
         console.error(`[downloadExampleScenesFolder] Error writing ${targetPath}:`, error);
