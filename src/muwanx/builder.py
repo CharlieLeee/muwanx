@@ -308,6 +308,10 @@ class Builder:
                     scene.spec.assets.update(collect_spec_assets(scene.spec))
                     scene.spec.to_zip(str(scene_path))  # Saves as .mjz
                 else:
+                    if scene.model is None:
+                        raise RuntimeError(
+                            f"Scene '{scene.name}' has no model to save as .mjb"
+                        )
                     mujoco.mj_saveModel(scene.model, str(scene_path))  # Saves as .mjb
 
                 # Save policies
