@@ -22,8 +22,7 @@ def main():
         env_cfg = load_env_cfg(task_id)
         env_cfg.scene.num_envs = 1
         scene = Scene(env_cfg.scene, device="cpu")
-        mj_model = scene.compile()
-        project.add_scene(model=mj_model, name=task_id)
+        project.add_scene(spec=scene.spec, name=task_id)
 
     app = builder.build()
     app.launch()

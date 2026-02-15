@@ -32,15 +32,7 @@ def setup_builder() -> muwanx.Builder:
     )
 
     demo_project.add_scene(
-        model=mujoco.MjModel.from_xml_path("assets/scene/muwanx/unitree_go2/scene.xml"),
-        name="Go2",
-    )
-    demo_project.add_scene(
-        model=mujoco.MjModel.from_xml_path("assets/scene/muwanx/unitree_go1/go1.xml"),
-        name="Go1",
-    )
-    demo_project.add_scene(
-        model=mujoco.MjModel.from_xml_path("assets/scene/muwanx/unitree_g1/scene.xml"),
+        spec=mujoco.MjSpec.from_file("assets/scene/muwanx/unitree_g1/scene.xml"),
         name="G1",
     ).add_policy(
         policy=onnx.load("assets/policy/unitree_g1/locomotion.onnx"),
@@ -51,6 +43,10 @@ def setup_builder() -> muwanx.Builder:
         lin_vel_y=(-0.5, 0.5),
         default_lin_vel_x=0.5,
         default_lin_vel_y=0.0,
+    )
+    demo_project.add_scene(
+        model=mujoco.MjModel.from_xml_path("assets/scene/muwanx/unitree_go2/scene.xml"),
+        name="Go2",
     )
 
     return builder

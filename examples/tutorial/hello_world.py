@@ -12,7 +12,7 @@ import muwanx
 def main():
     builder = muwanx.Builder()
     hello_world_project = builder.add_project(name="Hello World")
-    model = mujoco.MjModel.from_xml_string("""
+    spec = mujoco.MjSpec.from_string("""
     <mujoco>
       <worldbody>
         <light diffuse=".5 .5 .5" pos="0 0 3" dir="0 0 -1"/>
@@ -25,7 +25,7 @@ def main():
     </mujoco>
     """)
     hello_world_project.add_scene(
-        model=model,
+        spec=spec,
         name="Box over Plane",
     )
 

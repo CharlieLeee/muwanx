@@ -1,7 +1,7 @@
 """Test suite for validating MuJoCo model files used in full.py.
 
 This test ensures all XML model files referenced in the demo application
-can be loaded successfully using mujoco.MjModel.from_xml_path().
+can be loaded successfully using mujoco.MjSpec.from_file().
 """
 
 import sys
@@ -160,10 +160,12 @@ def test_demo_model_loading(demo_base_dir, model_path):
     # Check if file exists
     assert full_path.exists(), f"Model file not found: {full_path}"
 
-    # Try to load the model
+    # Try to load and compile the model (matches browser runtime behavior)
     try:
-        model = mujoco.MjModel.from_xml_path(str(full_path))
-        assert model is not None, f"Model loaded but is None: {model_path}"
+        spec = mujoco.MjSpec.from_file(str(full_path))
+        assert spec is not None, f"Spec loaded but is None: {model_path}"
+        model = spec.compile()
+        assert model is not None, f"Spec compiled but model is None: {model_path}"
     except Exception as e:
         pytest.fail(f"Failed to load model {model_path}: {e}")
 

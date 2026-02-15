@@ -26,7 +26,7 @@ export class MuJoCoAssetCollector {
       skin: ['skindir'],
     };
 
-    this.BINARY_EXTENSIONS = ['.png', '.stl', '.skn', '.mjb'];
+    this.BINARY_EXTENSIONS = ['.png', '.stl', '.skn', '.mjb', '.mjz'];
     this.cache = new Map();
     this.debug = options.debug || false;
   }
@@ -42,7 +42,7 @@ export class MuJoCoAssetCollector {
 
     const normalizedXmlPath = this._normalizePath(xmlPath);
 
-    // For binary .mjb files, just return the file itself - no XML parsing needed
+    // For binary .mjb/.mjz files, just return the file itself - no XML parsing needed
     if (this._isBinary(normalizedXmlPath)) {
       return [normalizedXmlPath];
     }

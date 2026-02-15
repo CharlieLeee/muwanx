@@ -7,7 +7,6 @@ managing projects containing multiple scenes.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import mujoco
@@ -55,35 +54,62 @@ class ProjectHandle:
 
     def add_scene(
         self,
-        model: mujoco.MjModel | str | Path,
         name: str,
         *,
+        model: mujoco.MjModel | None = None,
+        spec: mujoco.MjSpec | None = None,
         metadata: dict[str, Any] | None = None,
-        source_path: str | None = None,
     ) -> SceneHandle:
         """Add a MuJoCo scene to this project.
 
+        Provide either ``model`` or ``spec`` (not both).
+
+        Using ``model`` saves the scene as a binary ``.mjb`` file, which loads
+        faster in the browser but produces larger files. This is recommended
+        when loading speed is a priority and storage size is not a concern.
+
+        Using ``spec`` saves the scene as a compressed ``.mjz`` file, which
+        uses significantly less storage but may take slightly longer to load.
+        This is recommended when the generated web app exceeds 1 GB of storage
+        (e.g., the GitHub Pages deployment limit).
+
         Args:
-            model: MuJoCo model for the scene, or a path to an MJCF XML file.
             name: Name for the scene (displayed in the UI).
+            model: MuJoCo model for the scene (saved as .mjb).
+            spec: MuJoCo spec for the scene (saved as .mjz).
             metadata: Optional metadata dictionary for the scene.
-            source_path: Optional MJCF XML path for asset copying.
 
         Returns:
             SceneHandle for adding policies and further configuration.
+
+        Example:
+            ```
+            # Fast loading (larger files):
+            project.add_scene(
+                model=mujoco.MjModel.from_xml_path("scene.xml"),
+                name="My Scene",
+            )
+
+            # Compact storage (slower loading):
+            project.add_scene(
+                spec=mujoco.MjSpec.from_file("scene.xml"),
+                name="My Scene",
+            )
+            ```
         """
+        if model is not None and spec is not None:
+            raise ValueError("Provide either 'model' or 'spec', not both.")
+        if model is None and spec is None:
+            raise ValueError("Either 'model' or 'spec' must be provided.")
+
         if metadata is None:
             metadata = {}
-
-        if isinstance(model, (str, Path)):
-            source_path = str(model)
-            model = mujoco.MjModel.from_xml_path(str(model))
 
         scene_config = SceneConfig(
             name=name,
             model=model,
+            spec=spec,
             metadata=metadata,
-            source_path=source_path,
         )
         self._config.scenes.append(scene_config)
         return SceneHandle(scene_config, self)
