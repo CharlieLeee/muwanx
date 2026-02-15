@@ -701,11 +701,9 @@ export async function downloadExampleScenesFolder(
         if (isBinaryAsset(normalizedPath) || isBinaryAsset(originalPath)) {
           const arrayBuffer = await response.arrayBuffer();
           mujoco.FS.writeFile(targetPath, new Uint8Array(arrayBuffer));
-          console.log(`[downloadExampleScenesFolder] Written binary asset: ${targetPath}`);
         } else {
           const text = await response.text();
           mujoco.FS.writeFile(targetPath, text);
-          console.log(`[downloadExampleScenesFolder] Written text asset: ${targetPath}`);
         }
       } catch (error) {
         console.error(`[downloadExampleScenesFolder] Error writing ${targetPath}:`, error);
