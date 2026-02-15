@@ -18,9 +18,8 @@ import onnx
 from . import __version__
 from ._build_client import ClientBuilder
 from .app import MuwanxApp
-from .asset_collector import collect_spec_assets
 from .project import ProjectConfig, ProjectHandle
-from .utils import name2id
+from .utils import collect_spec_assets, name2id
 
 
 class Builder:

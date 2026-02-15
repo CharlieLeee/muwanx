@@ -136,15 +136,6 @@ export async function loadSceneFromURL(
         const xmlPath = await loadMjzFile(mujoco, modelPath);
         modelPath = xmlPath;
       }
-      console.log(`[loadSceneFromURL] Attempting to load XML from: ${modelPath}`);
-
-      // Debug: list files in /working directory
-      try {
-        const workingContents = mujoco.FS.readdir('/working');
-        console.log(`[loadSceneFromURL] /working directory contents:`, workingContents);
-      } catch (e) {
-        console.warn(`[loadSceneFromURL] Could not list /working directory:`, e);
-      }
 
       newModel = mujoco.MjModel.mj_loadXML(modelPath);
     }

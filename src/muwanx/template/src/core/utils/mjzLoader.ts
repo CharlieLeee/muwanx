@@ -22,8 +22,16 @@ export async function loadMjzFile(
     for (const [relativePath, file] of Object.entries(zip.files)) {
         if (file.dir) continue;
 
+        // Sanitize ZIP entry path to prevent path traversal
+        const sanitized = relativePath
+            .replace(/\\/g, '/')
+            .split('/')
+            .filter((seg) => seg && seg !== '..' && seg !== '.')
+            .join('/');
+        if (!sanitized) continue;
+
         const content = await file.async('uint8array');
-        const fsPath = `/working/${relativePath}`;
+        const fsPath = `/working/${sanitized}`;
 
         // Create directories
         const dirPath = fsPath.substring(0, fsPath.lastIndexOf('/'));
@@ -37,7 +45,7 @@ export async function loadMjzFile(
         mujoco.FS.writeFile(fsPath, content);
 
         // Track root XML
-        if (relativePath.endsWith('.xml') && !relativePath.includes('/')) {
+        if (sanitized.endsWith('.xml') && !sanitized.includes('/')) {
             xmlPath = fsPath;
         }
     }
