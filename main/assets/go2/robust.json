@@ -82,7 +82,7 @@
         ]
       ]
     },
-    "path": "go2/robust.onnx"
+    "path": "robust.onnx"
   },
   "obs_config": {
     "policy": [

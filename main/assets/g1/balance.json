@@ -71,7 +71,7 @@
         "action"
       ]
     },
-    "path": "g1/balance.onnx"
+    "path": "balance.onnx"
   },
   "obs_config": {
     "observation": [

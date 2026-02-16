@@ -45,7 +45,7 @@
         ]
       ]
     },
-    "path": "go1/himloco.onnx"
+    "path": "himloco.onnx"
   },
   "obs_config": {
     "obs_history": {

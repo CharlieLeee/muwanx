@@ -82,7 +82,7 @@
         ]
       ]
     },
-    "path": "go2/vanilla.onnx"
+    "path": "vanilla.onnx"
   },
   "obs_config": {
     "policy": [

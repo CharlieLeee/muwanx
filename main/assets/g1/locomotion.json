@@ -188,7 +188,7 @@
   ],
   "control_type": "joint_position",
   "onnx": {
-    "path": "g1/locomotion.onnx",
+    "path": "locomotion.onnx",
     "meta": {
       "in_keys": [
         "policy"

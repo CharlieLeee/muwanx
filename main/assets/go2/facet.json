@@ -83,7 +83,7 @@
         ]
       ]
     },
-    "path": "go2/facet.onnx"
+    "path": "facet.onnx"
   },
   "obs_config": {
     "policy": [

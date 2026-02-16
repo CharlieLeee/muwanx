@@ -45,7 +45,7 @@
         ]
       ]
     },
-    "path": "go1/decap.onnx"
+    "path": "decap.onnx"
   },
   "obs_config": {
     "obs_history": [
