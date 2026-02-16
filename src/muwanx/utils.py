@@ -4,11 +4,23 @@ from __future__ import annotations
 
 import os
 import posixpath
+import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
 from typing import IO, Union
 
 import mujoco
+
+
+def _strip_leading_dotdot(path: str) -> str:
+    """Normalize a POSIX path and strip any leading ``..`` components."""
+    normalized = posixpath.normpath(path)
+    if normalized == ".":
+        return ""
+    parts = normalized.split("/")
+    while parts and parts[0] == "..":
+        parts.pop(0)
+    return "/".join(parts) if parts else ""
 
 
 def collect_spec_assets(spec: mujoco.MjSpec) -> dict[str, bytes]:
@@ -33,12 +45,6 @@ def collect_spec_assets(spec: mujoco.MjSpec) -> dict[str, bytes]:
         full = os.path.join(base_dir, rel)
         if os.path.isfile(full):
             assets[rel] = Path(full).read_bytes()
-        # else:
-        #     warnings.warn(
-        #         f"Referenced asset not found: '{rel}' (resolved to '{full}')",
-        #         category=RuntimeWarning,
-        #         stacklevel=3,
-        #     )
 
     # Meshes
     for mesh in spec.meshes:
@@ -61,15 +67,112 @@ def collect_spec_assets(spec: mujoco.MjSpec) -> dict[str, bytes]:
     return assets
 
 
+def _rewrite_xml_paths(xml_str: str, mesh_dir: str, texture_dir: str) -> str:
+    """Rewrite asset paths in MuJoCo XML so the file is self-contained.
+
+    Resolves ``meshdir``/``texturedir`` + ``file`` into a single normalised
+    path (with leading ``..`` stripped), then removes the directory hints
+    from ``<compiler>`` elements.
+    """
+    root = ET.fromstring(xml_str)
+
+    # Rewrite <compiler> meshdir / texturedir
+    for compiler in root.iter("compiler"):
+        compiler.attrib.pop("meshdir", None)
+        compiler.attrib.pop("texturedir", None)
+
+    # Rewrite <mesh file="...">
+    for mesh in root.iter("mesh"):
+        f = mesh.get("file")
+        if f:
+            rel = posixpath.join(mesh_dir, f) if mesh_dir else f
+            mesh.set("file", _strip_leading_dotdot(rel))
+
+    # Rewrite <texture file/cube-map="...">
+    _TEX_FILE_ATTRS = (
+        "file",
+        "fileup",
+        "fileback",
+        "filedown",
+        "filefront",
+        "fileleft",
+        "fileright",
+    )
+    for tex in root.iter("texture"):
+        for attr in _TEX_FILE_ATTRS:
+            f = tex.get(attr)
+            if f:
+                rel = posixpath.join(texture_dir, f) if texture_dir else f
+                tex.set(attr, _strip_leading_dotdot(rel))
+
+    # Rewrite <hfield file="..."> and <skin file="...">
+    for tag in ("hfield", "skin"):
+        for elem in root.iter(tag):
+            f = elem.get("file")
+            if f:
+                elem.set("file", _strip_leading_dotdot(f))
+
+    ET.indent(root, space="  ")
+    return ET.tostring(root, encoding="unicode", xml_declaration=True) + "\n"
+
+
 def to_zip_deflated(spec: mujoco.MjSpec, file: Union[str, IO[bytes]]) -> None:
     """Save an MjSpec as a ZIP file with DEFLATE compression.
 
     This is a compressed alternative to ``mujoco.to_zip`` which stores
     entries uncompressed.  The output is a standard ZIP that JSZip (and
     other readers) can decompress transparently.
+
+    The function collects asset files from disk, normalises all relative
+    paths (stripping leading ``..`` components) so that the resulting ZIP
+    is self-contained.
     """
-    files_to_zip = spec.assets
-    files_to_zip[spec.modelname + ".xml"] = spec.to_xml()
+    base_dir = spec.modelfiledir or ""
+    mesh_dir = spec.meshdir or ""
+    texture_dir = spec.texturedir or ""
+
+    # --- collect asset files from disk with normalised zip-entry paths ----
+    files_to_zip: dict[str, bytes | str] = {}
+
+    for mesh in spec.meshes:
+        if not mesh.file:
+            continue
+        rel = posixpath.join(mesh_dir, mesh.file) if mesh_dir else mesh.file
+        full = os.path.join(base_dir, rel)
+        if os.path.isfile(full):
+            files_to_zip[_strip_leading_dotdot(rel)] = Path(full).read_bytes()
+
+    for texture in spec.textures:
+        for fname in [texture.file] + [
+            texture.cubefiles[i] for i in range(len(texture.cubefiles))
+        ]:
+            if not fname:
+                continue
+            rel = posixpath.join(texture_dir, fname) if texture_dir else fname
+            full = os.path.join(base_dir, rel)
+            if os.path.isfile(full):
+                files_to_zip[_strip_leading_dotdot(rel)] = Path(full).read_bytes()
+
+    for hfield in spec.hfields:
+        if not hfield.file:
+            continue
+        full = os.path.join(base_dir, hfield.file)
+        if os.path.isfile(full):
+            files_to_zip[_strip_leading_dotdot(hfield.file)] = Path(full).read_bytes()
+
+    for skin in spec.skins:
+        if not skin.file:
+            continue
+        full = os.path.join(base_dir, skin.file)
+        if os.path.isfile(full):
+            files_to_zip[_strip_leading_dotdot(skin.file)] = Path(full).read_bytes()
+
+    # --- generate XML and rewrite paths -----------------------------------
+    xml_str = spec.to_xml()
+    xml_str = _rewrite_xml_paths(xml_str, mesh_dir, texture_dir)
+    files_to_zip[spec.modelname + ".xml"] = xml_str
+
+    # --- write the ZIP ----------------------------------------------------
     if isinstance(file, str):
         directory = os.path.dirname(file)
         os.makedirs(directory, exist_ok=True)
