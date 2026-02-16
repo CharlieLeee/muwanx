@@ -19,7 +19,7 @@ from . import __version__
 from ._build_client import ClientBuilder
 from .app import MuwanxApp
 from .project import ProjectConfig, ProjectHandle
-from .utils import collect_spec_assets, name2id
+from .utils import collect_spec_assets, name2id, to_zip_deflated
 
 
 class Builder:
@@ -305,7 +305,7 @@ class Builder:
                 scene_path = scene_dir / scene.scene_filename
                 if scene.spec is not None:
                     scene.spec.assets.update(collect_spec_assets(scene.spec))
-                    scene.spec.to_zip(str(scene_path))  # Saves as .mjz
+                    to_zip_deflated(scene.spec, str(scene_path))  # Saves as .mjz
                 else:
                     if scene.model is None:
                         raise RuntimeError(

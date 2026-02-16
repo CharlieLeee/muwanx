@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import os
 import posixpath
-import warnings
+import zipfile
 from pathlib import Path
+from typing import IO, Union
 
 import mujoco
 
@@ -32,12 +33,12 @@ def collect_spec_assets(spec: mujoco.MjSpec) -> dict[str, bytes]:
         full = os.path.join(base_dir, rel)
         if os.path.isfile(full):
             assets[rel] = Path(full).read_bytes()
-        else:
-            warnings.warn(
-                f"Referenced asset not found: '{rel}' (resolved to '{full}')",
-                category=RuntimeWarning,
-                stacklevel=3,
-            )
+        # else:
+        #     warnings.warn(
+        #         f"Referenced asset not found: '{rel}' (resolved to '{full}')",
+        #         category=RuntimeWarning,
+        #         stacklevel=3,
+        #     )
 
     # Meshes
     for mesh in spec.meshes:
@@ -58,6 +59,24 @@ def collect_spec_assets(spec: mujoco.MjSpec) -> dict[str, bytes]:
         _read("", skin.file)
 
     return assets
+
+
+def to_zip_deflated(spec: mujoco.MjSpec, file: Union[str, IO[bytes]]) -> None:
+    """Save an MjSpec as a ZIP file with DEFLATE compression.
+
+    This is a compressed alternative to ``mujoco.to_zip`` which stores
+    entries uncompressed.  The output is a standard ZIP that JSZip (and
+    other readers) can decompress transparently.
+    """
+    files_to_zip = spec.assets
+    files_to_zip[spec.modelname + ".xml"] = spec.to_xml()
+    if isinstance(file, str):
+        directory = os.path.dirname(file)
+        os.makedirs(directory, exist_ok=True)
+        file = open(file, "wb")
+    with zipfile.ZipFile(file, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for filename, contents in files_to_zip.items():
+            zf.writestr(filename, contents)
 
 
 def name2id(name: str) -> str:

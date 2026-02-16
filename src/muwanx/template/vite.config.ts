@@ -54,7 +54,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    sourcemap: true,
+    sourcemap: false,
     chunkSizeWarningLimit: 11000,
     rollupOptions: {
       input: path.resolve(__dirname, 'index.html'),
