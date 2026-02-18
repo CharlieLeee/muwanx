@@ -1426,6 +1426,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "musclemimic-models"
+version = "1.0.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "mujoco" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/39/89/5652b889ca64e5d55cf82260b5be49154cf931061931aa40eef749530ba6/musclemimic_models-1.0.3.tar.gz", hash = "sha256:777747f4974d4c62c094a4923faa8ebe458f2a6678eb979f9e2ad5197aa89917", size = 23979939, upload-time = "2026-02-17T05:29:45.42Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/29/5f/fccf0ddbe682fcbf5e3fdd6c44a56eb46a49aaffd19bd3aa4f8c70f6d5fb/musclemimic_models-1.0.3-py3-none-any.whl", hash = "sha256:4f825398a7e42387568c6d74dfb240a09ff8af151aa479cb4db9083e8b383925", size = 23989898, upload-time = "2026-02-17T05:29:41.511Z" },
+]
+
+[[package]]
 name = "muwanx"
 source = { editable = "." }
 dependencies = [
@@ -1447,6 +1459,7 @@ examples = [
     { name = "gymnasium" },
     { name = "mjlab" },
     { name = "mjlab-myosuite" },
+    { name = "musclemimic-models" },
     { name = "torch" },
 ]
 
@@ -1456,6 +1469,7 @@ requires-dist = [
     { name = "mjlab", marker = "extra == 'examples'", git = "https://github.com/mujocolab/mjlab" },
     { name = "mjlab-myosuite", marker = "extra == 'examples'", git = "https://github.com/MyoHub/mjlab_myosuite" },
     { name = "mujoco", specifier = "==3.5.0" },
+    { name = "musclemimic-models", marker = "extra == 'examples'", specifier = ">=1.0.3" },
     { name = "nodeenv", specifier = ">=1.9.1" },
     { name = "nodeenv", marker = "extra == 'dev'", specifier = ">=1.9.0" },
     { name = "onnx", specifier = ">=1.20.0" },

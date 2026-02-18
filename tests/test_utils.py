@@ -15,6 +15,7 @@ import mujoco
 import pytest
 
 from muwanx.utils import (
+    _make_zip_safe_path,
     _rewrite_xml_paths,
     _strip_leading_dotdot,
     collect_spec_assets,
@@ -65,6 +66,39 @@ class TestStripLeadingDotdot:
             _strip_leading_dotdot("../../../../simhive/myo_sim/meshes/a.stl")
             == "simhive/myo_sim/meshes/a.stl"
         )
+
+
+# ===========================================================================
+# _make_zip_safe_path
+# ===========================================================================
+class TestMakeZipSafePath:
+    def test_relative_no_dotdot(self):
+        assert _make_zip_safe_path("meshes/foo.stl") == "meshes/foo.stl"
+
+    def test_relative_with_dotdot(self):
+        assert _make_zip_safe_path("../meshes/foo.stl") == "meshes/foo.stl"
+
+    def test_absolute_unix_returns_basename(self):
+        assert (
+            _make_zip_safe_path("/Users/alice/models/scene/skybox.png") == "skybox.png"
+        )
+
+    def test_absolute_deep_path_returns_basename(self):
+        assert (
+            _make_zip_safe_path(
+                "/home/user/.venv/lib/python3.13/site-packages/pkg/model/scene/tex.png"
+            )
+            == "tex.png"
+        )
+
+    def test_windows_style_absolute(self):
+        assert _make_zip_safe_path("C:/Users/bob/models/mesh.stl") == "mesh.stl"
+
+    def test_empty_string(self):
+        assert _make_zip_safe_path("") == ""
+
+    def test_only_dotdot(self):
+        assert _make_zip_safe_path("../..") == ""
 
 
 # ===========================================================================
@@ -157,6 +191,39 @@ class TestRewriteXmlPaths:
         mesh = root.find(".//mesh")
         assert mesh is not None
         assert mesh.get("file") is None
+
+    def test_absolute_texture_path_becomes_basename(self):
+        """Absolute paths emitted by MjSpec.to_xml() must be reduced to basename."""
+        abs_path = "/Users/alice/.venv/lib/site-packages/pkg/scene/skybox.png"
+        xml_in = (
+            "<mujoco>"
+            '<compiler texturedir=".."/>'
+            "<asset>"
+            f'<texture type="skybox" name="sky" file="{abs_path}"/>'
+            "</asset>"
+            "</mujoco>"
+        )
+        result = _rewrite_xml_paths(xml_in, mesh_dir="", texture_dir="..")
+        root = ET.fromstring(result)
+        tex = root.find(".//texture")
+        assert tex is not None
+        assert tex.get("file") == "skybox.png"
+
+    def test_absolute_mesh_path_becomes_basename(self):
+        abs_path = "/home/user/.venv/lib/site-packages/pkg/meshes/robot.stl"
+        xml_in = (
+            "<mujoco>"
+            '<compiler meshdir=".."/>'
+            "<asset>"
+            f'<mesh name="robot" file="{abs_path}"/>'
+            "</asset>"
+            "</mujoco>"
+        )
+        result = _rewrite_xml_paths(xml_in, mesh_dir="..", texture_dir="")
+        root = ET.fromstring(result)
+        mesh = root.find(".//mesh")
+        assert mesh is not None
+        assert mesh.get("file") == "robot.stl"
 
 
 # ===========================================================================
@@ -305,6 +372,49 @@ def test_to_zip_deflated_loadable(model_path: str):
         xml_path = os.path.join(tmpdir, xml_names[0])
         model = mujoco.MjModel.from_xml_path(xml_path)
         assert model.nq > 0, "Model loaded but has zero DOFs"
+
+
+@pytest.mark.parametrize("model_path", MYOSUITE_MODELS + SIMPLE_MODELS)
+def test_to_zip_deflated_no_absolute_paths_in_xml(model_path: str):
+    """The XML inside the ZIP must not contain absolute file paths."""
+    spec = mujoco.MjSpec.from_file(str(DEMO_DIR / model_path))
+    buf = io.BytesIO()
+    to_zip_deflated(spec, buf)
+    buf.seek(0)
+    with zipfile.ZipFile(buf, "r") as zf:
+        xml_names = [n for n in zf.namelist() if n.endswith(".xml")]
+        assert len(xml_names) == 1
+        root = ET.fromstring(zf.read(xml_names[0]))
+        for tag in ("mesh", "texture", "hfield", "skin"):
+            _TEX_FILE_ATTRS = (
+                "file",
+                "fileup",
+                "fileback",
+                "filedown",
+                "filefront",
+                "fileleft",
+                "fileright",
+            )
+            for elem in root.iter(tag):
+                for attr in _TEX_FILE_ATTRS:
+                    f = elem.get(attr, "")
+                    assert not f.startswith("/"), (
+                        f"<{tag} {attr}='{f}'> is an absolute path (model: {model_path})"
+                    )
+
+
+@pytest.mark.parametrize("model_path", MYOSUITE_MODELS + SIMPLE_MODELS)
+def test_to_zip_deflated_no_absolute_paths_in_zip_entries(model_path: str):
+    """ZIP entry names must not be absolute paths."""
+    spec = mujoco.MjSpec.from_file(str(DEMO_DIR / model_path))
+    buf = io.BytesIO()
+    to_zip_deflated(spec, buf)
+    buf.seek(0)
+    with zipfile.ZipFile(buf, "r") as zf:
+        for name in zf.namelist():
+            assert not name.startswith("/"), (
+                f"ZIP entry is an absolute path: {name} (model: {model_path})"
+            )
 
 
 @pytest.mark.parametrize("model_path", MYOSUITE_MODELS + SIMPLE_MODELS)
