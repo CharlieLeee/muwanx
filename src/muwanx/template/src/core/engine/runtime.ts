@@ -7,6 +7,7 @@ import {
   getQuaternion,
   loadSceneFromURL,
 } from '../scene/scene';
+import { createSkyboxTexture } from '../scene/textures';
 import { DragStateManager } from '../utils/dragStateManager';
 import { createTendonState, updateTendonGeometry, updateTendonRendering } from '../scene/tendons';
 import { updateHeadlightFromCamera, updateLightsFromData } from '../scene/lights';
@@ -915,6 +916,10 @@ export class MuwanxRuntime {
 
     // Re-add root to scene
     this.scene.add(this.mujocoRoot);
+
+    // Restore skybox background
+    const skybox = createSkyboxTexture(this.mujoco, this.mjModel);
+    this.scene.background = skybox ?? new THREE.Color(0.15, 0.25, 0.35);
 
     // Run forward dynamics
     this.mujoco.mj_forward(this.mjModel, this.mjData);

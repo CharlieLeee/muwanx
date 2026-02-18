@@ -209,6 +209,39 @@ export function createTexture({
     return createCubeTexture(mjModel, texId);
   }
 
+  if (type === mujoco.mjtTexture.mjTEXTURE_SKYBOX.value) {
+    return createCubeTexture(mjModel, texId);
+  }
+
   console.warn(`Unsupported texture type ${type} for texId: ${texId}`);
+  return null;
+}
+
+export function createSkyboxTexture(mujoco: MainModule, mjModel: MjModel): THREE.CubeTexture | null {
+  if (!mjModel.tex_type) {
+    return null;
+  }
+  for (let i = 0; i < mjModel.ntex; i++) {
+    if (Number(mjModel.tex_type[i]) === mujoco.mjtTexture.mjTEXTURE_SKYBOX.value) {
+      const cube = createCubeTexture(mjModel, i);
+      if (cube) {
+        // Flip faces horizontally: cubemap is outside-in, skybox is viewed from inside
+        const faces = cube.image as unknown as HTMLCanvasElement[];
+        for (let f = 0; f < faces.length; f++) {
+          const src = faces[f];
+          const flipped = document.createElement('canvas');
+          flipped.width = src.width;
+          flipped.height = src.height;
+          const ctx = flipped.getContext('2d')!;
+          ctx.translate(src.width, 0);
+          ctx.scale(-1, 1);
+          ctx.drawImage(src, 0, 0);
+          faces[f] = flipped;
+        }
+        cube.needsUpdate = true;
+      }
+      return cube;
+    }
+  }
   return null;
 }
