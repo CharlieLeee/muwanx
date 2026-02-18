@@ -16,7 +16,7 @@ nav:
     - Core API: api/core.md
   - Notes:
     - Embeddings: notes/embeddings.md
-    - Related Projects: notes/related-projects.md
+    - Projects: notes/projects.md
 
 theme:
   name: material
