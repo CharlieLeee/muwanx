@@ -12,11 +12,13 @@ export interface TendonState {
   matrix: THREE.Matrix4;
 }
 
+const MAX_TENDON_INSTANCES = 4096;
+
 export function createTendonMeshes(mujocoRoot: THREE.Group): TendonMeshes {
   const tendonMat = new THREE.MeshPhongMaterial();
   tendonMat.color = new THREE.Color(0.8, 0.3, 0.3);
 
-  const cylinders = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1), tendonMat, 1023);
+  const cylinders = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1), tendonMat, MAX_TENDON_INSTANCES);
   cylinders.receiveShadow = true;
   cylinders.castShadow = true;
   cylinders.count = 0;
@@ -24,7 +26,7 @@ export function createTendonMeshes(mujocoRoot: THREE.Group): TendonMeshes {
   cylinders.computeBoundingSphere();
   mujocoRoot.add(cylinders);
 
-  const spheres = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 10, 10), tendonMat, 1023);
+  const spheres = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 10, 10), tendonMat, MAX_TENDON_INSTANCES);
   spheres.receiveShadow = true;
   spheres.castShadow = true;
   spheres.count = 0;
